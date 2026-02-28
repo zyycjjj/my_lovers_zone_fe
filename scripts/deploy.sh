@@ -49,6 +49,8 @@ fi
 pnpm --version
 cd "${DEPLOY_PATH}"
 echo "[deploy] CWD: $(pwd)"
+echo "[deploy] List deploy dir:"
+ls -la "${DEPLOY_PATH}/deploy" 2>/dev/null || true
 pnpm install --prod
 SERVICE_NAME="${DEPLOY_SERVICE:-}"
 if [ -z "${SERVICE_NAME}" ]; then
@@ -70,12 +72,20 @@ ls -la deploy/*.service 2>/dev/null || true
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 SOURCE_FILE="${DEPLOY_PATH}/deploy/${SERVICE_NAME}.service"
 if [ ! -f "${SOURCE_FILE}" ]; then
-  CANDIDATE=$(ls -1 deploy/*.service 2>/dev/null | head -n1 || true)
+  CANDIDATE=$(ls -1 "${DEPLOY_PATH}/deploy"/*.service 2>/dev/null | head -n1 || true)
   if [ -n "${CANDIDATE}" ]; then
     SERVICE_NAME=$(basename "${CANDIDATE}" .service)
     SOURCE_FILE="${DEPLOY_PATH}/deploy/${SERVICE_NAME}.service"
     SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
     echo "[deploy] Using detected service file: ${SOURCE_FILE}"
+  else
+    CANDIDATE=$(ls -1 "${DEPLOY_PATH}"/*.service 2>/dev/null | head -n1 || true)
+    if [ -n "${CANDIDATE}" ]; then
+      SERVICE_NAME=$(basename "${CANDIDATE}" .service)
+      SOURCE_FILE="${DEPLOY_PATH}/${SERVICE_NAME}.service"
+      SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
+      echo "[deploy] Using detected root service file: ${SOURCE_FILE}"
+    fi
   fi
 fi
 if [ ! -f "${SERVICE_FILE}" ]; then
