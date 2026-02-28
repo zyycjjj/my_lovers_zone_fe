@@ -30,7 +30,7 @@ ssh -o StrictHostKeyChecking=no -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOS
   sudo -n /bin/chown -R '${DEPLOY_USER}':'${DEPLOY_USER}' '${DEPLOY_PATH}/deploy' 2>/dev/null || sudo -n /usr/bin/chown -R '${DEPLOY_USER}':'${DEPLOY_USER}' '${DEPLOY_PATH}/deploy' 2>/dev/null || true
 "
 
-rsync -az --delete --no-perms --no-owner --no-group -e "ssh -p ${DEPLOY_PORT} -o StrictHostKeyChecking=no" .next public package.json pnpm-lock.yaml next.config.ts .env deploy/ "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}"
+rsync -az --delete --no-perms --no-owner --no-group -e "ssh -p ${DEPLOY_PORT} -o StrictHostKeyChecking=no" .next public package.json pnpm-lock.yaml next.config.js .env deploy/ "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_PATH}"
 
 ssh -o StrictHostKeyChecking=no -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" "DEPLOY_PATH='${DEPLOY_PATH}' DEPLOY_SERVICE='${DEPLOY_SERVICE}' bash -s" <<'REMOTE'
 set -euo pipefail
