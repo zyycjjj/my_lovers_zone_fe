@@ -62,6 +62,11 @@ if [ -z "${SERVICE_NAME}" ]; then
   echo "[deploy] ERROR: service name is empty (DEPLOY_SERVICE not set and no deploy/*.service found)"
   exit 1
 fi
+if [[ "${SERVICE_NAME}" == *.service ]]; then
+  SERVICE_NAME="${SERVICE_NAME%.service}"
+fi
+echo "[deploy] Available service files:"
+ls -la deploy/*.service 2>/dev/null || true
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 SOURCE_FILE="${DEPLOY_PATH}/deploy/${SERVICE_NAME}.service"
 if [ ! -f "${SERVICE_FILE}" ]; then
