@@ -88,19 +88,14 @@ if [ ! -f "${SOURCE_FILE}" ]; then
     fi
   fi
 fi
-if [ ! -f "${SERVICE_FILE}" ]; then
-  if [ -f "${SOURCE_FILE}" ]; then
-    echo "[deploy] Installing systemd unit: ${SERVICE_FILE}"
-    sudo -n cp "${SOURCE_FILE}" "${SERVICE_FILE}"
-    sudo -n /usr/bin/systemctl daemon-reload
-    sudo -n /usr/bin/systemctl enable "${SERVICE_NAME}"
-  else
-    echo "[deploy] ERROR: source unit not found at ${SOURCE_FILE}"
-    exit 1
-  fi
-else
-  echo "[deploy] Unit already exists: ${SERVICE_FILE}"
+if [ -f "${SOURCE_FILE}" ]; then
+  echo "[deploy] Installing systemd unit: ${SERVICE_FILE}"
+  sudo -n cp "${SOURCE_FILE}" "${SERVICE_FILE}"
   sudo -n /usr/bin/systemctl daemon-reload
+  sudo -n /usr/bin/systemctl enable "${SERVICE_NAME}"
+else
+  echo "[deploy] ERROR: source unit not found at ${SOURCE_FILE}"
+  exit 1
 fi
 sudo -n /usr/bin/systemctl restart "${SERVICE_NAME}"
 REMOTE

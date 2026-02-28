@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 WorkingDirectory=/srv/my_lovers_zone_fe
-ExecStart=/usr/bin/bash -lc "pnpm start -p ${PORT}"
+ExecStart=/usr/bin/bash -lc "export PNPM_HOME=${HOME}/.local/share/pnpm; export PATH=${PNPM_HOME}:${PATH}; pnpm start -p ${PORT}"
 Restart=always
 Environment=NODE_ENV=production
 EnvironmentFile=/srv/my_lovers_zone_fe/.env
