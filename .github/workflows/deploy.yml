@@ -1,0 +1,89 @@
+name: deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+
+      - name: write env
+        run: |
+          cat > .env <<EOF
+          PORT=${{ secrets.PORT }}
+          NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+          EOF
+      - name: validate secrets
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          DEPLOY_SERVICE: ${{ secrets.DEPLOY_SERVICE }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          set -euo pipefail
+          missing=()
+          [ -z "${DEPLOY_HOST:-}" ] && missing+=("DEPLOY_HOST")
+          [ -z "${DEPLOY_USER:-}" ] && missing+=("DEPLOY_USER")
+          [ -z "${DEPLOY_PATH:-}" ] && missing+=("DEPLOY_PATH")
+          [ -z "${DEPLOY_SERVICE:-}" ] && missing+=("DEPLOY_SERVICE")
+          [ -z "${DEPLOY_SSH_KEY:-}" ] && missing+=("DEPLOY_SSH_KEY")
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "Missing required secrets: ${missing[*]}";
+            exit 1;
+          fi
+
+      - name: add ssh key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: known hosts
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          PORT="${DEPLOY_PORT}"
+          if [ -z "$PORT" ]; then PORT=22; fi
+          if [ -z "${DEPLOY_HOST:-}" ]; then
+            echo "DEPLOY_HOST is empty"; exit 1;
+          fi
+          ssh-keyscan -p "$PORT" -H "${DEPLOY_HOST}" >> ~/.ssh/known_hosts
+
+      - name: ssh preflight
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+        run: |
+          PORT="${DEPLOY_PORT}"
+          if [ -z "$PORT" ]; then PORT=22; fi
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=no -p "$PORT" "${DEPLOY_USER}@${DEPLOY_HOST}" "echo ok"
+
+      - name: deploy
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          DEPLOY_SERVICE: ${{ secrets.DEPLOY_SERVICE }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+        run: bash ./scripts/deploy.sh

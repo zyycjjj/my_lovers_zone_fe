@@ -1,0 +1,13 @@
+[Unit]
+Description=My Lovers Zone Frontend
+After=network.target
+
+[Service]
+WorkingDirectory=/srv/my_lovers_zone_fe
+ExecStart=/usr/bin/bash -lc "pnpm start -p ${PORT}"
+Restart=always
+Environment=NODE_ENV=production
+EnvironmentFile=/srv/my_lovers_zone_fe/.env
+
+[Install]
+WantedBy=multi-user.target
