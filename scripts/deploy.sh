@@ -69,6 +69,15 @@ echo "[deploy] Available service files:"
 ls -la deploy/*.service 2>/dev/null || true
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
 SOURCE_FILE="${DEPLOY_PATH}/deploy/${SERVICE_NAME}.service"
+if [ ! -f "${SOURCE_FILE}" ]; then
+  CANDIDATE=$(ls -1 deploy/*.service 2>/dev/null | head -n1 || true)
+  if [ -n "${CANDIDATE}" ]; then
+    SERVICE_NAME=$(basename "${CANDIDATE}" .service)
+    SOURCE_FILE="${DEPLOY_PATH}/deploy/${SERVICE_NAME}.service"
+    SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}.service"
+    echo "[deploy] Using detected service file: ${SOURCE_FILE}"
+  fi
+fi
 if [ ! -f "${SERVICE_FILE}" ]; then
   if [ -f "${SOURCE_FILE}" ]; then
     echo "[deploy] Installing systemd unit: ${SERVICE_FILE}"
