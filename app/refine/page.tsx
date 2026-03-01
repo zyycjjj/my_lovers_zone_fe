@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { UiButton } from "../components/ui-button";
 import { apiRequest } from "../lib/api";
 import { useClientToken } from "../lib/use-client-token";
 
@@ -71,13 +72,14 @@ export default function RefinePage() {
               {error}
             </div>
           ) : null}
-          <button
+          <UiButton
             onClick={submit}
             disabled={loading}
-            className="rounded-full bg-rose-500 px-6 py-2 text-sm font-medium text-white hover:bg-rose-600 disabled:opacity-60"
+            variant="primary"
+            className="px-6 py-2 text-sm"
           >
             {loading ? "提炼中..." : "开始提炼"}
-          </button>
+          </UiButton>
         </div>
       </div>
       <div className="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { UiButton } from "../components/ui-button";
 import { apiRequest } from "../lib/api";
 import { useClientToken } from "../lib/use-client-token";
 
@@ -106,26 +107,20 @@ export default function ScriptPage() {
           <div>
             <label className="text-sm text-slate-600">风格</label>
             <div className="mt-2 flex gap-2">
-              <button
+              <UiButton
                 onClick={() => setStyle("short")}
-                className={`rounded-full px-4 py-2 text-sm ${
-                  style === "short"
-                    ? "bg-rose-500 text-white"
-                    : "border border-rose-200 text-rose-600"
-                }`}
+                variant={style === "short" ? "primary" : "secondary"}
+                className="px-4 py-2 text-sm"
               >
                 短视频种草
-              </button>
-              <button
+              </UiButton>
+              <UiButton
                 onClick={() => setStyle("live")}
-                className={`rounded-full px-4 py-2 text-sm ${
-                  style === "live"
-                    ? "bg-rose-500 text-white"
-                    : "border border-rose-200 text-rose-600"
-                }`}
+                variant={style === "live" ? "primary" : "secondary"}
+                className="px-4 py-2 text-sm"
               >
                 直播口播
-              </button>
+              </UiButton>
             </div>
           </div>
           {error ? (
@@ -133,13 +128,14 @@ export default function ScriptPage() {
               {error}
             </div>
           ) : null}
-          <button
+          <UiButton
             onClick={submit}
             disabled={loading}
-            className="rounded-full bg-rose-500 px-6 py-2 text-sm font-medium text-white hover:bg-rose-600 disabled:opacity-60"
+            variant="primary"
+            className="px-6 py-2 text-sm"
           >
             {loading ? "生成中..." : "生成脚本"}
-          </button>
+          </UiButton>
         </div>
       </div>
       <div className="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm">

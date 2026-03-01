@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { UiButton } from "./components/ui-button";
 import { apiRequest } from "./lib/api";
 import { useClientToken, useProfiles } from "./lib/use-client-token";
 
@@ -15,11 +16,23 @@ type EchoResponse = {
   items: EchoItem[];
 };
 
+type ProfileResponse = {
+  role?: "me" | "girlfriend" | "test" | "user" | null;
+  name?: string | null;
+};
+
 type ActivityEvent = {
   type: "button_used";
   key: string;
   userId: number;
   occurredAt: string;
+};
+
+const loveKeyLabels: Record<string, string> = {
+  hug: "给你抱抱",
+  miss: "想你了",
+  ok: "我很好",
+  busy: "忙但想你",
 };
 
 const tools = [
@@ -37,28 +50,49 @@ export default function Home() {
   const [echoes, setEchoes] = useState<EchoItem[]>([]);
   const [echoLoading, setEchoLoading] = useState(false);
   const [error, setError] = useState("");
-  const [activityPass, setActivityPass] = useState(() => {
-    if (typeof window === "undefined") return "";
-    return localStorage.getItem("love.adminPass") ?? "";
-  });
+  const [loveToast, setLoveToast] = useState<{
+    visible: boolean;
+    message: string;
+  }>({ visible: false, message: "" });
+  const [serverRole, setServerRole] = useState<ProfileResponse["role"]>(null);
+  const [activityPass, setActivityPass] = useState("");
   const [activityStreamOn, setActivityStreamOn] = useState(false);
   const [activities, setActivities] = useState<ActivityEvent[]>([]);
   const [activityError, setActivityError] = useState("");
+  const [activitySuccess, setActivitySuccess] = useState("");
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       setOrigin(window.location.origin);
+      const storedPass = localStorage.getItem("love.adminPass");
+      if (storedPass) setActivityPass(storedPass);
     }
   }, []);
 
-  const role = useMemo(() => {
+  const derivedRole = useMemo(() => {
     if (!token) return "guest";
     if (token === profiles.girlfriend) return "girlfriend";
     if (token === profiles.test) return "test";
     if (token === profiles.me) return "me";
     return "guest";
   }, [profiles, token]);
+
+  const role =
+    serverRole && serverRole !== "user" ? serverRole : derivedRole;
+
+  const isGirlfriend = role === "girlfriend";
+  const heroTitle = isGirlfriend
+    ? "给你的轻信号小站"
+    : "送给她的轻信号小站，也送给你的带货工具箱";
+  const heroDesc = isGirlfriend
+    ? "不打扰、不监控，只在需要时轻轻回应。今天的状态、一次按钮，都是爱的提示。"
+    : "不打扰、不监控，只在需要时轻轻回应。今天的状态、一次按钮、一句话回声，都是爱的提示。";
+  const heroTagline = isGirlfriend ? "只想轻轻回应" : "温柔与效率兼得";
+  const messageTitle = isGirlfriend ? "他发来的话" : "她发来的话";
+  const emptyMessageText = isGirlfriend
+    ? "还没有收到他的话。"
+    : "还没有收到她的话。";
 
   const fetchEcho = useCallback(async () => {
     if (!token) return;
@@ -79,11 +113,43 @@ export default function Home() {
   }, [fetchEcho]);
 
   useEffect(() => {
+    if (!token) {
+      setServerRole(null);
+      return;
+    }
+    let active = true;
+    apiRequest<ProfileResponse>("/api/echo/profile", { token })
+      .then((data) => {
+        if (active) setServerRole(data?.role ?? "user");
+      })
+      .catch(() => {
+        if (active) setServerRole(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [token]);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
     localStorage.setItem("love.adminPass", activityPass);
   }, [activityPass]);
 
   const canSeeActivity = role === "me" || role === "test";
+
+  const latestLoveMessage = useMemo(() => {
+    const latest = activities.find((item) =>
+      item.key.startsWith("girlfriend."),
+    );
+    if (!latest) return "";
+    const key = latest.key.split(".")[1] ?? latest.key;
+    return loveKeyLabels[key] ?? latest.key;
+  }, [activities]);
+
+  const latestEchoText = echoes[0]?.text?.trim() ?? "";
+  const latestMessage = isGirlfriend
+    ? latestEchoText
+    : latestEchoText || latestLoveMessage;
 
   useEffect(() => {
     if (!canSeeActivity || !activityStreamOn || !activityPass) return;
@@ -109,6 +175,8 @@ export default function Home() {
     source.onerror = () => {
       source.close();
       setActivityStreamOn(false);
+      setActivitySuccess("");
+      setActivityError("实时流连接失败，请检查 Admin Pass");
     };
     return () => source.close();
   }, [activityPass, activityStreamOn, apiBase, canSeeActivity]);
@@ -116,16 +184,39 @@ export default function Home() {
   const sendLoveEvent = async (key: string) => {
     if (!token) {
       setError("请先填写你的访问 token");
+      setLoveToast({ visible: true, message: "请先填写你的访问 token" });
+      setTimeout(() => {
+        setLoveToast({ visible: false, message: "" });
+      }, 2000);
       return;
     }
     setError("");
     try {
+      const targetToken =
+        role === "me"
+          ? profiles.girlfriend
+          : role === "girlfriend"
+            ? profiles.me
+            : "";
       await apiRequest("/api/event", {
         token,
-        body: { type: "button_used", key: `${role}.${key}` },
+        body: {
+          type: "button_used",
+          key: `${role}.${key}`,
+          targetToken: targetToken || undefined,
+        },
       });
+      setLoveToast({ visible: true, message: "已发送给对方" });
+      setTimeout(() => {
+        setLoveToast({ visible: false, message: "" });
+      }, 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "发送失败");
+      const message = err instanceof Error ? err.message : "发送失败";
+      setError(message);
+      setLoveToast({ visible: true, message });
+      setTimeout(() => {
+        setLoveToast({ visible: false, message: "" });
+      }, 2000);
     }
   };
 
@@ -147,24 +238,25 @@ export default function Home() {
       return;
     }
     setActivityError("");
+    setActivitySuccess("实时流已开启");
     setActivityStreamOn(true);
   };
 
   const showTokenConfig = role !== "girlfriend";
+  const showTools = role !== "girlfriend";
 
   return (
     <div className="space-y-10">
       <section className="grid gap-6 rounded-3xl bg-white/80 p-8 shadow-sm">
         <div className="space-y-3">
           <p className="text-sm uppercase tracking-[0.3em] text-rose-400">
-            温柔与效率兼得
+            {heroTagline}
           </p>
           <h1 className="text-3xl font-semibold text-slate-900 sm:text-4xl">
-            送给她的轻信号小站，也送给你的带货工具箱
+            {heroTitle}
           </h1>
           <p className="max-w-2xl text-base text-slate-600">
-            不打扰、不监控，只在需要时轻轻回应。今天的状态、一次按钮、
-            一句话回声，都是爱的提示。
+            {heroDesc}
           </p>
         </div>
         {showTokenConfig ? (
@@ -219,18 +311,20 @@ export default function Home() {
                     <span className="truncate">{link || "请先填写 token"}</span>
                   </div>
                   <div className="flex gap-2">
-                    <button
+                    <UiButton
                       onClick={() => link && window.open(link, "_blank")}
-                      className="flex-1 rounded-full bg-rose-500 px-4 py-2 text-sm font-medium text-white hover:bg-rose-600"
+                      variant="primary"
+                      className="flex-1 px-4 py-2 text-sm"
                     >
                       打开链接
-                    </button>
-                    <button
+                    </UiButton>
+                    <UiButton
                       onClick={() => copyLink(link)}
-                      className="flex-1 rounded-full border border-rose-200 px-4 py-2 text-sm text-rose-600 hover:bg-rose-50"
+                      variant="secondary"
+                      className="flex-1 px-4 py-2 text-sm"
                     >
                       复制
-                    </button>
+                    </UiButton>
                   </div>
                 </div>
               );
@@ -246,30 +340,34 @@ export default function Home() {
             点一下就好，我会收到你的小心意。
           </p>
           <div className="grid grid-cols-2 gap-3">
-            <button
+            <UiButton
               onClick={() => sendLoveEvent("hug")}
-              className="rounded-2xl bg-rose-500 px-4 py-3 text-sm font-medium text-white hover:bg-rose-600"
+              variant="primary"
+              className="rounded-2xl px-4 py-3 text-sm"
             >
               给你抱抱
-            </button>
-            <button
+            </UiButton>
+            <UiButton
               onClick={() => sendLoveEvent("miss")}
-              className="rounded-2xl bg-rose-100 px-4 py-3 text-sm font-medium text-rose-700 hover:bg-rose-200"
+              variant="secondary"
+              className="rounded-2xl px-4 py-3 text-sm"
             >
               想你了
-            </button>
-            <button
+            </UiButton>
+            <UiButton
               onClick={() => sendLoveEvent("ok")}
-              className="rounded-2xl bg-white px-4 py-3 text-sm font-medium text-rose-600 shadow-sm hover:bg-rose-50"
+              variant="ghost"
+              className="rounded-2xl px-4 py-3 text-sm shadow-sm"
             >
               我很好
-            </button>
-            <button
+            </UiButton>
+            <UiButton
               onClick={() => sendLoveEvent("busy")}
-              className="rounded-2xl bg-white px-4 py-3 text-sm font-medium text-rose-600 shadow-sm hover:bg-rose-50"
+              variant="ghost"
+              className="rounded-2xl px-4 py-3 text-sm shadow-sm"
             >
               忙但想你
-            </button>
+            </UiButton>
           </div>
           {error ? (
             <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-600">
@@ -280,31 +378,25 @@ export default function Home() {
 
         <div className="space-y-4 rounded-2xl border border-rose-100 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-slate-800">最近回声</h3>
-            <button
+            <h3 className="text-lg font-semibold text-slate-800">
+              {messageTitle}
+            </h3>
+            <UiButton
               onClick={fetchEcho}
-              className="text-xs text-rose-500 hover:text-rose-600"
+              variant="ghost"
+              className="px-2 py-1 text-xs"
             >
               刷新
-            </button>
+            </UiButton>
           </div>
           {echoLoading ? (
             <div className="text-sm text-slate-500">加载中...</div>
-          ) : echoes.length ? (
-            <ul className="space-y-3 text-sm text-slate-700">
-              {echoes.map((item) => (
-                <li
-                  key={item.id}
-                  className="rounded-xl border border-rose-100 bg-rose-50/60 px-4 py-3"
-                >
-                  {item.text}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="text-sm text-slate-500">
-              还没有回声，去 Admin 发一句话给她吧。
+          ) : latestMessage ? (
+            <div className="rounded-xl border border-rose-100 bg-rose-50/60 px-4 py-3 text-sm text-slate-700">
+              {latestMessage}
             </div>
+          ) : (
+            <div className="text-sm text-slate-500">{emptyMessageText}</div>
           )}
         </div>
       </section>
@@ -321,12 +413,13 @@ export default function Home() {
                   实时查看她/测试的按钮点击
                 </p>
               </div>
-              <button
+              <UiButton
                 onClick={startActivityStream}
-                className="rounded-full border border-rose-200 px-5 py-2 text-sm text-rose-600 hover:bg-rose-50"
+                variant="secondary"
+                className="px-5 py-2 text-sm"
               >
                 {activityStreamOn ? "已开启" : "开启实时流"}
-              </button>
+              </UiButton>
             </div>
             <div className="mt-4 grid gap-3">
               <input
@@ -338,6 +431,11 @@ export default function Home() {
               {activityError ? (
                 <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs text-rose-600">
                   {activityError}
+                </div>
+              ) : null}
+              {activitySuccess ? (
+                <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-2 text-xs text-emerald-600">
+                  {activitySuccess}
                 </div>
               ) : null}
               {activities.length ? (
@@ -361,23 +459,30 @@ export default function Home() {
         </section>
       ) : null}
 
-      <section className="grid gap-4">
-        <h2 className="text-xl font-semibold text-slate-800">工具入口</h2>
-        <div className="grid gap-4 md:grid-cols-3">
-          {tools.map((tool) => (
-            <Link
-              key={tool.title}
-              href={tool.href}
-              className="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-rose-200"
-            >
-              <h3 className="text-base font-semibold text-slate-800">
-                {tool.title}
-              </h3>
-              <p className="mt-2 text-sm text-slate-500">{tool.desc}</p>
-            </Link>
-          ))}
+      {showTools ? (
+        <section className="grid gap-4">
+          <h2 className="text-xl font-semibold text-slate-800">工具入口</h2>
+          <div className="grid gap-4 md:grid-cols-3">
+            {tools.map((tool) => (
+              <Link
+                key={tool.title}
+                href={tool.href}
+                className="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-rose-200"
+              >
+                <h3 className="text-base font-semibold text-slate-800">
+                  {tool.title}
+                </h3>
+                <p className="mt-2 text-sm text-slate-500">{tool.desc}</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
+      {loveToast.visible ? (
+        <div className="fixed bottom-4 right-4 z-50 rounded-xl bg-rose-500 px-4 py-2 text-sm text-white shadow-lg">
+          {loveToast.message}
         </div>
-      </section>
+      ) : null}
     </div>
   );
 }

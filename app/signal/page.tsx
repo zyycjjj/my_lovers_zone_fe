@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useState } from "react";
+import { UiButton } from "../components/ui-button";
 import { apiRequest } from "../lib/api";
 import { useClientToken } from "../lib/use-client-token";
 
@@ -139,17 +140,14 @@ export default function SignalPage() {
               <label className="text-sm text-slate-600">心情</label>
               <div className="mt-2 flex flex-wrap gap-2">
                 {moods.map((item) => (
-                  <button
+                  <UiButton
                     key={item.value}
                     onClick={() => setMood(item.value)}
-                    className={`rounded-full px-4 py-2 text-sm ${
-                      mood === item.value
-                        ? "bg-rose-500 text-white"
-                        : "border border-rose-200 text-rose-600"
-                    }`}
+                    variant={mood === item.value ? "primary" : "secondary"}
+                    className="px-4 py-2 text-sm"
                   >
                     {item.label}
-                  </button>
+                  </UiButton>
                 ))}
               </div>
             </div>
@@ -157,17 +155,14 @@ export default function SignalPage() {
               <label className="text-sm text-slate-600">状态</label>
               <div className="mt-2 flex flex-wrap gap-2">
                 {statuses.map((item) => (
-                  <button
+                  <UiButton
                     key={item.value}
                     onClick={() => setStatus(item.value)}
-                    className={`rounded-full px-4 py-2 text-sm ${
-                      status === item.value
-                        ? "bg-rose-500 text-white"
-                        : "border border-rose-200 text-rose-600"
-                    }`}
+                    variant={status === item.value ? "primary" : "secondary"}
+                    className="px-4 py-2 text-sm"
                   >
                     {item.label}
-                  </button>
+                  </UiButton>
                 ))}
               </div>
             </div>
@@ -186,13 +181,14 @@ export default function SignalPage() {
               {error}
             </div>
           ) : null}
-          <button
+          <UiButton
             onClick={submit}
             disabled={loading}
-            className="rounded-full bg-rose-500 px-6 py-2 text-sm font-medium text-white hover:bg-rose-600 disabled:opacity-60"
+            variant="primary"
+            className="px-6 py-2 text-sm"
           >
             {loading ? "提交中..." : "提交轻信号"}
-          </button>
+          </UiButton>
         </div>
       </div>
 
@@ -238,12 +234,13 @@ export default function SignalPage() {
       <div className="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-800">最近照片</h2>
-          <button
+          <UiButton
             onClick={loadPhotos}
-            className="text-xs text-rose-500 hover:text-rose-600"
+            variant="ghost"
+            className="px-2 py-1 text-xs"
           >
             刷新
-          </button>
+          </UiButton>
         </div>
         {photos.length ? (
           <div className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-3">

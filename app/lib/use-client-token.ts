@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 type Profiles = {
   test: string;
@@ -12,56 +12,122 @@ const TOKEN_KEY = "love.currentToken";
 const PROFILE_KEY = "love.profiles";
 
 const defaultProfiles: Profiles = {
-  test: "test",
-  girlfriend: "girlfriend",
-  me: "me",
+  test: "",
+  girlfriend: "",
+  me: "",
+};
+
+const tokenListeners = new Set<() => void>();
+const profileListeners = new Set<() => void>();
+
+const getTokenSnapshot = () => {
+  if (typeof window === "undefined") return "";
+  const params = new URLSearchParams(window.location.search);
+  const queryToken = (params.get("t") ?? "").trim();
+  if (queryToken) return queryToken;
+  return localStorage.getItem(TOKEN_KEY) ?? "";
+};
+
+const getTokenServerSnapshot = () => "";
+
+const subscribeToken = (listener: () => void) => {
+  tokenListeners.add(listener);
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === TOKEN_KEY) listener();
+  };
+  window.addEventListener("storage", handleStorage);
+  return () => {
+    tokenListeners.delete(listener);
+    window.removeEventListener("storage", handleStorage);
+  };
+};
+
+const emitToken = () => {
+  tokenListeners.forEach((listener) => listener());
+};
+
+let cachedProfilesRaw: string | null = null;
+let cachedProfilesValue: Profiles = defaultProfiles;
+
+const buildProfiles = (stored: string | null) => {
+  if (!stored) return defaultProfiles;
+  try {
+    const parsed = JSON.parse(stored) as Partial<Profiles>;
+    return {
+      test: parsed.test ?? defaultProfiles.test,
+      girlfriend: parsed.girlfriend ?? defaultProfiles.girlfriend,
+      me: parsed.me ?? defaultProfiles.me,
+    };
+  } catch {
+    return defaultProfiles;
+  }
+};
+
+const getProfilesSnapshot = () => {
+  if (typeof window === "undefined") return defaultProfiles;
+  const stored = localStorage.getItem(PROFILE_KEY);
+  if (stored === cachedProfilesRaw) return cachedProfilesValue;
+  cachedProfilesRaw = stored;
+  cachedProfilesValue = buildProfiles(stored);
+  return cachedProfilesValue;
+};
+
+const getProfilesServerSnapshot = () => defaultProfiles;
+
+const subscribeProfiles = (listener: () => void) => {
+  profileListeners.add(listener);
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === PROFILE_KEY) listener();
+  };
+  window.addEventListener("storage", handleStorage);
+  return () => {
+    profileListeners.delete(listener);
+    window.removeEventListener("storage", handleStorage);
+  };
+};
+
+const emitProfiles = () => {
+  profileListeners.forEach((listener) => listener());
 };
 
 export function useClientToken() {
-  const [token, setTokenState] = useState(() => {
-    if (typeof window === "undefined") return "";
-    const params = new URLSearchParams(window.location.search);
-    const queryToken = (params.get("t") ?? "").trim();
-    if (queryToken) return queryToken;
-    return localStorage.getItem(TOKEN_KEY) ?? "";
-  });
+  const token = useSyncExternalStore(
+    subscribeToken,
+    getTokenSnapshot,
+    getTokenServerSnapshot,
+  );
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (token) localStorage.setItem(TOKEN_KEY, token);
-  }, [token]);
-
-  const setToken = (next: string) => {
+  const setToken = useCallback((next: string) => {
     const value = next.trim();
-    setTokenState(value);
-  };
+    if (typeof window !== "undefined") {
+      if (value) {
+        localStorage.setItem(TOKEN_KEY, value);
+      } else {
+        localStorage.removeItem(TOKEN_KEY);
+      }
+    }
+    emitToken();
+  }, []);
 
   return { token, setToken };
 }
 
 export function useProfiles() {
-  const [profiles, setProfilesState] = useState<Profiles>(() => {
-    if (typeof window === "undefined") return defaultProfiles;
-    const stored = localStorage.getItem(PROFILE_KEY);
-    if (!stored) return defaultProfiles;
-    try {
-      const parsed = JSON.parse(stored) as Partial<Profiles>;
-      return {
-        test: parsed.test ?? defaultProfiles.test,
-        girlfriend: parsed.girlfriend ?? defaultProfiles.girlfriend,
-        me: parsed.me ?? defaultProfiles.me,
-      };
-    } catch {
-      return defaultProfiles;
-    }
-  });
+  const profiles = useSyncExternalStore(
+    subscribeProfiles,
+    getProfilesSnapshot,
+    getProfilesServerSnapshot,
+  );
 
-  const updateProfiles = (next: Profiles) => {
+  const updateProfiles = useCallback((next: Profiles) => {
+    const raw = JSON.stringify(next);
+    cachedProfilesRaw = raw;
+    cachedProfilesValue = next;
     if (typeof window !== "undefined") {
-      localStorage.setItem(PROFILE_KEY, JSON.stringify(next));
+      localStorage.setItem(PROFILE_KEY, raw);
     }
-    setProfilesState(next);
-  };
+    emitProfiles();
+  }, []);
 
   return { profiles, setProfiles: updateProfiles };
 }

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../lib/api";
+import { UiButton } from "../components/ui-button";
 import { useProfiles } from "../lib/use-client-token";
 
 type ActivityEvent = {
@@ -44,10 +45,17 @@ type EventLog = {
   updatedAt: string;
 };
 
+type SeedUsersResult = {
+  me: User;
+  girlfriend: User;
+  test: User;
+};
+
 const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+const ADMIN_PASS_KEY = "love.adminPass";
 
 export default function AdminPage() {
-  const { profiles } = useProfiles();
+  const { profiles, setProfiles } = useProfiles();
   const [adminPass, setAdminPass] = useState("");
   const [summary, setSummary] = useState<Summary | null>(null);
   const [users, setUsers] = useState<User[]>([]);
@@ -58,20 +66,36 @@ export default function AdminPage() {
   const [echoToken, setEchoToken] = useState(() => profiles.girlfriend);
   const [echoText, setEchoText] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [showTokens, setShowTokens] = useState(false);
 
   const startStream = () => {
-    if (!adminPass) {
-      setError("请先填写 Admin Pass");
-      return;
-    }
+    setError("");
+    setSuccess("实时流已开启");
     setStreaming(true);
   };
 
   useEffect(() => {
-    if (!streaming || !adminPass) return;
+    if (typeof window === "undefined") return;
+    if (adminPass) return;
+    const stored = localStorage.getItem(ADMIN_PASS_KEY);
+    if (stored) setAdminPass(stored);
+  }, [adminPass]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (adminPass) {
+      localStorage.setItem(ADMIN_PASS_KEY, adminPass);
+    } else {
+      localStorage.removeItem(ADMIN_PASS_KEY);
+    }
+  }, [adminPass]);
+
+  useEffect(() => {
+    if (!streaming) return;
     const url = new URL(`${apiBase}/api/event/stream`, window.location.origin);
-    url.searchParams.set("adminPass", adminPass);
+    const trimmedPass = adminPass.trim();
+    if (trimmedPass) url.searchParams.set("adminPass", trimmedPass);
     const source = new EventSource(url.toString());
     source.onmessage = (event) => {
       try {
@@ -92,26 +116,65 @@ export default function AdminPage() {
     source.onerror = () => {
       source.close();
       setStreaming(false);
+      setError("实时流连接失败，请确认 Admin Pass 和 API 地址");
     };
     return () => source.close();
   }, [adminPass, streaming]);
 
-  const fetchSummary = async () => {
-    if (!adminPass) {
-      setError("请先填写 Admin Pass");
-      return;
+  useEffect(() => {
+    if (!profiles.girlfriend) return;
+    if (!echoToken || echoToken === "girlfriend") {
+      setEchoToken(profiles.girlfriend);
     }
+  }, [profiles.girlfriend, echoToken]);
+
+  const syncProfilesFromUsers = (userList: User[]) => {
+    if (!userList.length) return;
+    const next = { ...profiles };
+    let changed = false;
+    userList.forEach((user) => {
+      if (user.role === "me" && user.token && user.token !== next.me) {
+        next.me = user.token;
+        changed = true;
+      }
+      if (
+        user.role === "girlfriend" &&
+        user.token &&
+        user.token !== next.girlfriend
+      ) {
+        next.girlfriend = user.token;
+        changed = true;
+      }
+      if (user.role === "test" && user.token && user.token !== next.test) {
+        next.test = user.token;
+        changed = true;
+      }
+    });
+    if (changed) setProfiles(next);
+  };
+
+  const fetchSummary = async () => {
     setLoading(true);
     setError("");
+    setSuccess("");
     try {
+      const trimmedPass = adminPass.trim();
       const [data, userList, eventLogs] = await Promise.all([
-        apiRequest<Summary>("/api/me/summary", { adminPass }),
-        apiRequest<User[]>("/api/me/users", { adminPass }),
-        apiRequest<EventLog[]>("/api/me/events", { adminPass }),
+        apiRequest<Summary>("/api/me/summary", {
+          adminPass: trimmedPass || undefined,
+        }),
+        apiRequest<User[]>("/api/me/users", {
+          adminPass: trimmedPass || undefined,
+        }),
+        apiRequest<EventLog[]>("/api/me/events", {
+          adminPass: trimmedPass || undefined,
+        }),
       ]);
       setSummary(data);
       setUsers(userList ?? []);
       setLogs(eventLogs ?? []);
+      syncProfilesFromUsers(userList ?? []);
+      setSuccess("汇总已更新");
     } catch (err) {
       setError(err instanceof Error ? err.message : "加载失败");
     } finally {
@@ -120,22 +183,21 @@ export default function AdminPage() {
   };
 
   const sendEcho = async () => {
-    if (!adminPass) {
-      setError("请先填写 Admin Pass");
-      return;
-    }
     if (!echoToken.trim() || !echoText.trim()) {
       setError("请填写 token 和回声内容");
       return;
     }
     setError("");
+    setSuccess("");
     try {
+      const trimmedPass = adminPass.trim();
       await apiRequest("/api/echo", {
-        adminPass,
+        adminPass: trimmedPass || undefined,
         body: { token: echoToken.trim(), text: echoText.trim() },
       });
       setEchoText("");
       await fetchSummary();
+      setSuccess("回声已发送");
     } catch (err) {
       setError(err instanceof Error ? err.message : "发送失败");
     }
@@ -176,42 +238,54 @@ export default function AdminPage() {
             />
           </div>
           <div className="flex flex-wrap gap-2">
-            <button
+            <UiButton
               onClick={fetchSummary}
               disabled={loading}
-              className="rounded-full bg-rose-500 px-6 py-2 text-sm font-medium text-white hover:bg-rose-600 disabled:opacity-60"
+              variant="primary"
             >
               {loading ? "加载中..." : "获取汇总"}
-            </button>
-            <button
+            </UiButton>
+            <UiButton
               onClick={startStream}
-              className="rounded-full border border-rose-200 px-6 py-2 text-sm text-rose-600 hover:bg-rose-50"
+              variant="secondary"
             >
               {streaming ? "实时流已开启" : "开启实时流"}
-            </button>
-            <button
+            </UiButton>
+            <UiButton
               onClick={async () => {
-                if (!adminPass) {
-                  setError("请先填写 Admin Pass");
-                  return;
-                }
                 setError("");
+                setSuccess("");
                 try {
-                  await apiRequest("/api/me/seed-users", {
-                    adminPass,
-                    body: {},
-                    method: "POST",
+                  const trimmedPass = adminPass.trim();
+                  const data = await apiRequest<SeedUsersResult>(
+                    "/api/me/seed-users",
+                    {
+                      adminPass: trimmedPass || undefined,
+                      body: {},
+                      method: "POST",
+                    },
+                  );
+                  setProfiles({
+                    me: data.me.token,
+                    girlfriend: data.girlfriend.token,
+                    test: data.test.token,
                   });
+                  setSuccess("已生成三人 Token，已更新用户列表与首页入口");
                   await fetchSummary();
                 } catch (err) {
                   setError(err instanceof Error ? err.message : "生成失败");
                 }
               }}
-              className="rounded-full border border-rose-200 px-6 py-2 text-sm text-rose-600 hover:bg-rose-50"
+              variant="secondary"
             >
               一键生成三人 Token
-            </button>
+            </UiButton>
           </div>
+          {success ? (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2 text-xs text-emerald-700">
+              {success}
+            </div>
+          ) : null}
           {error ? (
             <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-2 text-xs text-rose-600">
               {error}
@@ -256,12 +330,12 @@ export default function AdminPage() {
               className="rounded-xl border border-rose-100 bg-white px-4 py-2 text-sm text-slate-700 focus:border-rose-300 focus:outline-none"
               placeholder="一句温柔的话"
             />
-            <button
+            <UiButton
               onClick={sendEcho}
-              className="rounded-full bg-rose-500 px-6 py-2 text-sm font-medium text-white hover:bg-rose-600"
+              variant="primary"
             >
               发送回声
-            </button>
+            </UiButton>
           </div>
         </div>
       </div>
@@ -273,9 +347,9 @@ export default function AdminPage() {
             <div className="space-y-2">
               <div className="text-xs text-rose-500">事件统计</div>
               {eventStats.length ? (
-                eventStats.map((item) => (
+                eventStats.map((item, index) => (
                   <div
-                    key={item.label}
+                    key={`${item.label}-${index}`}
                     className="flex items-center justify-between rounded-xl border border-rose-100 bg-rose-50/60 px-4 py-2"
                   >
                     <span>{item.label}</span>
@@ -341,12 +415,13 @@ export default function AdminPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs text-rose-500">
                 <span>用户列表</span>
-                <button
+                <UiButton
                   onClick={() => setShowTokens((prev) => !prev)}
-                  className="rounded-full border border-rose-200 px-3 py-1 text-xs text-rose-600 hover:bg-rose-50"
+                  variant="secondary"
+                  className="px-3 py-1 text-xs"
                 >
                   {showTokens ? "隐藏完整 token" : "显示完整 token"}
-                </button>
+                </UiButton>
               </div>
               {users.length ? (
                 users.map((user) => (
@@ -361,12 +436,13 @@ export default function AdminPage() {
                       <span className="text-slate-500">
                         {showTokens ? user.token : maskToken(user.token)}
                       </span>
-                      <button
+                      <UiButton
                         onClick={() => copyToken(user.token)}
-                        className="rounded-full border border-rose-200 px-3 py-1 text-xs text-rose-600 hover:bg-rose-50"
+                        variant="secondary"
+                        className="px-3 py-1 text-xs"
                       >
                         复制
-                      </button>
+                      </UiButton>
                     </div>
                   </div>
                 ))
