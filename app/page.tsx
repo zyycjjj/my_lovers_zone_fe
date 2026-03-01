@@ -12,9 +12,7 @@ type EchoItem = {
   createdAt: string;
 };
 
-type EchoResponse = {
-  items: EchoItem[];
-};
+  type EchoResponse = EchoItem[] | { items: EchoItem[] };
 
 type ProfileResponse = {
   role?: "me" | "girlfriend" | "test" | "user" | null;
@@ -100,7 +98,8 @@ export default function Home() {
     setError("");
     try {
       const data = await apiRequest<EchoResponse>("/api/echo/latest", { token });
-      setEchoes(data.items ?? []);
+      const items = Array.isArray(data) ? data : data.items ?? [];
+      setEchoes(items);
     } catch (err) {
       setError(err instanceof Error ? err.message : "回声加载失败");
     } finally {
