@@ -56,14 +56,16 @@ export default function CommissionPage() {
           快速预估收益与多价位对比
         </p>
         <div className="mt-5 grid gap-4">
-          <div>
-            <label className="text-sm text-slate-600">访问 Token</label>
-            <input
-              value={token}
-              onChange={(event) => setToken(event.target.value)}
-              className="mt-2 w-full rounded-xl border border-rose-100 bg-rose-50 px-4 py-2 text-sm text-slate-700 focus:border-rose-300 focus:outline-none"
-            />
-          </div>
+          {!token ? (
+            <div>
+              <label className="text-sm text-slate-600">访问 Token</label>
+              <input
+                value={token}
+                onChange={(event) => setToken(event.target.value)}
+                className="mt-2 w-full rounded-xl border border-rose-100 bg-rose-50 px-4 py-2 text-sm text-slate-700 focus:border-rose-300 focus:outline-none"
+              />
+            </div>
+          ) : null}
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="text-sm text-slate-600">商品价格</label>

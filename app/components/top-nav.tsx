@@ -25,11 +25,17 @@ export default function TopNav() {
   }, [profiles, token]);
 
   const showAdmin = role === "me" || role === "test";
+  const buildHref = (href: string) =>
+    token ? `${href}?t=${encodeURIComponent(token)}` : href;
 
   return (
     <nav className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
       {items.map((item) => (
-        <Link key={item.href} href={item.href} className="hover:text-rose-600">
+        <Link
+          key={item.href}
+          href={buildHref(item.href)}
+          className="hover:text-rose-600"
+        >
           {item.label}
         </Link>
       ))}

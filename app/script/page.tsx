@@ -58,14 +58,16 @@ export default function ScriptPage() {
           短视频种草 / 直播口播脚本一键生成
         </p>
         <div className="mt-5 grid gap-4">
-          <div>
-            <label className="text-sm text-slate-600">访问 Token</label>
-            <input
-              value={token}
-              onChange={(event) => setToken(event.target.value)}
-              className="mt-2 w-full rounded-xl border border-rose-100 bg-rose-50 px-4 py-2 text-sm text-slate-700 focus:border-rose-300 focus:outline-none"
-            />
-          </div>
+          {!token ? (
+            <div>
+              <label className="text-sm text-slate-600">访问 Token</label>
+              <input
+                value={token}
+                onChange={(event) => setToken(event.target.value)}
+                className="mt-2 w-full rounded-xl border border-rose-100 bg-rose-50 px-4 py-2 text-sm text-slate-700 focus:border-rose-300 focus:outline-none"
+              />
+            </div>
+          ) : null}
           <div>
             <label className="text-sm text-slate-600">商品关键词</label>
             <input

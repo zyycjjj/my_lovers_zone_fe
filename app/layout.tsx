@@ -33,10 +33,16 @@ export default function RootLayout({
           <header className="border-b border-rose-100/70 bg-white/70 backdrop-blur">
             <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
               <Link href="/" className="flex items-center gap-2 font-semibold">
-                <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-rose-500 text-white">
+                <span className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-rose-500 text-white">
                   ❤
+                  <span className="absolute -right-1 -top-1 text-[10px]">
+                    🎀
+                  </span>
                 </span>
                 <span className="text-lg">Love Zone</span>
+                <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs text-rose-500">
+                  Kitty Mood
+                </span>
               </Link>
               <TopNav />
             </div>

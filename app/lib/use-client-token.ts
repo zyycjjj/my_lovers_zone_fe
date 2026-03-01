@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 type Profiles = {
   test: string;
@@ -20,10 +20,15 @@ const defaultProfiles: Profiles = {
 const tokenListeners = new Set<() => void>();
 const profileListeners = new Set<() => void>();
 
-const getTokenSnapshot = () => {
+const getQueryToken = () => {
   if (typeof window === "undefined") return "";
   const params = new URLSearchParams(window.location.search);
-  const queryToken = (params.get("t") ?? "").trim();
+  return (params.get("t") ?? "").trim();
+};
+
+const getTokenSnapshot = () => {
+  if (typeof window === "undefined") return "";
+  const queryToken = getQueryToken();
   if (queryToken) return queryToken;
   return localStorage.getItem(TOKEN_KEY) ?? "";
 };
@@ -96,6 +101,17 @@ export function useClientToken() {
     getTokenSnapshot,
     getTokenServerSnapshot,
   );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const queryToken = getQueryToken();
+    if (!queryToken) return;
+    const stored = localStorage.getItem(TOKEN_KEY) ?? "";
+    if (stored !== queryToken) {
+      localStorage.setItem(TOKEN_KEY, queryToken);
+      emitToken();
+    }
+  }, [token]);
 
   const setToken = useCallback((next: string) => {
     const value = next.trim();

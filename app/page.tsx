@@ -313,20 +313,38 @@ export default function Home() {
 
   const showTokenConfig = role !== "girlfriend";
   const showTools = role !== "girlfriend";
+  const buildToolHref = useCallback(
+    (href: string) => (token ? `${href}?t=${encodeURIComponent(token)}` : href),
+    [token],
+  );
 
   return (
     <div className="space-y-10">
       <section className="grid gap-6 rounded-3xl bg-white/80 p-8 shadow-sm">
         <div className="space-y-3">
-          <p className="text-sm uppercase tracking-[0.3em] text-rose-400">
-            {heroTagline}
-          </p>
+          <div className="flex flex-wrap items-center gap-2 text-sm uppercase tracking-[0.3em] text-rose-400">
+            <span>{heroTagline}</span>
+            <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs text-rose-500">
+              🎀 Kitty vibes
+            </span>
+            <span className="rounded-full bg-white px-2 py-0.5 text-xs text-rose-400 shadow-sm">
+              🐾 甜甜守护
+            </span>
+          </div>
           <h1 className="text-3xl font-semibold text-slate-900 sm:text-4xl">
             {heroTitle}
           </h1>
           <p className="max-w-2xl text-base text-slate-600">
             {heroDesc}
           </p>
+          {isGirlfriend ? (
+            <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-rose-100 bg-rose-50/70 px-4 py-3 text-sm text-rose-500">
+              <span className="rounded-full bg-white px-3 py-1 text-xs text-rose-400 shadow-sm">
+                🎀 陈瑶 · 2003.07.31
+              </span>
+              <span className="text-rose-500">今天也要被可爱包围</span>
+            </div>
+          ) : null}
         </div>
         {showTokenConfig ? (
           <div className="grid gap-4 rounded-2xl border border-rose-100 bg-rose-50/60 p-5">
@@ -404,7 +422,12 @@ export default function Home() {
 
       <section className="grid gap-6 md:grid-cols-2">
         <div className="space-y-4 rounded-2xl border border-rose-100 bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-slate-800">爱的按钮</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-slate-800">爱的按钮</h3>
+            <span className="rounded-full bg-rose-50 px-3 py-1 text-xs text-rose-400">
+              🎀 Kitty hug
+            </span>
+          </div>
           <p className="text-sm text-slate-500">
             点一下就好，我会收到你的小心意。
           </p>
@@ -513,6 +536,9 @@ export default function Home() {
             <h3 className="text-lg font-semibold text-slate-800">
               {messageTitle}
             </h3>
+            <span className="rounded-full bg-rose-50 px-3 py-1 text-xs text-rose-400">
+              🐱 甜甜回声
+            </span>
             <UiButton
               onClick={fetchEcho}
               variant="ghost"
@@ -615,7 +641,7 @@ export default function Home() {
             {tools.map((tool) => (
               <Link
                 key={tool.title}
-                href={tool.href}
+                href={buildToolHref(tool.href)}
                 className="rounded-2xl border border-rose-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-rose-200"
               >
                 <h3 className="text-base font-semibold text-slate-800">
