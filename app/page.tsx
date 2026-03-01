@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { UiButton } from "./components/ui-button";
 import { apiRequest } from "./lib/api";
 import { useClientToken, useProfiles } from "./lib/use-client-token";
@@ -9,6 +10,12 @@ import { useClientToken, useProfiles } from "./lib/use-client-token";
 type EchoItem = {
   id: number;
   text: string;
+  createdAt: string;
+};
+
+type Photo = {
+  id: number;
+  url: string;
   createdAt: string;
 };
 
@@ -52,6 +59,11 @@ export default function Home() {
     visible: boolean;
     message: string;
   }>({ visible: false, message: "" });
+  const [showReward, setShowReward] = useState(false);
+  const [lovePhotos, setLovePhotos] = useState<Photo[]>([]);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const rewardInputRef = useRef<HTMLInputElement | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [serverRole, setServerRole] = useState<ProfileResponse["role"]>(null);
   const [activityPass, setActivityPass] = useState("");
   const [activityStreamOn, setActivityStreamOn] = useState(false);
@@ -107,9 +119,20 @@ export default function Home() {
     }
   }, [token]);
 
+  const loadLovePhotos = useCallback(async () => {
+    if (!token) return;
+    try {
+      const data = await apiRequest<Photo[]>("/api/photo/latest", { token });
+      setLovePhotos(data ?? []);
+    } catch {
+      setLovePhotos([]);
+    }
+  }, [token]);
+
   useEffect(() => {
     fetchEcho();
-  }, [fetchEcho]);
+    loadLovePhotos();
+  }, [fetchEcho, loadLovePhotos]);
 
   useEffect(() => {
     if (!token) {
@@ -135,6 +158,16 @@ export default function Home() {
   }, [activityPass]);
 
   const canSeeActivity = role === "me" || role === "test";
+
+  const resolvePhotoUrl = useCallback(
+    (url: string) => {
+      if (!url) return url;
+      if (url.startsWith("http")) return url;
+      if (!apiBase) return url;
+      return `${apiBase}${url}`;
+    },
+    [apiBase],
+  );
 
   const latestLoveMessage = useMemo(() => {
     const latest = activities.find((item) =>
@@ -206,6 +239,7 @@ export default function Home() {
         },
       });
       setLoveToast({ visible: true, message: "已发送给对方" });
+      setShowReward(true);
       setTimeout(() => {
         setLoveToast({ visible: false, message: "" });
       }, 2000);
@@ -216,6 +250,42 @@ export default function Home() {
       setTimeout(() => {
         setLoveToast({ visible: false, message: "" });
       }, 2000);
+    }
+  };
+
+  const uploadLovePhoto = async (file: File) => {
+    if (!token) {
+      setLoveToast({ visible: true, message: "请先填写你的访问 token" });
+      setTimeout(() => {
+        setLoveToast({ visible: false, message: "" });
+      }, 2000);
+      return;
+    }
+    setPhotoUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const targetToken =
+        role === "me"
+          ? profiles.girlfriend
+          : role === "girlfriend"
+            ? profiles.me
+            : "";
+      if (targetToken) form.append("targetToken", targetToken);
+      await apiRequest("/api/photo", { token, body: form, isForm: true });
+      await loadLovePhotos();
+      setLoveToast({ visible: true, message: "照片已发送" });
+      setTimeout(() => {
+        setLoveToast({ visible: false, message: "" });
+      }, 2000);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "上传失败";
+      setLoveToast({ visible: true, message });
+      setTimeout(() => {
+        setLoveToast({ visible: false, message: "" });
+      }, 2000);
+    } finally {
+      setPhotoUploading(false);
     }
   };
 
@@ -373,6 +443,69 @@ export default function Home() {
               {error}
             </div>
           ) : null}
+          <div className="space-y-3 rounded-2xl border border-rose-100 bg-rose-50/60 p-4">
+            <div className="text-sm text-slate-600">奖励照片</div>
+            {showReward ? (
+              <div className="flex items-center gap-2">
+                <UiButton
+                  onClick={() => rewardInputRef.current?.click()}
+                  variant="secondary"
+                  className="px-4 py-2 text-sm"
+                  disabled={photoUploading}
+                >
+                  {photoUploading ? "上传中..." : "拍照上传"}
+                </UiButton>
+                <input
+                  ref={rewardInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  capture="environment"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) uploadLovePhoto(file);
+                    if (event.target) event.target.value = "";
+                  }}
+                  className="hidden"
+                />
+              </div>
+            ) : null}
+            {lovePhotos.length ? (
+              role === "girlfriend" ? (
+                <div className="overflow-hidden rounded-xl border border-rose-100 bg-white">
+                  <Image
+                    src={resolvePhotoUrl(lovePhotos[0]?.url ?? "")}
+                    alt="reward"
+                    width={240}
+                    height={180}
+                    unoptimized
+                    className="h-24 w-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  {lovePhotos.slice(0, 4).map((photo) => (
+                    <button
+                      key={photo.id}
+                      className="overflow-hidden rounded-xl border border-rose-100 bg-white"
+                      onClick={() => setPreviewUrl(resolvePhotoUrl(photo.url))}
+                      aria-label="查看大图"
+                    >
+                      <Image
+                        src={resolvePhotoUrl(photo.url)}
+                        alt="reward"
+                        width={240}
+                        height={180}
+                        unoptimized
+                        className="h-24 w-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )
+            ) : (
+              <div className="text-xs text-slate-500">还没有照片</div>
+            )}
+          </div>
         </div>
 
         <div className="space-y-4 rounded-2xl border border-rose-100 bg-white p-6 shadow-sm">
@@ -399,6 +532,23 @@ export default function Home() {
           )}
         </div>
       </section>
+      {previewUrl ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          onClick={() => setPreviewUrl(null)}
+        >
+          <div className="max-h-[90vh] max-w-[90vw] overflow-hidden rounded-2xl shadow-2xl">
+            <Image
+              src={previewUrl}
+              alt="reward full"
+              width={1200}
+              height={900}
+              unoptimized
+              className="h-auto w-full"
+            />
+          </div>
+        </div>
+      ) : null}
 
       {canSeeActivity ? (
         <section className="grid gap-6">
