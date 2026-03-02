@@ -22,6 +22,24 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 ## 使用说明
 
+### 0) 线上使用（同库）
+
+线上访问地址使用 `https://love.zychenyao.cn/?t=你的token`。
+
+前端环境变量（服务器 `/srv/my_lovers_zone_fe/.env` 或部署平台环境变量）：
+
+- NEXT_PUBLIC_API_BASE_URL：后端地址，例如 `https://love.zychenyao.cn`
+
+后端环境变量（服务器 `/srv/my_lovers_zone_me/.env` 或 GitHub Actions Secrets）：
+
+- DATABASE_URL
+- ADMIN_PASS
+- AI_BASE_URL
+- AI_API_KEY
+- AI_MODEL
+
+线上与本地使用同一个数据库时，两个后端必须指向同一个 `DATABASE_URL`，数据会实时互通。若需要隔离测试数据，建议为本地单独准备一个库。
+
 ### 1) 管理员初始化
 
 1. 打开 `http://localhost:3000/admin`
@@ -66,6 +84,12 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 - 回声：首页会展示最新回声
 - 活动流：仅 me/test 可见，输入 Admin Pass 后开启
+
+### 4.1) 多链接消息接收规则
+
+- 女朋友链接发出的爱的按钮/照片，默认投递给 me
+- 测试链接发出的爱的按钮，默认投递给 me 和 girlfriend
+- 回声列表按当前访问 Token 显示，使用 me Token 即可看到发给你的回声
 
 ## Learn More
 
