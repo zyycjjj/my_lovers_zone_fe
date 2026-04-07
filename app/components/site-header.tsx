@@ -59,7 +59,7 @@ export function SiteHeader() {
           {session?.sessionToken ? (
             <>
               <span className="hidden text-xs text-[--text-soft] sm:inline">
-                已连接第一阶段会话
+                已登录
               </span>
               <button
                 className="rounded-full border border-[--border-soft] px-4 py-2 text-sm font-medium text-[--text-soft] hover:bg-white/70"

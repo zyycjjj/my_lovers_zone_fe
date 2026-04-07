@@ -22,9 +22,9 @@ export default function HomePage() {
             </div>
 
             <SectionHeading
-              eyebrow="Warm, Calm, Ready"
+              eyebrow="轻一点开始"
               title="帮你把内容先做出来，也帮你更稳地继续做下去"
-              description="标题、脚本、爆款复刻先给你一版能继续往下做的结果。登录后补几项关键信息，再回到你的工作入口继续。"
+              description="标题、脚本、爆款复刻先给你一个清晰起点。先用手机号登录，简单填几项信息，就能更快进入自己的主页。"
             />
 
             <div className="grid gap-3 sm:grid-cols-3">
@@ -39,9 +39,9 @@ export default function HomePage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-3 pt-2">
-              <ButtonLink href="/login">直接登录开始</ButtonLink>
-              <ButtonLink href="/workspace" variant="secondary">
-                看当前工作台
+              <ButtonLink href="/login">手机号登录开始</ButtonLink>
+              <ButtonLink href="#how-it-starts" variant="secondary">
+                先看看怎么开始
               </ButtonLink>
             </div>
           </div>
@@ -76,37 +76,37 @@ export default function HomePage() {
         </Card>
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+      <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]" id="how-it-starts">
         <Card>
           <SectionHeading
-            eyebrow="What You See First"
-            title="登录之后，不会直接扔给你一堆功能"
-            description="第一次来，先补几项最影响结果的信息。已经用过的人，会更快回到自己该继续的那一步。"
+            eyebrow="怎么开始"
+            title="第一次来，也不会很重"
+            description="Memory 会先认识你在做什么，再把后面的结果和页面慢慢贴近你。"
           />
 
           <div className="mt-6 space-y-3">
             <div className="rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-4">
               <div className="text-sm font-semibold text-[--text-strong]">
-                第一次登录
+                先认识你一下
               </div>
               <div className="mt-1 text-sm leading-7 text-[--text-soft]">
-                补你的身份、主营类目和当前目标。
+                先了解你的身份、主营类目和当前目标。
               </div>
             </div>
             <div className="rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-4">
               <div className="text-sm font-semibold text-[--text-strong]">
-                已经建档
+                记住你的偏好
               </div>
               <div className="mt-1 text-sm leading-7 text-[--text-soft]">
-                直接进当前工作空间，先把今天这一步接住。
+                以后再回来，不用每次都重新介绍自己。
               </div>
             </div>
             <div className="rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-4">
               <div className="text-sm font-semibold text-[--text-strong]">
-                多空间场景
+                回来继续就行
               </div>
               <div className="mt-1 text-sm leading-7 text-[--text-soft]">
-                不用重新找入口，直接接着当前这一步继续。
+                今天没做完，明天回来还能顺着往下走。
               </div>
             </div>
           </div>
@@ -114,7 +114,7 @@ export default function HomePage() {
 
         <Card className="rounded-[32px]">
           <SectionHeading
-            eyebrow="Who It Fits"
+            eyebrow="适合谁"
             title="适合先把内容经营稳住的人"
             description="不是一上来就逼你进复杂后台，而是先帮你把每天做内容这件事接住。"
           />
@@ -132,10 +132,10 @@ export default function HomePage() {
 
           <div className="mt-6 rounded-3xl border border-[--border-soft] bg-[rgba(244,246,248,0.78)] px-5 py-5">
             <div className="text-sm font-semibold text-[--text-strong]">
-              先从这里开始
+              从这里开始就够了
             </div>
             <div className="mt-2 text-sm leading-7 text-[--text-soft]">
-              先登录，补几项最关键的信息，再回到你的工作入口。之后生成、复刻和结果页会继续接在这条主链路上。
+              先用手机号登录，简单填几项信息，后面每次回来都会更省心一点。
             </div>
           </div>
         </Card>

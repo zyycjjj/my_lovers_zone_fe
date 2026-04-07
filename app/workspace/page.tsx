@@ -35,13 +35,22 @@ type WorkspaceList = {
   items: WorkspaceSummary[];
 };
 
+function getWorkspaceTypeLabel(type?: string) {
+  return type === "team" ? "团队空间" : "个人空间";
+}
+
+function getWorkspaceRoleLabel(role?: string) {
+  if (role === "admin") return "管理员";
+  if (role === "editor") return "编辑成员";
+  return "主理人";
+}
+
 export default function WorkspacePage() {
   const router = useRouter();
   const session = useAuthSession();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [me, setMe] = useState<AuthMe | null>(null);
-  const [routing, setRouting] = useState<RoutingResult | null>(null);
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
 
   useEffect(() => {
@@ -60,7 +69,6 @@ export default function WorkspacePage() {
       .then(([nextMe, nextRouting, list]) => {
         if (!active) return;
         setMe(nextMe);
-        setRouting(nextRouting);
         setWorkspaces(list.items || []);
 
         if (nextRouting.routeType === "onboarding") {
@@ -110,48 +118,50 @@ export default function WorkspacePage() {
         <Card className="rounded-[32px] bg-[linear-gradient(180deg,_rgba(255,255,255,0.9)_0%,_rgba(255,245,238,0.86)_100%)]">
           <div className="space-y-5">
             <div className="flex flex-wrap items-center gap-3">
-              <SoftBadge tone="brand">当前工作台</SoftBadge>
+              <SoftBadge tone="brand">我的主页</SoftBadge>
               {me?.onboardingCompleted ? <SoftBadge tone="sage">已完成建档</SoftBadge> : null}
             </div>
 
             <SectionHeading
-              eyebrow="Workspace"
+              eyebrow="欢迎回来"
               title={`欢迎回来，${displayName}`}
-              description="这一版先把会话、当前空间和建档信息接稳。接下来你就能从这里继续接内容主流程。"
+              description="你的基础信息已经记住了。今天回来，可以先从这里把资料理顺，再继续往下做。"
             />
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-4">
                 <div className="text-xs uppercase tracking-[0.2em] text-[--text-muted]">
-                  当前空间
+                  我的空间
                 </div>
                 <div className="mt-2 text-base font-semibold text-[--text-strong]">
-                  {me?.currentWorkspace?.name || "未识别工作空间"}
+                  {me?.currentWorkspace?.name || "还没有空间名称"}
                 </div>
                 <div className="mt-1 text-sm text-[--text-soft]">
-                  {me?.currentWorkspace?.role || "owner"} / {me?.currentWorkspace?.type || "personal"}
+                  {getWorkspaceRoleLabel(me?.currentWorkspace?.role)} / {getWorkspaceTypeLabel(me?.currentWorkspace?.type)}
                 </div>
               </div>
               <div className="rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-4">
                 <div className="text-xs uppercase tracking-[0.2em] text-[--text-muted]">
-                  当前状态
+                  资料状态
                 </div>
                 <div className="mt-2 text-base font-semibold text-[--text-strong]">
-                  {me?.account.status === "active" ? "账号正常" : me?.account.status}
+                  {me?.onboardingCompleted ? "已准备好" : "还差一点"}
                 </div>
                 <div className="mt-1 text-sm text-[--text-soft]">
-                  登录后分流：{routing?.reason || "已回到工作台"}
+                  {me?.onboardingCompleted ? "下次回来，会更快回到这里。" : "把资料补完整，后面会更贴近你。"}
                 </div>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <Button disabled type="button">
-                生成入口即将接上
-              </Button>
               <ButtonLink href="/onboarding" variant="secondary">
-                修改建档信息
+                修改资料
               </ButtonLink>
+              {workspaces.length > 1 ? (
+                <ButtonLink href="/workspace/select" variant="ghost">
+                  切换空间
+                </ButtonLink>
+              ) : null}
             </div>
           </div>
         </Card>
@@ -162,12 +172,12 @@ export default function WorkspacePage() {
               今天建议
             </div>
             <div className="rounded-2xl border border-[--border-soft] bg-[--slate-soft] px-4 py-4 text-sm leading-7 text-[--text-soft]">
-              先把今天要做的这一条接住。等生成页接上之后，从这里直接开始会更顺。
+              先看一眼资料是不是还准确。主营类目和当前目标越清楚，后面给你的内容就越贴近。
             </div>
 
             <div className="grid gap-3">
               <div className="rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-4 text-sm text-[--text-soft]">
-                账号：{me?.account.phone || "已登录"}
+                登录手机号：{me?.account.phone || "已登录"}
               </div>
               <div className="rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-4 text-sm text-[--text-soft]">
                 空间数：{workspaces.length}

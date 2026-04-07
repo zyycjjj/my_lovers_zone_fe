@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiRequest, ApiClientError } from "../lib/api";
 import { getNumberAuthEnvironment, getSpToken } from "../lib/number-auth";
@@ -41,7 +41,7 @@ function resolveRoute(routing: RoutingResult) {
   return "/workspace";
 }
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const session = useAuthSession();
@@ -148,20 +148,20 @@ export default function LoginPage() {
       <Card className="rounded-[32px]">
         <div className="space-y-6">
           <div className="flex flex-wrap items-center gap-3">
-            <SoftBadge tone="brand">正式登录路径</SoftBadge>
-            {intent === "trial" ? <SoftBadge tone="sage">从首页入口过来</SoftBadge> : null}
+            <SoftBadge tone="brand">手机号快捷登录</SoftBadge>
+            {intent === "trial" ? <SoftBadge tone="sage">从首页继续</SoftBadge> : null}
           </div>
 
           <SectionHeading
             eyebrow="手机号登录"
             title="手机号快捷登录"
-            description="当前以手机号快捷登录为主。登录成功后会自动创建账号，并把你送到该去的下一步。"
+            description="第一次来，先简单认识你一下。以后再回来，会更快回到自己的主页。"
           />
 
           <div className="space-y-3 rounded-3xl border border-[--border-soft] bg-white/80 p-5">
-            <div className="text-sm font-semibold text-[--text-strong]">快捷登录说明</div>
+            <div className="text-sm font-semibold text-[--text-strong]">登录前提醒</div>
             <p className="text-sm leading-7 text-[--text-soft]">
-              推荐在手机浏览器里使用。当前网络不适合快捷认证时，可以稍后再试。
+              推荐在手机浏览器里使用。当前网络不适合快捷认证时，可以换个时间再试。
             </p>
             <div className="rounded-2xl bg-[--slate-soft] px-4 py-4 text-sm leading-7 text-[--text-soft]">
               {networkHint || "正在检查当前环境…"}
@@ -191,32 +191,32 @@ export default function LoginPage() {
         <Card className="rounded-[32px] bg-[linear-gradient(180deg,_rgba(255,255,255,0.86)_0%,_rgba(255,245,238,0.86)_100%)]">
           <div className="space-y-4">
             <h2 className="heading-serif text-[28px] leading-tight text-[--text-strong]">
-              登录后会自动接上的事
+              第一次登录之后
             </h2>
 
             <div className="grid gap-3">
               <div className="rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-4">
                 <div className="text-sm font-semibold text-[--text-strong]">
-                  自动建账号
+                  先认识你在做什么
                 </div>
                 <div className="mt-1 text-sm leading-7 text-[--text-soft]">
-                  第一次用这个手机号登录，会自动创建正式账号。
+                  会先了解你的身份、主营类目和当前目标。
                 </div>
               </div>
               <div className="rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-4">
                 <div className="text-sm font-semibold text-[--text-strong]">
-                  自动建个人空间
+                  以后回来更轻松
                 </div>
                 <div className="mt-1 text-sm leading-7 text-[--text-soft]">
-                  这版先把个人空间和 owner 成员关系接好。
+                  不用每次重新说一遍自己在做什么。
                 </div>
               </div>
               <div className="rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-4">
                 <div className="text-sm font-semibold text-[--text-strong]">
-                  自动分流
+                  先回到自己的主页
                 </div>
                 <div className="mt-1 text-sm leading-7 text-[--text-soft]">
-                  没建档就去补 3 项，建完档就直接回到当前工作入口。
+                  把资料收好之后，后面用起来会顺很多。
                 </div>
               </div>
             </div>
@@ -230,13 +230,13 @@ export default function LoginPage() {
             </div>
             <div className="grid gap-3">
               <div className="rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-4 text-sm text-[--text-soft]">
-                当前会话
+                你的手机号
               </div>
               <div className="rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-4 text-sm text-[--text-soft]">
-                当前工作空间
+                你的资料
               </div>
               <div className="rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-4 text-sm text-[--text-soft]">
-                你已经补过的建档信息
+                你的主页入口
               </div>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -248,5 +248,19 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <Card className="mx-auto max-w-3xl rounded-[32px] p-8">
+          <p className="text-sm text-[--text-soft]">正在准备登录入口…</p>
+        </Card>
+      }
+    >
+      <LoginPageContent />
+    </Suspense>
   );
 }

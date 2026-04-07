@@ -18,6 +18,15 @@ type WorkspaceList = {
   items: WorkspaceSummary[];
 };
 
+function describeWorkspace(item: WorkspaceSummary) {
+  const typeLabel = item.type === "team" ? "团队空间" : "个人空间";
+  const roleLabel =
+    item.role === "admin" ? "管理员" : item.role === "editor" ? "编辑成员" : "主理人";
+  const statusLabel = item.status === "active" ? "正常使用" : item.status;
+
+  return `${typeLabel} · ${roleLabel} · ${statusLabel}`;
+}
+
 export default function WorkspaceSelectPage() {
   const router = useRouter();
   const session = useAuthSession();
@@ -59,9 +68,9 @@ export default function WorkspaceSelectPage() {
         <div className="space-y-4">
           <SoftBadge tone="brand">选择工作空间</SoftBadge>
           <SectionHeading
-            eyebrow="Workspace Switch"
-            title="选一个你要继续的空间"
-            description="多空间场景下，先回到你这次要继续的那个空间。"
+            eyebrow="选一个"
+            title="选一个你现在要进入的空间"
+            description="如果你同时在多个空间里工作，先回到这次要继续的那个。"
           />
         </div>
       </Card>
@@ -80,11 +89,11 @@ export default function WorkspaceSelectPage() {
                     {item.name}
                   </div>
                   <div className="mt-1 text-sm text-[--text-soft]">
-                    {item.type} / {item.role} / {item.status}
+                    {describeWorkspace(item)}
                   </div>
                 </div>
                 <Button onClick={() => router.push("/workspace")} type="button">
-                  进入这个空间
+                  进入
                 </Button>
               </div>
             </Card>
