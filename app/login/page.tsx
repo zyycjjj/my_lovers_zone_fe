@@ -50,6 +50,7 @@ function LoginPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [networkHint, setNetworkHint] = useState("");
+  const [allowDevLogin, setAllowDevLogin] = useState(false);
 
   const intent = useMemo(() => searchParams.get("intent") ?? "", [searchParams]);
 
@@ -86,6 +87,22 @@ function LoginPageContent() {
     };
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hostname = window.location.hostname;
+    setAllowDevLogin(hostname !== "love.zychenyao.cn");
+  }, []);
+
+  function finishLogin(response: NumberLoginResponse) {
+    setSession({
+      sessionToken: response.session.sessionToken,
+      refreshToken: response.session.refreshToken || "",
+      expiredAt: response.session.expiredAt,
+    });
+
+    router.replace(resolveRoute(response.routing));
+  }
+
   async function submitLogin(spToken: string) {
     setIsSubmitting(true);
     setError("");
@@ -97,13 +114,7 @@ function LoginPageContent() {
         retryOnUnauthorized: false,
       });
 
-      setSession({
-        sessionToken: response.session.sessionToken,
-        refreshToken: response.session.refreshToken || "",
-        expiredAt: response.session.expiredAt,
-      });
-
-      router.replace(resolveRoute(response.routing));
+      finishLogin(response);
     } catch (err) {
       const message =
         err instanceof ApiClientError
@@ -111,6 +122,34 @@ function LoginPageContent() {
           : err instanceof Error
             ? err.message
             : "登录失败，请稍后再试";
+      setError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function handleDevLogin() {
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      const response = await apiRequest<NumberLoginResponse>("/api/auth/dev-login", {
+        method: "POST",
+        body: {
+          phone: "13900000000",
+          displayName: "本地测试用户",
+        },
+        retryOnUnauthorized: false,
+      });
+
+      finishLogin(response);
+    } catch (err) {
+      const message =
+        err instanceof ApiClientError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "本地测试登录失败";
       setError(message);
     } finally {
       setIsSubmitting(false);
@@ -178,6 +217,18 @@ function LoginPageContent() {
               {isPreparing || isSubmitting ? "正在连接手机号快捷登录…" : "手机号快捷登录"}
             </Button>
 
+            {allowDevLogin ? (
+              <Button
+                className="w-full py-3.5 text-[15px]"
+                disabled={isPreparing || isSubmitting}
+                onClick={handleDevLogin}
+                type="button"
+                variant="secondary"
+              >
+                本地测试直接进入
+              </Button>
+            ) : null}
+
             {error ? (
               <div className="rounded-2xl border border-[rgba(191,92,49,0.18)] bg-[--brand-soft] px-4 py-4 text-sm leading-7 text-[--brand-ink]">
                 {error}
@@ -220,6 +271,12 @@ function LoginPageContent() {
                 </div>
               </div>
             </div>
+
+            {allowDevLogin ? (
+              <div className="rounded-2xl border border-[--border-soft] bg-[--slate-soft] px-4 py-4 text-sm leading-7 text-[--text-soft]">
+                当前是本地预览环境，可以直接进入测试账号，先把整条使用链路走通。
+              </div>
+            ) : null}
           </div>
         </Card>
 
