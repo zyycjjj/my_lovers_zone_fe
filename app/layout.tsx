@@ -1,22 +1,24 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Noto_Sans_SC, Noto_Serif_SC } from "next/font/google";
 import "./globals.css";
-import TopNav from "./components/top-nav";
+import { SiteHeader } from "./components/site-header";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const notoSans = Noto_Sans_SC({
+  variable: "--font-noto-sans-sc",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const notoSerif = Noto_Serif_SC({
+  variable: "--font-noto-serif-sc",
   subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "Love Zone | 轻信号与带货小助手",
-  description: "送给她的温柔工具箱：带货工具、轻信号与回声。",
+  title: "Memory | 轻陪跑式 AI 内容工作台",
+  description:
+    "先把账号、建档和工作入口接稳，再用更轻一点的方式帮你持续把内容做下去。",
 };
 
 export default function RootLayout({
@@ -26,36 +28,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <div className="min-h-screen bg-gradient-to-b from-rose-50 via-white to-rose-100 text-slate-900">
-          <header className="border-b border-rose-100/70 bg-white/70 backdrop-blur">
-            <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-              <Link href="/" className="flex items-center gap-2 font-semibold">
-                <span className="relative inline-flex h-9 w-9 items-center justify-center rounded-full bg-rose-500 text-white">
-                  ❤
-                  <span className="absolute -right-1 -top-1 text-[10px]">
-                    🎀
-                  </span>
-                </span>
-                <span className="text-lg">Love Zone</span>
-                <span className="rounded-full bg-rose-100 px-2 py-0.5 text-xs text-rose-500">
-                  Kitty Mood
-                </span>
-              </Link>
-              <TopNav />
-            </div>
-          </header>
-          <main className="mx-auto w-full max-w-6xl px-6 py-8">
+      <body className={`${notoSans.variable} ${notoSerif.variable}`}>
+        <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,237,224,0.9),_transparent_38%),linear-gradient(180deg,_#fcfaf6_0%,_#f7f4ef_100%)] text-[--text-strong]">
+          <SiteHeader />
+          <main className="mx-auto w-full max-w-7xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
             {children}
           </main>
-          <footer className="border-t border-rose-100/70 bg-white/70">
-            <div className="mx-auto flex max-w-6xl flex-col gap-2 px-6 py-6 text-sm text-slate-500">
-              <span>爱意小站 · 轻信号与带货工具箱</span>
-              <span>愿你每一天都被温柔对待</span>
-            </div>
-          </footer>
         </div>
       </body>
     </html>
