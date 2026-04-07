@@ -2,6 +2,40 @@
 
 const SDK_SRC = "/vendor/numberAuth-web-sdk.js";
 
+type NumberAuthCallback = (result: {
+  code?: number | string;
+  msg?: string;
+  spToken?: string;
+}) => void;
+
+type PhoneNumberServerInstance = {
+  checkEnvAvailable: () => {
+    isPc?: boolean;
+    isWifi?: boolean;
+  };
+  checkLoginAvailable: (options: {
+    accessToken: string;
+    jwtToken: string;
+    success: NumberAuthCallback;
+    error: NumberAuthCallback;
+    timeout?: number;
+  }) => void;
+  getLoginToken: (options: {
+    success: NumberAuthCallback;
+    error: NumberAuthCallback;
+    watch?: (status: unknown, data: unknown) => void;
+    authPageOption?: Record<string, unknown>;
+  }) => void;
+};
+
+type PhoneNumberServerCtor = new () => PhoneNumberServerInstance;
+
+declare global {
+  interface Window {
+    PhoneNumberServer?: PhoneNumberServerCtor;
+  }
+}
+
 type NumberAuthTokenInfo = {
   accessToken: string;
   jwtToken: string;
@@ -13,7 +47,7 @@ type NumberAuthSdkResult = {
   spToken?: string;
 };
 
-let sdkPromise: Promise<PhoneNumberServerInstance> | null = null;
+let sdkPromise: Promise<PhoneNumberServerCtor> | null = null;
 
 function ensureSdkScript() {
   if (typeof window === "undefined") {
@@ -87,20 +121,22 @@ export async function getSpToken(tokenInfo: NumberAuthTokenInfo) {
       accessToken: tokenInfo.accessToken,
       jwtToken: tokenInfo.jwtToken,
       success: () => resolve(),
-      error: (result) => reject(new Error(asErrorMessage(result))),
+      error: (result: NumberAuthSdkResult) =>
+        reject(new Error(asErrorMessage(result))),
     });
   });
 
   return new Promise<NumberAuthSdkResult>((resolve, reject) => {
     server.getLoginToken({
-      success: (result) => {
+      success: (result: NumberAuthSdkResult) => {
         if (result?.spToken) {
           resolve(result);
           return;
         }
         reject(new Error(asErrorMessage(result)));
       },
-      error: (result) => reject(new Error(asErrorMessage(result))),
+      error: (result: NumberAuthSdkResult) =>
+        reject(new Error(asErrorMessage(result))),
       watch: () => {},
       authPageOption: {
         navText: "手机号快捷登录",

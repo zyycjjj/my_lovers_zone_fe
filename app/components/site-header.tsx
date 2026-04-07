@@ -56,7 +56,7 @@ export function SiteHeader() {
         </div>
 
         <div className="flex items-center gap-3">
-          {session.sessionToken ? (
+          {session?.sessionToken ? (
             <>
               <span className="hidden text-xs text-[--text-soft] sm:inline">
                 已连接第一阶段会话
