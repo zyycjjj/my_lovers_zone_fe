@@ -11,10 +11,10 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-[--text-strong] text-white shadow-[0_12px_32px_rgba(17,24,39,0.16)] hover:bg-[#0f172a]",
+    "bg-[linear-gradient(135deg,_#6d48eb_0%,_#4d2bb8_100%)] text-white shadow-[0_16px_34px_rgba(93,63,211,0.28)] hover:brightness-[1.03]",
   secondary:
-    "border border-[--border-strong] bg-white/80 text-[--text-strong] hover:bg-white",
-  ghost: "text-[--text-soft] hover:text-[--text-strong]",
+    "border border-[rgba(93,63,211,0.18)] bg-white/86 text-strong hover:bg-white",
+  ghost: "bg-transparent text-soft hover:bg-white/55 hover:text-strong",
 };
 
 export function UiButton({

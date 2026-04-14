@@ -67,18 +67,18 @@ function LoginPageContent() {
       .then((env) => {
         if (!active) return;
         if (env?.isPc) {
-          setNetworkHint("当前像是桌面环境，快捷登录更适合在手机浏览器里调起。");
+          setNetworkHint("现在像是桌面环境，快捷登录更适合在手机浏览器里完成。");
           return;
         }
         if (env?.isWifi) {
-          setNetworkHint("当前连接了 Wi‑Fi，建议切到移动网络后再尝试快捷登录。");
+          setNetworkHint("当前连接了 Wi‑Fi，切到移动网络后，快捷认证会更稳一点。");
           return;
         }
         setNetworkHint("当前环境可以先尝试手机号快捷登录。");
       })
       .catch(() => {
         if (active) {
-          setNetworkHint("号码认证 SDK 尚未就绪，先加载完成后再试。");
+          setNetworkHint("号码认证 SDK 正在准备中，稍等一下再试。");
         }
       });
 
@@ -89,8 +89,7 @@ function LoginPageContent() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const hostname = window.location.hostname;
-    setAllowDevLogin(hostname !== "love.zychenyao.cn");
+    setAllowDevLogin(window.location.hostname !== "love.zychenyao.cn");
   }, []);
 
   function finishLogin(response: NumberLoginResponse) {
@@ -116,41 +115,13 @@ function LoginPageContent() {
 
       finishLogin(response);
     } catch (err) {
-      const message =
+      setError(
         err instanceof ApiClientError
           ? err.message
           : err instanceof Error
             ? err.message
-            : "登录失败，请稍后再试";
-      setError(message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
-
-  async function handleDevLogin() {
-    setIsSubmitting(true);
-    setError("");
-
-    try {
-      const response = await apiRequest<NumberLoginResponse>("/api/auth/dev-login", {
-        method: "POST",
-        body: {
-          phone: "13900000000",
-          displayName: "本地测试用户",
-        },
-        retryOnUnauthorized: false,
-      });
-
-      finishLogin(response);
-    } catch (err) {
-      const message =
-        err instanceof ApiClientError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "本地测试登录失败";
-      setError(message);
+            : "登录失败，请稍后再试",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -170,57 +141,87 @@ function LoginPageContent() {
       });
       await submitLogin(result.spToken || "");
     } catch (err) {
-      const message =
+      setError(
         err instanceof ApiClientError
           ? err.message
           : err instanceof Error
             ? err.message
-            : "快捷登录暂时不可用";
-      setError(message);
+            : "快捷登录暂时不可用",
+      );
     } finally {
       setIsPreparing(false);
     }
   }
 
+  async function handleDevLogin() {
+    setIsSubmitting(true);
+    setError("");
+
+    try {
+      const response = await apiRequest<NumberLoginResponse>("/api/auth/dev-login", {
+        method: "POST",
+        body: {
+          phone: "13900000000",
+          displayName: "本地测试用户",
+        },
+        retryOnUnauthorized: false,
+      });
+
+      finishLogin(response);
+    } catch (err) {
+      setError(
+        err instanceof ApiClientError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "本地测试登录失败",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  const working = isPreparing || isSubmitting;
+
   return (
-    <div className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
-      <Card className="rounded-[32px]">
+    <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+      <Card className="surface-card-strong rounded-[34px] p-6 sm:p-8">
         <div className="space-y-6">
           <div className="flex flex-wrap items-center gap-3">
             <SoftBadge tone="brand">手机号快捷登录</SoftBadge>
-            {intent === "trial" ? <SoftBadge tone="sage">从首页继续</SoftBadge> : null}
+            {intent === "trial" ? <SoftBadge tone="rose">继续刚才那一轮</SoftBadge> : null}
           </div>
 
           <SectionHeading
-            eyebrow="手机号登录"
-            title="手机号快捷登录"
-            description="第一次来，先简单认识你一下。以后再回来，会更快回到自己的主页。"
+            eyebrow="第一步"
+            title="先登录，再把你的主页接起来"
+            description="第一次来，只需要先把登录走通。后面会顺着你的身份、类目和目标，给你更贴近的内容结果。"
           />
 
-          <div className="space-y-3 rounded-3xl border border-[--border-soft] bg-white/80 p-5">
-            <div className="text-sm font-semibold text-[--text-strong]">登录前提醒</div>
-            <p className="text-sm leading-7 text-[--text-soft]">
-              推荐在手机浏览器里使用。当前网络不适合快捷认证时，可以换个时间再试。
+          <div className="surface-card-muted rounded-[28px] p-5">
+            <div className="text-strong text-sm font-semibold">登录前提醒</div>
+            <p className="text-soft mt-2 text-sm leading-7">
+              推荐在手机浏览器中使用。当前网络不适合快捷认证时，也可以稍后再试。
             </p>
-            <div className="rounded-2xl bg-[--slate-soft] px-4 py-4 text-sm leading-7 text-[--text-soft]">
-              {networkHint || "正在检查当前环境…"}
+            <div className="bg-slate-soft text-soft mt-4 rounded-[20px] px-4 py-4 text-sm leading-7">
+              {networkHint || "正在确认当前环境…"}
             </div>
           </div>
 
           <div className="space-y-3">
             <Button
               className="w-full py-3.5 text-[15px]"
-              disabled={isPreparing || isSubmitting}
+              disabled={working}
               onClick={handleQuickLogin}
               type="button"
             >
-              {isPreparing || isSubmitting ? "正在连接手机号快捷登录…" : "手机号快捷登录"}
+              {working ? "正在连接手机号快捷登录…" : "手机号快捷登录"}
             </Button>
 
             {allowDevLogin ? (
               <Button
                 className="w-full py-3.5 text-[15px]"
-                disabled={isPreparing || isSubmitting}
+                disabled={working}
                 onClick={handleDevLogin}
                 type="button"
                 variant="secondary"
@@ -230,7 +231,7 @@ function LoginPageContent() {
             ) : null}
 
             {error ? (
-              <div className="rounded-2xl border border-[rgba(191,92,49,0.18)] bg-[--brand-soft] px-4 py-4 text-sm leading-7 text-[--brand-ink]">
+              <div className="rounded-[20px] border border-[rgba(203,96,146,0.16)] bg-rose-soft px-4 py-4 text-sm leading-7 text-[#a34377]">
                 {error}
               </div>
             ) : null}
@@ -238,65 +239,53 @@ function LoginPageContent() {
         </div>
       </Card>
 
-      <div className="space-y-6">
-        <Card className="rounded-[32px] bg-[linear-gradient(180deg,_rgba(255,255,255,0.86)_0%,_rgba(255,245,238,0.86)_100%)]">
+      <div className="grid gap-6">
+        <Card className="rounded-[32px] bg-[linear-gradient(180deg,_rgba(255,255,255,0.94)_0%,_rgba(241,234,255,0.84)_100%)]">
           <div className="space-y-4">
-            <h2 className="heading-serif text-[28px] leading-tight text-[--text-strong]">
-              第一次登录之后
+            <h2 className="heading-serif text-strong text-[30px] leading-tight">
+              登录之后会更轻一点
             </h2>
-
             <div className="grid gap-3">
-              <div className="rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-4">
-                <div className="text-sm font-semibold text-[--text-strong]">
-                  先认识你在做什么
+              {[
+                ["先认一下你在做什么", "会先知道你的身份、主营类目和当前目标。"],
+                ["以后回来不用重说一遍", "登录后会保留你的账号和主页入口。"],
+                ["先回到自己的工作台", "资料收好之后，后面每天回来就顺手很多。"],
+              ].map(([title, text]) => (
+                <div
+                  key={title}
+                  className="rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-4"
+                >
+                  <div className="text-strong text-sm font-semibold">{title}</div>
+                  <div className="text-soft mt-1 text-sm leading-7">{text}</div>
                 </div>
-                <div className="mt-1 text-sm leading-7 text-[--text-soft]">
-                  会先了解你的身份、主营类目和当前目标。
-                </div>
-              </div>
-              <div className="rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-4">
-                <div className="text-sm font-semibold text-[--text-strong]">
-                  以后回来更轻松
-                </div>
-                <div className="mt-1 text-sm leading-7 text-[--text-soft]">
-                  不用每次重新说一遍自己在做什么。
-                </div>
-              </div>
-              <div className="rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-4">
-                <div className="text-sm font-semibold text-[--text-strong]">
-                  先回到自己的主页
-                </div>
-                <div className="mt-1 text-sm leading-7 text-[--text-soft]">
-                  把资料收好之后，后面用起来会顺很多。
-                </div>
-              </div>
+              ))}
             </div>
-
-            {allowDevLogin ? (
-              <div className="rounded-2xl border border-[--border-soft] bg-[--slate-soft] px-4 py-4 text-sm leading-7 text-[--text-soft]">
-                当前是本地预览环境，可以直接进入测试账号，先把整条使用链路走通。
-              </div>
-            ) : null}
           </div>
         </Card>
 
         <Card className="rounded-[32px]">
           <div className="space-y-4">
-            <div className="text-sm font-semibold text-[--text-strong]">
-              登录后会保留
+            <div className="flex items-center gap-3">
+              <SoftBadge tone="sage">登录后会保留</SoftBadge>
             </div>
-            <div className="grid gap-3">
-              <div className="rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-4 text-sm text-[--text-soft]">
-                你的手机号
-              </div>
-              <div className="rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-4 text-sm text-[--text-soft]">
-                你的资料
-              </div>
-              <div className="rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-4 text-sm text-[--text-soft]">
-                你的主页入口
-              </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {["你的手机号", "你的资料", "你的主页入口"].map((item) => (
+                <div
+                  key={item}
+                  className="rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/78 px-4 py-4 text-sm text-soft"
+                >
+                  {item}
+                </div>
+              ))}
             </div>
-            <div className="flex flex-wrap gap-3">
+
+            {allowDevLogin ? (
+              <div className="rounded-[24px] border border-[rgba(93,63,211,0.12)] bg-[linear-gradient(180deg,_rgba(241,234,255,0.66)_0%,_rgba(255,255,255,0.84)_100%)] px-5 py-5 text-sm leading-7 text-soft">
+                当前是本地预览环境，可以直接进入测试账号，把整条链路先跑通。
+              </div>
+            ) : null}
+
+            <div className="flex justify-start">
               <ButtonLink href="/" variant="ghost">
                 回首页
               </ButtonLink>
@@ -313,7 +302,7 @@ export default function LoginPage() {
     <Suspense
       fallback={
         <Card className="mx-auto max-w-3xl rounded-[32px] p-8">
-          <p className="text-sm text-[--text-soft]">正在准备登录入口…</p>
+          <p className="text-soft text-sm">正在准备登录入口…</p>
         </Card>
       }
     >

@@ -15,9 +15,9 @@ export default function RootLayout({
   return (
     <html lang="zh-CN">
       <body>
-        <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(255,237,224,0.9),_transparent_38%),linear-gradient(180deg,_#fcfaf6_0%,_#f7f4ef_100%)] text-[--text-strong]">
+        <div className="text-strong min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(237,228,255,0.88),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(255,234,243,0.74),_transparent_26%),linear-gradient(180deg,_#faf6ff_0%,_#fff8f2_100%)]">
           <SiteHeader />
-          <main className="mx-auto w-full max-w-7xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
+          <main className="page-shell mx-auto w-full max-w-7xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
             {children}
           </main>
         </div>

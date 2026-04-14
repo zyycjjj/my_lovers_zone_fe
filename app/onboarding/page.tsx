@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiRequest, ApiClientError } from "../lib/api";
 import { useAuthSession } from "../lib/session-store";
-import { Button, Card, SectionHeading, SoftBadge } from "../components/ui";
+import { Button, Card, SectionHeading, SoftBadge, cn } from "../components/ui";
 
 type OnboardingStatus = {
   completed: boolean;
@@ -23,8 +23,33 @@ type OnboardingPayload = {
   experienceLevel?: string;
 };
 
-const businessRoles = ["商家", "主播", "运营", "主理人"];
+const businessRoles = ["个体商家", "带货博主", "直播运营", "内容主理人"];
 const goals = ["起号", "提升转化", "稳定更新", "补内容节奏"];
+
+function ChoicePill({
+  active,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      className={cn(
+        "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
+        active
+          ? "border-[rgba(93,63,211,0.18)] bg-brand-soft text-brand-ink"
+          : "border-[rgba(91,70,142,0.1)] bg-white/72 text-soft hover:bg-white",
+      )}
+      onClick={onClick}
+      type="button"
+    >
+      {children}
+    </button>
+  );
+}
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -70,14 +95,16 @@ export default function OnboardingPage() {
     };
   }, [router, session?.sessionToken]);
 
-  const canSubmit = useMemo(() => {
-    return (
-      form.nickname.trim() &&
-      form.businessRole?.trim() &&
-      form.industry?.trim() &&
-      form.currentGoal?.trim()
-    );
-  }, [form]);
+  const canSubmit = useMemo(
+    () =>
+      Boolean(
+        form.nickname.trim() &&
+          form.businessRole?.trim() &&
+          form.industry?.trim() &&
+          form.currentGoal?.trim(),
+      ),
+    [form],
+  );
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -117,42 +144,47 @@ export default function OnboardingPage() {
   if (loading) {
     return (
       <Card className="mx-auto max-w-3xl rounded-[32px] p-8">
-        <p className="text-sm text-[--text-soft]">正在确认你的建档状态…</p>
+        <p className="text-soft text-sm">正在确认你的建档状态…</p>
       </Card>
     );
   }
 
   return (
-    <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[0.84fr_1.16fr]">
-      <Card className="rounded-[32px]">
-        <div className="space-y-5">
+    <div className="mx-auto grid max-w-6xl gap-6 xl:grid-cols-[0.84fr_1.16fr]">
+      <Card className="surface-card-strong rounded-[34px] p-6 sm:p-8">
+        <div className="space-y-6">
           <SoftBadge tone="brand">首次建档</SoftBadge>
           <SectionHeading
-            eyebrow="首次建档"
-            title="先补 3 项就够了"
-            description="先把最影响结果的内容补上：你的身份、主营类目和当前目标。这样后面给你的结果会更贴近。"
+            eyebrow="只补最重要的几项"
+            title="先把你现在的经营状态说清楚"
+            description="我们先不用问得很重。先把身份、主营类目和当前目标收好，后面的结果就会更贴近你。"
           />
 
-          <div className="space-y-3 rounded-3xl border border-[--border-soft] bg-[rgba(255,255,255,0.8)] p-5">
-            <div className="text-sm font-semibold text-[--text-strong]">
-              为什么先收这几项
-            </div>
-            <div className="text-sm leading-7 text-[--text-soft]">
-              先知道你是谁、在做什么、眼下最想解决什么，就够开始第一轮了。
-            </div>
+          <div className="grid gap-3">
+            {[
+              ["你现在主要是谁", "比如个体商家、带货博主、直播运营。"],
+              ["你现在主要卖什么", "先知道类目，标题和脚本会更贴近。"],
+              ["你现在最想解决什么", "先知道目标，给你的第一轮就会更准。"],
+            ].map(([title, description]) => (
+              <div
+                key={title}
+                className="surface-card-muted rounded-[24px] px-5 py-5"
+              >
+                <div className="text-strong text-sm font-semibold">{title}</div>
+                <div className="text-soft mt-2 text-sm leading-7">{description}</div>
+              </div>
+            ))}
           </div>
         </div>
       </Card>
 
-      <Card className="rounded-[32px]">
+      <Card className="rounded-[34px] p-6 sm:p-8">
         <form className="space-y-6" onSubmit={handleSubmit}>
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-5 md:grid-cols-2">
             <label className="space-y-2">
-              <span className="text-sm font-semibold text-[--text-strong]">
-                你想我怎么称呼你
-              </span>
+              <span className="text-strong text-sm font-semibold">怎么称呼你</span>
               <input
-                className="w-full rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-3 text-sm text-[--text-strong] outline-none placeholder:text-[--text-muted] focus:border-[rgba(191,92,49,0.28)]"
+                className="input-base"
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, nickname: event.target.value }))
                 }
@@ -162,108 +194,77 @@ export default function OnboardingPage() {
             </label>
 
             <label className="space-y-2">
-              <span className="text-sm font-semibold text-[--text-strong]">
-                主营类目
-              </span>
+              <span className="text-strong text-sm font-semibold">主营类目</span>
               <input
-                className="w-full rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-3 text-sm text-[--text-strong] outline-none placeholder:text-[--text-muted] focus:border-[rgba(191,92,49,0.28)]"
+                className="input-base"
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, industry: event.target.value }))
                 }
-                placeholder="比如：家居、个护、零食"
+                placeholder="比如：家居、零食、个护"
                 value={form.industry}
               />
             </label>
           </div>
 
           <div className="space-y-3">
-            <span className="text-sm font-semibold text-[--text-strong]">
-              你的身份
-            </span>
+            <span className="text-strong text-sm font-semibold">你的身份</span>
             <div className="flex flex-wrap gap-3">
-              {businessRoles.map((item) => {
-                const active = form.businessRole === item;
-                return (
-                  <button
-                    key={item}
-                    className={`rounded-full border px-4 py-2 text-sm ${
-                      active
-                        ? "border-[rgba(191,92,49,0.22)] bg-[--brand-soft] text-[--brand-ink]"
-                        : "border-[--border-soft] bg-white/70 text-[--text-soft]"
-                    }`}
-                    onClick={() => setForm((prev) => ({ ...prev, businessRole: item }))}
-                    type="button"
-                  >
-                    {item}
-                  </button>
-                );
-              })}
+              {businessRoles.map((item) => (
+                <ChoicePill
+                  key={item}
+                  active={form.businessRole === item}
+                  onClick={() => setForm((prev) => ({ ...prev, businessRole: item }))}
+                >
+                  {item}
+                </ChoicePill>
+              ))}
             </div>
           </div>
 
           <div className="space-y-3">
-            <span className="text-sm font-semibold text-[--text-strong]">
-              当前目标
-            </span>
+            <span className="text-strong text-sm font-semibold">当前目标</span>
             <div className="flex flex-wrap gap-3">
-              {goals.map((item) => {
-                const active = form.currentGoal === item;
-                return (
-                  <button
-                    key={item}
-                    className={`rounded-full border px-4 py-2 text-sm ${
-                      active
-                        ? "border-[rgba(191,92,49,0.22)] bg-[--brand-soft] text-[--brand-ink]"
-                        : "border-[--border-soft] bg-white/70 text-[--text-soft]"
-                    }`}
-                    onClick={() => setForm((prev) => ({ ...prev, currentGoal: item }))}
-                    type="button"
-                  >
-                    {item}
-                  </button>
-                );
-              })}
+              {goals.map((item) => (
+                <ChoicePill
+                  key={item}
+                  active={form.currentGoal === item}
+                  onClick={() => setForm((prev) => ({ ...prev, currentGoal: item }))}
+                >
+                  {item}
+                </ChoicePill>
+              ))}
             </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
             <label className="space-y-2">
-              <span className="text-sm text-[--text-soft]">内容方向</span>
+              <span className="text-soft text-sm">内容方向</span>
               <input
-                className="w-full rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-3 text-sm text-[--text-strong] outline-none placeholder:text-[--text-muted] focus:border-[rgba(191,92,49,0.28)]"
+                className="input-base"
                 onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    contentDirection: event.target.value,
-                  }))
+                  setForm((prev) => ({ ...prev, contentDirection: event.target.value }))
                 }
                 placeholder="选填"
                 value={form.contentDirection}
               />
             </label>
             <label className="space-y-2">
-              <span className="text-sm text-[--text-soft]">目标平台</span>
+              <span className="text-soft text-sm">目标平台</span>
               <input
-                className="w-full rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-3 text-sm text-[--text-strong] outline-none placeholder:text-[--text-muted] focus:border-[rgba(191,92,49,0.28)]"
+                className="input-base"
                 onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    targetPlatform: event.target.value,
-                  }))
+                  setForm((prev) => ({ ...prev, targetPlatform: event.target.value }))
                 }
                 placeholder="选填"
                 value={form.targetPlatform}
               />
             </label>
             <label className="space-y-2">
-              <span className="text-sm text-[--text-soft]">当前经验</span>
+              <span className="text-soft text-sm">当前经验</span>
               <input
-                className="w-full rounded-2xl border border-[--border-soft] bg-white/80 px-4 py-3 text-sm text-[--text-strong] outline-none placeholder:text-[--text-muted] focus:border-[rgba(191,92,49,0.28)]"
+                className="input-base"
                 onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    experienceLevel: event.target.value,
-                  }))
+                  setForm((prev) => ({ ...prev, experienceLevel: event.target.value }))
                 }
                 placeholder="选填"
                 value={form.experienceLevel}
@@ -272,22 +273,20 @@ export default function OnboardingPage() {
           </div>
 
           {error ? (
-            <div className="rounded-2xl border border-[rgba(191,92,49,0.18)] bg-[--brand-soft] px-4 py-4 text-sm leading-7 text-[--brand-ink]">
+            <div className="rounded-[22px] border border-[rgba(203,96,146,0.16)] bg-rose-soft px-4 py-4 text-sm leading-7 text-[#a34377]">
               {error}
             </div>
           ) : null}
 
-          <div className="flex flex-wrap gap-3">
-            <Button disabled={!canSubmit || submitting} type="submit">
-              {submitting ? "正在保存并进入工作台…" : "保存并开始"}
-            </Button>
+          <div className="flex flex-wrap items-center gap-3">
             <Button
-              onClick={() => router.push("/workspace")}
-              type="button"
-              variant="secondary"
+              className="min-w-[160px] py-3.5 text-[15px]"
+              disabled={!canSubmit || submitting}
+              type="submit"
             >
-              先去看当前工作台
+              {submitting ? "正在保存资料…" : "进入工作台"}
             </Button>
+            <div className="text-soft text-sm">先把最重要的几项填完就够了。</div>
           </div>
         </form>
       </Card>

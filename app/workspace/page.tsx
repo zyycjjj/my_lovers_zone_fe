@@ -118,8 +118,8 @@ function Field({
   return (
     <label className="space-y-2">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-semibold text-[--text-strong]">{label}</span>
-        {hint ? <span className="text-xs text-[--text-muted]">{hint}</span> : null}
+        <span className="text-strong text-sm font-semibold">{label}</span>
+        {hint ? <span className="text-muted text-xs">{hint}</span> : null}
       </div>
       {children}
     </label>
@@ -128,7 +128,7 @@ function Field({
 
 function inputClassName(multiline = false) {
   return cn(
-    "w-full rounded-[22px] border border-[--border-soft] bg-white/88 px-4 py-3 text-sm text-[--text-strong] outline-none placeholder:text-[--text-muted] focus:border-[rgba(191,92,49,0.28)]",
+    "input-base",
     multiline ? "min-h-[144px] resize-none" : "",
   );
 }
@@ -338,7 +338,7 @@ export default function WorkspacePage() {
   if (loading) {
     return (
       <Card className="mx-auto max-w-3xl rounded-[32px] p-8">
-        <p className="text-sm text-[--text-soft]">正在进入你的工作台…</p>
+        <p className="text-soft text-sm">正在进入你的工作台…</p>
       </Card>
     );
   }
@@ -346,7 +346,7 @@ export default function WorkspacePage() {
   return (
     <div className="space-y-6">
       <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card className="rounded-[32px] bg-[linear-gradient(180deg,_rgba(255,255,255,0.94)_0%,_rgba(255,243,235,0.86)_100%)]">
+        <Card className="surface-card-strong rounded-[34px] bg-[linear-gradient(180deg,_rgba(255,255,255,0.95)_0%,_rgba(241,234,255,0.84)_100%)]">
           <div className="space-y-6">
             <div className="flex flex-wrap items-center gap-3">
               <SoftBadge tone="brand">内容工作台</SoftBadge>
@@ -356,31 +356,31 @@ export default function WorkspacePage() {
             <SectionHeading
               eyebrow="今天先做一轮"
               title={`欢迎回来，${displayName}`}
-              description="现在可以直接开始做内容了。先从一个入口开始，把今天最重要的这一轮先接住。"
+              description="现在直接从一个入口开始就行。今天先把最重要的一轮做出来，后面再慢慢往下接。"
             />
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-[24px] border border-[--border-soft] bg-white/88 px-5 py-5">
-                <div className="text-xs uppercase tracking-[0.2em] text-[--text-muted]">
+              <div className="surface-card-muted rounded-[24px] px-5 py-5">
+                <div className="text-muted text-xs uppercase tracking-[0.2em]">
                   当前空间
                 </div>
-                <div className="mt-2 text-lg font-semibold text-[--text-strong]">
+                <div className="text-strong mt-2 text-lg font-semibold">
                   {me?.currentWorkspace?.name || "个人空间"}
                 </div>
-                <div className="mt-2 text-sm text-[--text-soft]">
+                <div className="text-soft mt-2 text-sm">
                   {getWorkspaceRoleLabel(me?.currentWorkspace?.role)} /{" "}
                   {getWorkspaceTypeLabel(me?.currentWorkspace?.type)}
                 </div>
               </div>
 
-              <div className="rounded-[24px] border border-[--border-soft] bg-white/88 px-5 py-5">
-                <div className="text-xs uppercase tracking-[0.2em] text-[--text-muted]">
+              <div className="surface-card-muted rounded-[24px] px-5 py-5">
+                <div className="text-muted text-xs uppercase tracking-[0.2em]">
                   今天建议
                 </div>
-                <div className="mt-2 text-base font-semibold text-[--text-strong]">
+                <div className="text-strong mt-2 text-base font-semibold">
                   {todayLine}
                 </div>
-                <div className="mt-2 text-sm text-[--text-soft]">
+                <div className="text-soft mt-2 text-sm">
                   资料越清楚，后面给你的结果就越贴近。
                 </div>
               </div>
@@ -399,13 +399,13 @@ export default function WorkspacePage() {
           </div>
         </Card>
 
-        <Card className="rounded-[32px]">
+        <Card className="rounded-[34px]">
           <div className="space-y-5">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <div className="text-sm font-semibold text-[--text-strong]">你的当前状态</div>
-                <div className="mt-1 text-sm leading-7 text-[--text-soft]">
-                  这里先把能直接开始用的能力接起来，回来就能继续做。
+                <div className="text-strong text-sm font-semibold">这次回来先从这里接上</div>
+                <div className="text-soft mt-1 text-sm leading-7">
+                  不需要重开一整套流程，先把今天这一轮继续做下去。
                 </div>
               </div>
               <Button onClick={handleLogout} type="button" variant="secondary">
@@ -414,18 +414,18 @@ export default function WorkspacePage() {
             </div>
 
             <div className="grid gap-3">
-              <div className="rounded-[22px] border border-[--border-soft] bg-white/82 px-4 py-4 text-sm text-[--text-soft]">
+              <div className="rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-4 text-sm text-soft">
                 登录手机号：{me?.account.phone || "已登录"}
               </div>
-              <div className="rounded-[22px] border border-[--border-soft] bg-white/82 px-4 py-4 text-sm text-[--text-soft]">
+              <div className="rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-4 text-sm text-soft">
                 空间数量：{workspaces.length}
               </div>
-              <div className="rounded-[22px] border border-[--border-soft] bg-white/82 px-4 py-4 text-sm text-[--text-soft]">
-                当前可用：标题生成、脚本生成、话术提炼、佣金测算
+              <div className="rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-4 text-sm text-soft">
+                现在可用：标题生成、脚本生成、话术整理、佣金测算
               </div>
             </div>
 
-            <div className="rounded-[24px] border border-[rgba(191,92,49,0.14)] bg-[--brand-soft] px-4 py-4 text-sm leading-7 text-[--brand-ink]">
+            <div className="rounded-[24px] border border-[rgba(93,63,211,0.12)] bg-brand-soft px-4 py-4 text-sm leading-7 text-brand-ink">
               不用一口气把所有事做完。先选一个入口，先做出一版，再继续往下走。
             </div>
           </div>
@@ -433,7 +433,7 @@ export default function WorkspacePage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[0.98fr_1.02fr]">
-        <Card className="rounded-[32px]">
+        <Card className="rounded-[34px]">
           <div className="space-y-6">
             <div className="flex flex-wrap items-center gap-3">
               {tools.map((tool) => {
@@ -442,10 +442,10 @@ export default function WorkspacePage() {
                   <button
                     key={tool.key}
                     className={cn(
-                      "rounded-full border px-4 py-2 text-sm font-medium",
+                      "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
                       active
-                        ? "border-[rgba(191,92,49,0.18)] bg-[--brand-soft] text-[--brand-ink]"
-                        : "border-[--border-soft] bg-white/70 text-[--text-soft]",
+                        ? "border-[rgba(93,63,211,0.18)] bg-brand-soft text-brand-ink"
+                        : "border-[rgba(91,70,142,0.1)] bg-white/70 text-soft hover:bg-white",
                     )}
                     onClick={() => {
                       setActiveTool(tool.key);
@@ -460,11 +460,11 @@ export default function WorkspacePage() {
               })}
             </div>
 
-            <div className="rounded-[26px] border border-[--border-soft] bg-[linear-gradient(180deg,_rgba(255,255,255,0.92)_0%,_rgba(244,246,248,0.72)_100%)] p-5">
-              <div className="text-base font-semibold text-[--text-strong]">
+            <div className="rounded-[28px] border border-[rgba(91,70,142,0.1)] bg-[linear-gradient(180deg,_rgba(255,255,255,0.92)_0%,_rgba(244,241,250,0.8)_100%)] p-5">
+              <div className="text-strong text-base font-semibold">
                 {activeToolMeta.label}
               </div>
-              <div className="mt-2 text-sm leading-7 text-[--text-soft]">
+              <div className="text-soft mt-2 text-sm leading-7">
                 {activeToolMeta.description}
               </div>
             </div>
@@ -538,8 +538,8 @@ export default function WorkspacePage() {
                         className={cn(
                           "rounded-full border px-4 py-2 text-sm font-medium",
                           scriptStyle === "short"
-                            ? "border-[rgba(191,92,49,0.18)] bg-[--brand-soft] text-[--brand-ink]"
-                            : "border-[--border-soft] bg-white/70 text-[--text-soft]",
+                            ? "border-[rgba(93,63,211,0.18)] bg-brand-soft text-brand-ink"
+                            : "border-soft bg-white/70 text-soft",
                         )}
                         onClick={() => setScriptStyle("short")}
                         type="button"
@@ -550,8 +550,8 @@ export default function WorkspacePage() {
                         className={cn(
                           "rounded-full border px-4 py-2 text-sm font-medium",
                           scriptStyle === "live"
-                            ? "border-[rgba(191,92,49,0.18)] bg-[--brand-soft] text-[--brand-ink]"
-                            : "border-[--border-soft] bg-white/70 text-[--text-soft]",
+                            ? "border-[rgba(93,63,211,0.18)] bg-brand-soft text-brand-ink"
+                            : "border-soft bg-white/70 text-soft",
                         )}
                         onClick={() => setScriptStyle("live")}
                         type="button"
@@ -611,7 +611,7 @@ export default function WorkspacePage() {
             </div>
 
             {toolError ? (
-              <div className="rounded-[22px] border border-[rgba(191,92,49,0.18)] bg-[--brand-soft] px-4 py-4 text-sm leading-7 text-[--brand-ink]">
+              <div className="rounded-[22px] border border-[rgba(93,63,211,0.16)] bg-brand-soft px-4 py-4 text-sm leading-7 text-brand-ink">
                 {toolError}
               </div>
             ) : null}
@@ -620,19 +620,19 @@ export default function WorkspacePage() {
               <Button disabled={loadingTool === activeTool} onClick={handleSubmitTool} type="button">
                 {loadingTool === activeTool ? "正在生成…" : `开始${activeToolMeta.label}`}
               </Button>
-              <div className="inline-flex items-center rounded-full bg-[--slate-soft] px-4 py-2 text-sm text-[--text-soft]">
+              <div className="bg-slate-soft text-soft inline-flex items-center rounded-full px-4 py-2 text-sm">
                 {activeToolMeta.short}
               </div>
             </div>
           </div>
         </Card>
 
-        <Card className="rounded-[32px]">
+        <Card className="rounded-[34px]">
           <div className="space-y-5">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <div className="text-base font-semibold text-[--text-strong]">结果区</div>
-                <div className="mt-1 text-sm text-[--text-soft]">
+                <div className="text-strong text-base font-semibold">这轮结果</div>
+                <div className="text-soft mt-1 text-sm">
                   先看这一轮结果，再决定下一步怎么继续。
                 </div>
               </div>
@@ -646,9 +646,9 @@ export default function WorkspacePage() {
                     {titleResult.map((title, index) => (
                       <div
                         key={`${title}-${index}`}
-                        className="rounded-[22px] border border-[--border-soft] bg-white/84 px-4 py-4 text-sm leading-7 text-[--text-strong]"
+                        className="rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/84 px-4 py-4 text-sm leading-7 text-strong"
                       >
-                        <span className="mr-2 text-[--brand]">{index + 1}.</span>
+                        <span className="text-brand mr-2">{index + 1}.</span>
                         {title}
                       </div>
                     ))}
@@ -662,7 +662,7 @@ export default function WorkspacePage() {
                   </Button>
                 </div>
               ) : (
-                <div className="rounded-[24px] border border-dashed border-[--border-soft] bg-white/76 px-5 py-10 text-sm leading-7 text-[--text-soft]">
+                <div className="rounded-[24px] border border-dashed border-[rgba(91,70,142,0.14)] bg-white/76 px-5 py-10 text-sm leading-7 text-soft">
                   先输一个商品关键词。标题出来之后，你可以直接挑一条先用。
                 </div>
               )
@@ -671,7 +671,7 @@ export default function WorkspacePage() {
             {activeTool === "script" ? (
               scriptResult ? (
                 <div className="space-y-4">
-                  <pre className="whitespace-pre-wrap rounded-[24px] border border-[--border-soft] bg-white/84 px-5 py-5 text-sm leading-7 text-[--text-strong]">
+                  <pre className="whitespace-pre-wrap rounded-[24px] border border-[rgba(91,70,142,0.1)] bg-white/84 px-5 py-5 text-sm leading-7 text-strong">
                     {scriptResult}
                   </pre>
                   <Button onClick={() => handleCopy(scriptResult)} type="button" variant="secondary">
@@ -679,7 +679,7 @@ export default function WorkspacePage() {
                   </Button>
                 </div>
               ) : (
-                <div className="rounded-[24px] border border-dashed border-[--border-soft] bg-white/76 px-5 py-10 text-sm leading-7 text-[--text-soft]">
+                <div className="rounded-[24px] border border-dashed border-[rgba(91,70,142,0.14)] bg-white/76 px-5 py-10 text-sm leading-7 text-soft">
                   先给我一个商品关键词。我会先把开场、脚本和分镜建议整理出来。
                 </div>
               )
@@ -688,45 +688,45 @@ export default function WorkspacePage() {
             {activeTool === "refine" ? (
               refineResult ? (
                 <div className="space-y-4">
-                  <div className="rounded-[24px] border border-[--border-soft] bg-[--brand-soft] px-5 py-5">
-                    <div className="text-xs uppercase tracking-[0.2em] text-[--brand]">一句话总结</div>
-                    <div className="mt-3 text-base font-semibold leading-8 text-[--brand-ink]">
+                  <div className="rounded-[24px] border border-[rgba(93,63,211,0.12)] bg-brand-soft px-5 py-5">
+                    <div className="text-brand text-xs uppercase tracking-[0.2em]">一句话总结</div>
+                    <div className="text-brand-ink mt-3 text-base font-semibold leading-8">
                       {refineResult.summaryLine || "这轮还没有总结结果"}
                     </div>
                   </div>
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-3">
-                      <div className="text-sm font-semibold text-[--text-strong]">卖点提炼</div>
+                      <div className="text-strong text-sm font-semibold">卖点提炼</div>
                       {refineResult.sellingPoints.length ? (
                         refineResult.sellingPoints.map((item, index) => (
                           <div
                             key={`${item}-${index}`}
-                            className="rounded-[20px] border border-[--border-soft] bg-white/82 px-4 py-3 text-sm leading-7 text-[--text-strong]"
+                            className="rounded-[20px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-3 text-sm leading-7 text-strong"
                           >
                             {item}
                           </div>
                         ))
                       ) : (
-                        <div className="rounded-[20px] border border-dashed border-[--border-soft] bg-white/76 px-4 py-3 text-sm text-[--text-soft]">
+                        <div className="rounded-[20px] border border-dashed border-[rgba(91,70,142,0.14)] bg-white/76 px-4 py-3 text-sm text-soft">
                           暂时没有提炼出新的卖点。
                         </div>
                       )}
                     </div>
 
                     <div className="space-y-3">
-                      <div className="text-sm font-semibold text-[--text-strong]">合规建议</div>
+                      <div className="text-strong text-sm font-semibold">合规建议</div>
                       {refineResult.suggestions.length ? (
                         refineResult.suggestions.map((item, index) => (
                           <div
                             key={`${item}-${index}`}
-                            className="rounded-[20px] border border-[--border-soft] bg-white/82 px-4 py-3 text-sm leading-7 text-[--text-strong]"
+                            className="rounded-[20px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-3 text-sm leading-7 text-strong"
                           >
                             {item}
                           </div>
                         ))
                       ) : (
-                        <div className="rounded-[20px] border border-dashed border-[--border-soft] bg-white/76 px-4 py-3 text-sm text-[--text-soft]">
+                        <div className="rounded-[20px] border border-dashed border-[rgba(91,70,142,0.14)] bg-white/76 px-4 py-3 text-sm text-soft">
                           暂时没有新的提醒。
                         </div>
                       )}
@@ -734,39 +734,39 @@ export default function WorkspacePage() {
                   </div>
 
                   <div className="space-y-3">
-                    <div className="text-sm font-semibold text-[--text-strong]">风险提示</div>
+                    <div className="text-strong text-sm font-semibold">风险提示</div>
                     {refineResult.risks.length ? (
                       refineResult.risks.map((risk, index) => (
                         <div
                           key={`${risk.type}-${index}`}
-                          className="rounded-[20px] border border-[rgba(191,92,49,0.18)] bg-white/82 px-4 py-3 text-sm leading-7 text-[--text-strong]"
+                          className="rounded-[20px] border border-[rgba(203,96,146,0.16)] bg-white/82 px-4 py-3 text-sm leading-7 text-strong"
                         >
-                          <div className="font-medium text-[--brand-ink]">{risk.type}</div>
-                          <div className="mt-1 text-[--text-soft]">
+                          <div className="text-brand-ink font-medium">{risk.type}</div>
+                          <div className="text-soft mt-1">
                             {risk.matches.join("、")}
                           </div>
                         </div>
                       ))
                     ) : (
-                      <div className="rounded-[20px] border border-dashed border-[--border-soft] bg-white/76 px-4 py-3 text-sm text-[--text-soft]">
+                      <div className="rounded-[20px] border border-dashed border-[rgba(91,70,142,0.14)] bg-white/76 px-4 py-3 text-sm text-soft">
                         这轮没有明显风险词。
                       </div>
                     )}
                   </div>
 
                   <div className="space-y-3">
-                    <div className="text-sm font-semibold text-[--text-strong]">更稳妥的表达</div>
+                    <div className="text-strong text-sm font-semibold">更稳妥的表达</div>
                     {refineResult.safeRewrites.length ? (
                       refineResult.safeRewrites.map((item, index) => (
                         <div
                           key={`${item}-${index}`}
-                          className="rounded-[20px] border border-[--border-soft] bg-white/82 px-4 py-3 text-sm leading-7 text-[--text-strong]"
+                          className="rounded-[20px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-3 text-sm leading-7 text-strong"
                         >
                           {item}
                         </div>
                       ))
                     ) : (
-                      <div className="rounded-[20px] border border-dashed border-[--border-soft] bg-white/76 px-4 py-3 text-sm text-[--text-soft]">
+                      <div className="rounded-[20px] border border-dashed border-[rgba(91,70,142,0.14)] bg-white/76 px-4 py-3 text-sm text-soft">
                         这轮还没有替代表达。
                       </div>
                     )}
@@ -796,7 +796,7 @@ export default function WorkspacePage() {
                   </Button>
                 </div>
               ) : (
-                <div className="rounded-[24px] border border-dashed border-[--border-soft] bg-white/76 px-5 py-10 text-sm leading-7 text-[--text-soft]">
+                <div className="rounded-[24px] border border-dashed border-[rgba(91,70,142,0.14)] bg-white/76 px-5 py-10 text-sm leading-7 text-soft">
                   把已有话术贴进来，我会帮你提炼重点、提醒风险，并给一版更稳妥的表达。
                 </div>
               )
@@ -805,12 +805,12 @@ export default function WorkspacePage() {
             {activeTool === "commission" ? (
               commissionResult ? (
                 <div className="space-y-4">
-                  <div className="rounded-[24px] border border-[rgba(191,92,49,0.18)] bg-[--brand-soft] px-5 py-5">
-                    <div className="text-xs uppercase tracking-[0.2em] text-[--brand]">预计佣金</div>
-                    <div className="mt-3 text-[32px] font-semibold leading-none text-[--brand-ink]">
+                  <div className="rounded-[24px] border border-[rgba(232,176,61,0.22)] bg-gold-soft px-5 py-5">
+                    <div className="text-brand text-xs uppercase tracking-[0.2em]">预计佣金</div>
+                    <div className="mt-3 text-[32px] font-semibold leading-none text-[#8e5f00]">
                       {commissionResult.commission} 元
                     </div>
-                    <div className="mt-3 text-sm leading-7 text-[--brand-ink]">
+                    <div className="mt-3 text-sm leading-7 text-[#7a5e1c]">
                       {commissionResult.sellingPoint}
                     </div>
                   </div>
@@ -819,10 +819,10 @@ export default function WorkspacePage() {
                     {commissionResult.comparisons.map((item) => (
                       <div
                         key={`${item.price}-${item.commission}`}
-                        className="flex items-center justify-between rounded-[22px] border border-[--border-soft] bg-white/82 px-4 py-4 text-sm"
+                        className="flex items-center justify-between rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-4 text-sm"
                       >
-                        <span className="text-[--text-soft]">售价 {item.price} 元</span>
-                        <span className="font-semibold text-[--text-strong]">
+                        <span className="text-soft">售价 {item.price} 元</span>
+                        <span className="text-strong font-semibold">
                           佣金 {item.commission} 元
                         </span>
                       </div>
@@ -848,7 +848,7 @@ export default function WorkspacePage() {
                   </Button>
                 </div>
               ) : (
-                <div className="rounded-[24px] border border-dashed border-[--border-soft] bg-white/76 px-5 py-10 text-sm leading-7 text-[--text-soft]">
+                <div className="rounded-[24px] border border-dashed border-[rgba(91,70,142,0.14)] bg-white/76 px-5 py-10 text-sm leading-7 text-soft">
                   把价格和佣金填上，先算清楚这一单值不值得推。
                 </div>
               )
@@ -858,8 +858,8 @@ export default function WorkspacePage() {
       </section>
 
       {pageError ? (
-        <Card className="rounded-[28px] border-[rgba(191,92,49,0.18)] bg-[--brand-soft]">
-          <p className="text-sm leading-7 text-[--brand-ink]">{pageError}</p>
+        <Card className="rounded-[28px] border-[rgba(203,96,146,0.16)] bg-rose-soft">
+          <p className="text-brand-ink text-sm leading-7">{pageError}</p>
         </Card>
       ) : null}
     </div>

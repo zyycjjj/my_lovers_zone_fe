@@ -64,35 +64,38 @@ export default function WorkspaceSelectPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <Card className="rounded-[32px]">
+      <Card className="surface-card-strong rounded-[34px] p-6 sm:p-8">
         <div className="space-y-4">
           <SoftBadge tone="brand">选择工作空间</SoftBadge>
           <SectionHeading
-            eyebrow="选一个"
-            title="选一个你现在要进入的空间"
+            eyebrow="先回到这次要做的那个空间"
+            title="选一个你现在要进入的工作空间"
             description="如果你同时在多个空间里工作，先回到这次要继续的那个。"
           />
         </div>
       </Card>
 
       {loading ? (
-        <Card className="rounded-[28px]">
-          <p className="text-sm text-[--text-soft]">正在加载空间列表…</p>
+        <Card className="rounded-[30px]">
+          <p className="text-soft text-sm">正在加载空间列表…</p>
         </Card>
       ) : (
         <div className="grid gap-4">
           {items.map((item) => (
-            <Card key={item.id} className="rounded-[28px]">
+            <Card
+              key={item.id}
+              className="rounded-[30px] bg-[linear-gradient(180deg,_rgba(255,255,255,0.9)_0%,_rgba(244,241,250,0.78)_100%)]"
+            >
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <div className="text-base font-semibold text-[--text-strong]">
+                  <div className="text-strong text-base font-semibold">
                     {item.name}
                   </div>
-                  <div className="mt-1 text-sm text-[--text-soft]">
+                  <div className="text-soft mt-1 text-sm">
                     {describeWorkspace(item)}
                   </div>
                 </div>
-                <Button onClick={() => router.push("/workspace")} type="button">
+                <Button className="min-w-[112px]" onClick={() => router.push("/workspace")} type="button">
                   进入
                 </Button>
               </div>
