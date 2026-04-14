@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { apiRequest, ApiClientError } from "../lib/api";
 import { getNumberAuthEnvironment, getSpToken } from "../lib/number-auth";
 import { useAuthSession, useAuthSessionActions } from "../lib/session-store";
-import { Button, ButtonLink, Card, SectionHeading, SoftBadge } from "../components/ui";
+import { Button, ButtonLink, Card, InfoPanel, NoticePanel, SectionHeading, SoftBadge } from "../components/ui";
 
 type NumberAuthTokenDto = {
   accessToken: string;
@@ -230,11 +230,7 @@ function LoginPageContent() {
               </Button>
             ) : null}
 
-            {error ? (
-              <div className="rounded-[20px] border border-[rgba(203,96,146,0.16)] bg-rose-soft px-4 py-4 text-sm leading-7 text-[#a34377]">
-                {error}
-              </div>
-            ) : null}
+            {error ? <NoticePanel tone="rose">{error}</NoticePanel> : null}
           </div>
         </div>
       </Card>
@@ -251,13 +247,12 @@ function LoginPageContent() {
                 ["以后回来不用重说一遍", "登录后会保留你的账号和主页入口。"],
                 ["先回到自己的工作台", "资料收好之后，后面每天回来就顺手很多。"],
               ].map(([title, text]) => (
-                <div
+                <InfoPanel
                   key={title}
-                  className="rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-4"
-                >
-                  <div className="text-strong text-sm font-semibold">{title}</div>
-                  <div className="text-soft mt-1 text-sm leading-7">{text}</div>
-                </div>
+                  className="rounded-[22px] px-4 py-4"
+                  description={text}
+                  title={title}
+                />
               ))}
             </div>
           </div>
@@ -280,9 +275,9 @@ function LoginPageContent() {
             </div>
 
             {allowDevLogin ? (
-              <div className="rounded-[24px] border border-[rgba(93,63,211,0.12)] bg-[linear-gradient(180deg,_rgba(241,234,255,0.66)_0%,_rgba(255,255,255,0.84)_100%)] px-5 py-5 text-sm leading-7 text-soft">
+              <NoticePanel className="rounded-[24px] px-5 py-5" tone="brand">
                 当前是本地预览环境，可以直接进入测试账号，把整条链路先跑通。
-              </div>
+              </NoticePanel>
             ) : null}
 
             <div className="flex justify-start">

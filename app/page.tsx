@@ -1,4 +1,4 @@
-import { ButtonLink, Card, SectionHeading, SoftBadge } from "./components/ui";
+import { ButtonLink, Card, InfoPanel, SectionHeading, SoftBadge } from "./components/ui";
 
 const entryPoints = [
   {
@@ -56,13 +56,13 @@ export default function HomePage() {
 
             <div className="grid gap-3 md:grid-cols-3">
               {entryPoints.map((item) => (
-                <div
+                <InfoPanel
                   key={item.title}
-                  className="surface-card-muted rounded-[26px] p-5"
-                >
-                  <SoftBadge tone={item.tone}>{item.title}</SoftBadge>
-                  <p className="text-soft mt-4 text-sm leading-7">{item.description}</p>
-                </div>
+                  className="surface-card-muted rounded-[26px]"
+                  description={item.description}
+                  title={item.title}
+                  tone={item.tone}
+                />
               ))}
             </div>
 
@@ -89,15 +89,20 @@ export default function HomePage() {
                 现在先做哪一步
               </h3>
               <div className="grid gap-3">
-                <div className="rounded-[22px] border border-[rgba(93,63,211,0.1)] bg-white/78 px-4 py-4 text-sm leading-7 text-soft">
-                  今天先把一条标题和一版脚本做出来
-                </div>
-                <div className="rounded-[22px] border border-[rgba(203,96,146,0.1)] bg-white/78 px-4 py-4 text-sm leading-7 text-soft">
-                  如果今天状态一般，也先把最轻的一步往前推
-                </div>
-                <div className="rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/78 px-4 py-4 text-sm leading-7 text-soft">
-                  明天回来，还能接着昨天那一轮继续做
-                </div>
+                <InfoPanel
+                  description="先把一条标题和一版脚本做出来。"
+                  title="今天先把最小的一轮做完"
+                  tone="brand"
+                />
+                <InfoPanel
+                  description="如果今天状态一般，也先把最轻的一步往前推。"
+                  title="状态不稳的时候也能继续"
+                  tone="rose"
+                />
+                <InfoPanel
+                  description="明天回来，还能接着昨天那一轮继续做。"
+                  title="不用每天都重新开始"
+                />
               </div>
             </div>
           </Card>
@@ -129,18 +134,16 @@ export default function HomePage() {
 
           <div className="mt-6 space-y-3">
             {steps.map((item, index) => (
-              <div
+              <InfoPanel
                 key={item.title}
-                className="rounded-[24px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-5 py-5"
+                className="relative pl-16"
+                description={item.description}
+                title={item.title}
               >
-                <div className="mb-2 flex items-center gap-3">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-sm font-semibold text-brand-ink">
-                    {index + 1}
-                  </span>
-                  <div className="text-strong text-sm font-semibold">{item.title}</div>
-                </div>
-                <div className="text-soft text-sm leading-7">{item.description}</div>
-              </div>
+                <span className="absolute left-5 top-5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-soft text-sm font-semibold text-brand-ink">
+                  {index + 1}
+                </span>
+              </InfoPanel>
             ))}
           </div>
         </Card>

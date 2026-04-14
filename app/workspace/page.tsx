@@ -4,7 +4,20 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiRequest, ApiClientError } from "../lib/api";
 import { clearAuthSession, useAuthSession } from "../lib/session-store";
-import { Button, ButtonLink, Card, SectionHeading, SoftBadge, cn } from "../components/ui";
+import { PromptInputCard, ResultDisplayCard, StatusSummaryCard } from "../components/business";
+import {
+  Button,
+  ButtonLink,
+  Card,
+  ChoicePill,
+  EmptyStatePanel,
+  FieldGroup,
+  MetricPanel,
+  NoticePanel,
+  SectionHeading,
+  SoftBadge,
+  cn,
+} from "../components/ui";
 
 type WorkspaceSummary = {
   id: number;
@@ -104,26 +117,6 @@ function getWorkspaceRoleLabel(role?: string) {
   if (role === "admin") return "管理员";
   if (role === "editor") return "编辑成员";
   return "主理人";
-}
-
-function Field({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="space-y-2">
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-strong text-sm font-semibold">{label}</span>
-        {hint ? <span className="text-muted text-xs">{hint}</span> : null}
-      </div>
-      {children}
-    </label>
-  );
 }
 
 function inputClassName(multiline = false) {
@@ -360,30 +353,16 @@ export default function WorkspacePage() {
             />
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="surface-card-muted rounded-[24px] px-5 py-5">
-                <div className="text-muted text-xs uppercase tracking-[0.2em]">
-                  当前空间
-                </div>
-                <div className="text-strong mt-2 text-lg font-semibold">
-                  {me?.currentWorkspace?.name || "个人空间"}
-                </div>
-                <div className="text-soft mt-2 text-sm">
-                  {getWorkspaceRoleLabel(me?.currentWorkspace?.role)} /{" "}
-                  {getWorkspaceTypeLabel(me?.currentWorkspace?.type)}
-                </div>
-              </div>
-
-              <div className="surface-card-muted rounded-[24px] px-5 py-5">
-                <div className="text-muted text-xs uppercase tracking-[0.2em]">
-                  今天建议
-                </div>
-                <div className="text-strong mt-2 text-base font-semibold">
-                  {todayLine}
-                </div>
-                <div className="text-soft mt-2 text-sm">
-                  资料越清楚，后面给你的结果就越贴近。
-                </div>
-              </div>
+              <MetricPanel
+                hint={`${getWorkspaceRoleLabel(me?.currentWorkspace?.role)} / ${getWorkspaceTypeLabel(me?.currentWorkspace?.type)}`}
+                label="当前空间"
+                value={me?.currentWorkspace?.name || "个人空间"}
+              />
+              <MetricPanel
+                hint="资料越清楚，后面给你的结果就越贴近。"
+                label="今天建议"
+                value={todayLine}
+              />
             </div>
 
             <div className="flex flex-wrap gap-3">
@@ -399,112 +378,115 @@ export default function WorkspacePage() {
           </div>
         </Card>
 
-        <Card className="rounded-[34px]">
-          <div className="space-y-5">
-            <div className="flex items-center justify-between gap-4">
+        <StatusSummaryCard
+          description="不需要重开一整套流程，先把今天这一轮继续做下去。"
+          footer={
+            <div className="space-y-4">
+              <NoticePanel>
+                不用一口气把所有事做完。先选一个入口，先做出一版，再继续往下走。
+              </NoticePanel>
               <div>
-                <div className="text-strong text-sm font-semibold">这次回来先从这里接上</div>
-                <div className="text-soft mt-1 text-sm leading-7">
-                  不需要重开一整套流程，先把今天这一轮继续做下去。
-                </div>
-              </div>
-              <Button onClick={handleLogout} type="button" variant="secondary">
-                退出登录
-              </Button>
-            </div>
-
-            <div className="grid gap-3">
-              <div className="rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-4 text-sm text-soft">
-                登录手机号：{me?.account.phone || "已登录"}
-              </div>
-              <div className="rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-4 text-sm text-soft">
-                空间数量：{workspaces.length}
-              </div>
-              <div className="rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-4 text-sm text-soft">
-                现在可用：标题生成、脚本生成、话术整理、佣金测算
+                <Button onClick={handleLogout} type="button" variant="secondary">
+                  退出登录
+                </Button>
               </div>
             </div>
-
-            <div className="rounded-[24px] border border-[rgba(93,63,211,0.12)] bg-brand-soft px-4 py-4 text-sm leading-7 text-brand-ink">
-              不用一口气把所有事做完。先选一个入口，先做出一版，再继续往下走。
-            </div>
-          </div>
-        </Card>
+          }
+          rows={[
+            <div
+              key="phone"
+              className="rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-4 text-sm text-soft"
+            >
+              登录手机号：{me?.account.phone || "已登录"}
+            </div>,
+            <div
+              key="count"
+              className="rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-4 text-sm text-soft"
+            >
+              空间数量：{workspaces.length}
+            </div>,
+            <div
+              key="ability"
+              className="rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-4 text-sm text-soft"
+            >
+              现在可用：标题生成、脚本生成、话术整理、佣金测算
+            </div>,
+          ]}
+          title="这次回来先从这里接上"
+        />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[0.98fr_1.02fr]">
-        <Card className="rounded-[34px]">
-          <div className="space-y-6">
-            <div className="flex flex-wrap items-center gap-3">
-              {tools.map((tool) => {
-                const active = tool.key === activeTool;
-                return (
-                  <button
-                    key={tool.key}
-                    className={cn(
-                      "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
-                      active
-                        ? "border-[rgba(93,63,211,0.18)] bg-brand-soft text-brand-ink"
-                        : "border-[rgba(91,70,142,0.1)] bg-white/70 text-soft hover:bg-white",
-                    )}
-                    onClick={() => {
-                      setActiveTool(tool.key);
-                      setToolError("");
-                      setCopiedText("");
-                    }}
-                    type="button"
-                  >
-                    {tool.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="rounded-[28px] border border-[rgba(91,70,142,0.1)] bg-[linear-gradient(180deg,_rgba(255,255,255,0.92)_0%,_rgba(244,241,250,0.8)_100%)] p-5">
-              <div className="text-strong text-base font-semibold">
-                {activeToolMeta.label}
+        <PromptInputCard
+          badge={activeToolMeta.label}
+          description={activeToolMeta.description}
+          footer={
+            <>
+              <Button disabled={loadingTool === activeTool} onClick={handleSubmitTool} type="button">
+                {loadingTool === activeTool ? "正在生成…" : `开始${activeToolMeta.label}`}
+              </Button>
+              <div className="bg-slate-soft text-soft inline-flex items-center rounded-full px-4 py-2 text-sm">
+                {activeToolMeta.short}
               </div>
-              <div className="text-soft mt-2 text-sm leading-7">
-                {activeToolMeta.description}
-              </div>
-            </div>
+            </>
+          }
+          title="选择一个入口，先把今天这轮做出来"
+        >
+          <div className="flex flex-wrap items-center gap-3">
+            {tools.map((tool) => {
+              const active = tool.key === activeTool;
+              return (
+                <ChoicePill
+                  key={tool.key}
+                  active={active}
+                  onClick={() => {
+                    setActiveTool(tool.key);
+                    setToolError("");
+                    setCopiedText("");
+                  }}
+                >
+                  {tool.label}
+                </ChoicePill>
+              );
+            })}
+          </div>
 
-            <div className="space-y-5">
+          <div className="space-y-5">
               {activeTool === "title" ? (
                 <>
-                  <Field label="商品关键词">
+                  <FieldGroup label="商品关键词">
                     <input
                       className={inputClassName()}
                       onChange={(event) => setTitleKeyword(event.target.value)}
                       placeholder="比如：香薰蜡烛、夏季凉感被、厨房收纳架"
                       value={titleKeyword}
                     />
-                  </Field>
+                  </FieldGroup>
 
-                  <Field label="风格方向" hint="选填">
+                  <FieldGroup label="风格方向" hint="选填">
                     <input
                       className={inputClassName()}
                       onChange={(event) => setTitleStyle(event.target.value)}
                       placeholder="比如：口语感、治愈、强转化"
                       value={titleStyle}
                     />
-                  </Field>
+                  </FieldGroup>
                 </>
               ) : null}
 
               {activeTool === "script" ? (
                 <>
-                  <Field label="商品关键词">
+                  <FieldGroup label="商品关键词">
                     <input
                       className={inputClassName()}
                       onChange={(event) => setScriptKeyword(event.target.value)}
                       placeholder="比如：家用小风扇"
                       value={scriptKeyword}
                     />
-                  </Field>
+                  </FieldGroup>
 
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="价格" hint="选填">
+                    <FieldGroup label="价格" hint="选填">
                       <input
                         className={inputClassName()}
                         inputMode="decimal"
@@ -512,72 +494,54 @@ export default function WorkspacePage() {
                         placeholder="比如：99"
                         value={scriptPrice}
                       />
-                    </Field>
-                    <Field label="目标人群" hint="选填">
+                    </FieldGroup>
+                    <FieldGroup label="目标人群" hint="选填">
                       <input
                         className={inputClassName()}
                         onChange={(event) => setScriptAudience(event.target.value)}
                         placeholder="比如：租房党、上班族"
                         value={scriptAudience}
                       />
-                    </Field>
+                    </FieldGroup>
                   </div>
 
-                  <Field label="使用场景" hint="选填">
+                  <FieldGroup label="使用场景" hint="选填">
                     <input
                       className={inputClassName()}
                       onChange={(event) => setScriptScene(event.target.value)}
                       placeholder="比如：办公室、宿舍、通勤"
                       value={scriptScene}
                     />
-                  </Field>
+                  </FieldGroup>
 
-                  <Field label="输出风格">
+                  <FieldGroup label="输出风格">
                     <div className="flex flex-wrap gap-3">
-                      <button
-                        className={cn(
-                          "rounded-full border px-4 py-2 text-sm font-medium",
-                          scriptStyle === "short"
-                            ? "border-[rgba(93,63,211,0.18)] bg-brand-soft text-brand-ink"
-                            : "border-soft bg-white/70 text-soft",
-                        )}
-                        onClick={() => setScriptStyle("short")}
-                        type="button"
-                      >
+                      <ChoicePill active={scriptStyle === "short"} onClick={() => setScriptStyle("short")}>
                         短视频种草
-                      </button>
-                      <button
-                        className={cn(
-                          "rounded-full border px-4 py-2 text-sm font-medium",
-                          scriptStyle === "live"
-                            ? "border-[rgba(93,63,211,0.18)] bg-brand-soft text-brand-ink"
-                            : "border-soft bg-white/70 text-soft",
-                        )}
-                        onClick={() => setScriptStyle("live")}
-                        type="button"
-                      >
+                      </ChoicePill>
+                      <ChoicePill active={scriptStyle === "live"} onClick={() => setScriptStyle("live")}>
                         直播口播
-                      </button>
+                      </ChoicePill>
                     </div>
-                  </Field>
+                  </FieldGroup>
                 </>
               ) : null}
 
               {activeTool === "refine" ? (
-                <Field label="原始话术">
+                <FieldGroup label="原始话术">
                   <textarea
                     className={inputClassName(true)}
                     onChange={(event) => setRefineText(event.target.value)}
                     placeholder="把你已经写好的话术贴进来，Memory 会帮你理顺表达、提炼卖点，并提醒风险。"
                     value={refineText}
                   />
-                </Field>
+                </FieldGroup>
               ) : null}
 
               {activeTool === "commission" ? (
                 <>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="商品价格">
+                    <FieldGroup label="商品价格">
                       <input
                         className={inputClassName()}
                         inputMode="decimal"
@@ -585,8 +549,8 @@ export default function WorkspacePage() {
                         placeholder="比如：199"
                         value={commissionPrice}
                       />
-                    </Field>
-                    <Field label="佣金比例">
+                    </FieldGroup>
+                    <FieldGroup label="佣金比例">
                       <input
                         className={inputClassName()}
                         inputMode="decimal"
@@ -594,10 +558,10 @@ export default function WorkspacePage() {
                         placeholder="比如：0.2"
                         value={commissionRate}
                       />
-                    </Field>
+                    </FieldGroup>
                   </div>
 
-                  <Field label="平台扣点" hint="选填">
+                  <FieldGroup label="平台扣点" hint="选填">
                     <input
                       className={inputClassName()}
                       inputMode="decimal"
@@ -605,40 +569,19 @@ export default function WorkspacePage() {
                       placeholder="比如：0.1"
                       value={platformRate}
                     />
-                  </Field>
+                  </FieldGroup>
                 </>
               ) : null}
-            </div>
-
-            {toolError ? (
-              <div className="rounded-[22px] border border-[rgba(93,63,211,0.16)] bg-brand-soft px-4 py-4 text-sm leading-7 text-brand-ink">
-                {toolError}
-              </div>
-            ) : null}
-
-            <div className="flex flex-wrap gap-3">
-              <Button disabled={loadingTool === activeTool} onClick={handleSubmitTool} type="button">
-                {loadingTool === activeTool ? "正在生成…" : `开始${activeToolMeta.label}`}
-              </Button>
-              <div className="bg-slate-soft text-soft inline-flex items-center rounded-full px-4 py-2 text-sm">
-                {activeToolMeta.short}
-              </div>
-            </div>
           </div>
-        </Card>
 
-        <Card className="rounded-[34px]">
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <div className="text-strong text-base font-semibold">这轮结果</div>
-                <div className="text-soft mt-1 text-sm">
-                  先看这一轮结果，再决定下一步怎么继续。
-                </div>
-              </div>
-              {copiedText ? <SoftBadge tone="sage">{copiedText}</SoftBadge> : null}
-            </div>
+          {toolError ? <NoticePanel>{toolError}</NoticePanel> : null}
+        </PromptInputCard>
 
+        <ResultDisplayCard
+          badge={copiedText ? <SoftBadge tone="sage">{copiedText}</SoftBadge> : null}
+          description="先看这一轮结果，再决定下一步怎么继续。"
+          title="这轮结果"
+        >
             {activeTool === "title" ? (
               titleResult.length ? (
                 <div className="space-y-4">
@@ -662,9 +605,9 @@ export default function WorkspacePage() {
                   </Button>
                 </div>
               ) : (
-                <div className="rounded-[24px] border border-dashed border-[rgba(91,70,142,0.14)] bg-white/76 px-5 py-10 text-sm leading-7 text-soft">
+                <EmptyStatePanel>
                   先输一个商品关键词。标题出来之后，你可以直接挑一条先用。
-                </div>
+                </EmptyStatePanel>
               )
             ) : null}
 
@@ -679,21 +622,21 @@ export default function WorkspacePage() {
                   </Button>
                 </div>
               ) : (
-                <div className="rounded-[24px] border border-dashed border-[rgba(91,70,142,0.14)] bg-white/76 px-5 py-10 text-sm leading-7 text-soft">
+                <EmptyStatePanel>
                   先给我一个商品关键词。我会先把开场、脚本和分镜建议整理出来。
-                </div>
+                </EmptyStatePanel>
               )
             ) : null}
 
             {activeTool === "refine" ? (
               refineResult ? (
                 <div className="space-y-4">
-                  <div className="rounded-[24px] border border-[rgba(93,63,211,0.12)] bg-brand-soft px-5 py-5">
+                  <NoticePanel className="rounded-[24px] px-5 py-5">
                     <div className="text-brand text-xs uppercase tracking-[0.2em]">一句话总结</div>
                     <div className="text-brand-ink mt-3 text-base font-semibold leading-8">
                       {refineResult.summaryLine || "这轮还没有总结结果"}
                     </div>
-                  </div>
+                  </NoticePanel>
 
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-3">
@@ -708,9 +651,9 @@ export default function WorkspacePage() {
                           </div>
                         ))
                       ) : (
-                        <div className="rounded-[20px] border border-dashed border-[rgba(91,70,142,0.14)] bg-white/76 px-4 py-3 text-sm text-soft">
+                        <EmptyStatePanel className="rounded-[20px] px-4 py-3">
                           暂时没有提炼出新的卖点。
-                        </div>
+                        </EmptyStatePanel>
                       )}
                     </div>
 
@@ -726,9 +669,9 @@ export default function WorkspacePage() {
                           </div>
                         ))
                       ) : (
-                        <div className="rounded-[20px] border border-dashed border-[rgba(91,70,142,0.14)] bg-white/76 px-4 py-3 text-sm text-soft">
+                        <EmptyStatePanel className="rounded-[20px] px-4 py-3">
                           暂时没有新的提醒。
-                        </div>
+                        </EmptyStatePanel>
                       )}
                     </div>
                   </div>
@@ -748,9 +691,9 @@ export default function WorkspacePage() {
                         </div>
                       ))
                     ) : (
-                      <div className="rounded-[20px] border border-dashed border-[rgba(91,70,142,0.14)] bg-white/76 px-4 py-3 text-sm text-soft">
+                      <EmptyStatePanel className="rounded-[20px] px-4 py-3">
                         这轮没有明显风险词。
-                      </div>
+                      </EmptyStatePanel>
                     )}
                   </div>
 
@@ -766,9 +709,9 @@ export default function WorkspacePage() {
                         </div>
                       ))
                     ) : (
-                      <div className="rounded-[20px] border border-dashed border-[rgba(91,70,142,0.14)] bg-white/76 px-4 py-3 text-sm text-soft">
+                      <EmptyStatePanel className="rounded-[20px] px-4 py-3">
                         这轮还没有替代表达。
-                      </div>
+                      </EmptyStatePanel>
                     )}
                   </div>
 
@@ -796,16 +739,16 @@ export default function WorkspacePage() {
                   </Button>
                 </div>
               ) : (
-                <div className="rounded-[24px] border border-dashed border-[rgba(91,70,142,0.14)] bg-white/76 px-5 py-10 text-sm leading-7 text-soft">
+                <EmptyStatePanel>
                   把已有话术贴进来，我会帮你提炼重点、提醒风险，并给一版更稳妥的表达。
-                </div>
+                </EmptyStatePanel>
               )
             ) : null}
 
             {activeTool === "commission" ? (
               commissionResult ? (
                 <div className="space-y-4">
-                  <div className="rounded-[24px] border border-[rgba(232,176,61,0.22)] bg-gold-soft px-5 py-5">
+                  <NoticePanel className="rounded-[24px] px-5 py-5" tone="gold">
                     <div className="text-brand text-xs uppercase tracking-[0.2em]">预计佣金</div>
                     <div className="mt-3 text-[32px] font-semibold leading-none text-[#8e5f00]">
                       {commissionResult.commission} 元
@@ -813,7 +756,7 @@ export default function WorkspacePage() {
                     <div className="mt-3 text-sm leading-7 text-[#7a5e1c]">
                       {commissionResult.sellingPoint}
                     </div>
-                  </div>
+                  </NoticePanel>
 
                   <div className="space-y-3">
                     {commissionResult.comparisons.map((item) => (
@@ -848,19 +791,16 @@ export default function WorkspacePage() {
                   </Button>
                 </div>
               ) : (
-                <div className="rounded-[24px] border border-dashed border-[rgba(91,70,142,0.14)] bg-white/76 px-5 py-10 text-sm leading-7 text-soft">
+                <EmptyStatePanel>
                   把价格和佣金填上，先算清楚这一单值不值得推。
-                </div>
+                </EmptyStatePanel>
               )
             ) : null}
-          </div>
-        </Card>
+        </ResultDisplayCard>
       </section>
 
       {pageError ? (
-        <Card className="rounded-[28px] border-[rgba(203,96,146,0.16)] bg-rose-soft">
-          <p className="text-brand-ink text-sm leading-7">{pageError}</p>
-        </Card>
+        <NoticePanel tone="rose">{pageError}</NoticePanel>
       ) : null}
     </div>
   );

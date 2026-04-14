@@ -4,7 +4,16 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiRequest, ApiClientError } from "../lib/api";
 import { useAuthSession } from "../lib/session-store";
-import { Button, Card, SectionHeading, SoftBadge, cn } from "../components/ui";
+import {
+  Button,
+  Card,
+  ChoicePill,
+  FieldGroup,
+  InfoPanel,
+  NoticePanel,
+  SectionHeading,
+  SoftBadge,
+} from "../components/ui";
 
 type OnboardingStatus = {
   completed: boolean;
@@ -25,31 +34,6 @@ type OnboardingPayload = {
 
 const businessRoles = ["个体商家", "带货博主", "直播运营", "内容主理人"];
 const goals = ["起号", "提升转化", "稳定更新", "补内容节奏"];
-
-function ChoicePill({
-  active,
-  children,
-  onClick,
-}: {
-  active: boolean;
-  children: React.ReactNode;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      className={cn(
-        "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
-        active
-          ? "border-[rgba(93,63,211,0.18)] bg-brand-soft text-brand-ink"
-          : "border-[rgba(91,70,142,0.1)] bg-white/72 text-soft hover:bg-white",
-      )}
-      onClick={onClick}
-      type="button"
-    >
-      {children}
-    </button>
-  );
-}
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -166,13 +150,12 @@ export default function OnboardingPage() {
               ["你现在主要卖什么", "先知道类目，标题和脚本会更贴近。"],
               ["你现在最想解决什么", "先知道目标，给你的第一轮就会更准。"],
             ].map(([title, description]) => (
-              <div
+              <InfoPanel
                 key={title}
-                className="surface-card-muted rounded-[24px] px-5 py-5"
-              >
-                <div className="text-strong text-sm font-semibold">{title}</div>
-                <div className="text-soft mt-2 text-sm leading-7">{description}</div>
-              </div>
+                className="surface-card-muted"
+                description={description}
+                title={title}
+              />
             ))}
           </div>
         </div>
@@ -181,8 +164,7 @@ export default function OnboardingPage() {
       <Card className="rounded-[34px] p-6 sm:p-8">
         <form className="space-y-6" onSubmit={handleSubmit}>
           <div className="grid gap-5 md:grid-cols-2">
-            <label className="space-y-2">
-              <span className="text-strong text-sm font-semibold">怎么称呼你</span>
+            <FieldGroup label="怎么称呼你">
               <input
                 className="input-base"
                 onChange={(event) =>
@@ -191,10 +173,9 @@ export default function OnboardingPage() {
                 placeholder="比如：阿遥"
                 value={form.nickname}
               />
-            </label>
+            </FieldGroup>
 
-            <label className="space-y-2">
-              <span className="text-strong text-sm font-semibold">主营类目</span>
+            <FieldGroup label="主营类目">
               <input
                 className="input-base"
                 onChange={(event) =>
@@ -203,7 +184,7 @@ export default function OnboardingPage() {
                 placeholder="比如：家居、零食、个护"
                 value={form.industry}
               />
-            </label>
+            </FieldGroup>
           </div>
 
           <div className="space-y-3">
@@ -237,46 +218,39 @@ export default function OnboardingPage() {
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">
-            <label className="space-y-2">
-              <span className="text-soft text-sm">内容方向</span>
+            <FieldGroup hint="选填" label="内容方向">
               <input
                 className="input-base"
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, contentDirection: event.target.value }))
                 }
-                placeholder="选填"
+                placeholder="比如：种草、直播、复盘"
                 value={form.contentDirection}
               />
-            </label>
-            <label className="space-y-2">
-              <span className="text-soft text-sm">目标平台</span>
+            </FieldGroup>
+            <FieldGroup hint="选填" label="目标平台">
               <input
                 className="input-base"
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, targetPlatform: event.target.value }))
                 }
-                placeholder="选填"
+                placeholder="比如：小红书、抖音"
                 value={form.targetPlatform}
               />
-            </label>
-            <label className="space-y-2">
-              <span className="text-soft text-sm">当前经验</span>
+            </FieldGroup>
+            <FieldGroup hint="选填" label="当前经验">
               <input
                 className="input-base"
                 onChange={(event) =>
                   setForm((prev) => ({ ...prev, experienceLevel: event.target.value }))
                 }
-                placeholder="选填"
+                placeholder="比如：刚开始、稳定更新中"
                 value={form.experienceLevel}
               />
-            </label>
+            </FieldGroup>
           </div>
 
-          {error ? (
-            <div className="rounded-[22px] border border-[rgba(203,96,146,0.16)] bg-rose-soft px-4 py-4 text-sm leading-7 text-[#a34377]">
-              {error}
-            </div>
-          ) : null}
+          {error ? <NoticePanel tone="rose">{error}</NoticePanel> : null}
 
           <div className="flex flex-wrap items-center gap-3">
             <Button
