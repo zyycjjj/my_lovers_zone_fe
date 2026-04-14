@@ -74,10 +74,7 @@ html {
 
 body {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top left, rgba(216, 199, 255, 0.45), transparent 24%),
-    radial-gradient(circle at top right, rgba(255, 205, 225, 0.42), transparent 20%),
-    linear-gradient(180deg, var(--background) 0%, var(--background-accent) 100%);
+  background: #fafafa;
   color: var(--text-strong);
   font-family:
     "PingFang SC",
@@ -110,24 +107,6 @@ a:active {
 }
 
 @layer utilities {
-  .page-shell {
-    position: relative;
-    isolation: isolate;
-  }
-
-  .page-shell::before {
-    content: "";
-    position: absolute;
-    inset: -40px 0 auto;
-    height: 240px;
-    background:
-      radial-gradient(circle at 12% 15%, rgba(137, 97, 242, 0.14), transparent 34%),
-      radial-gradient(circle at 84% 10%, rgba(245, 132, 180, 0.18), transparent 28%),
-      radial-gradient(circle at 70% 70%, rgba(255, 204, 130, 0.18), transparent 18%);
-    z-index: -1;
-    pointer-events: none;
-  }
-
   .text-strong {
     color: var(--text-strong);
   }
