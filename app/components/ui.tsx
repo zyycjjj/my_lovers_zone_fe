@@ -12,16 +12,7 @@ export function Card({
   className?: string;
   children: ReactNode;
 }) {
-  return (
-    <section
-      className={cn(
-        "surface-card rounded-[30px] p-5 sm:p-6",
-        className,
-      )}
-    >
-      {children}
-    </section>
-  );
+  return <section className={cn("ui-card p-5 sm:p-6", className)}>{children}</section>;
 }
 
 export function SoftBadge({
@@ -33,46 +24,49 @@ export function SoftBadge({
 }) {
   const toneClass =
     tone === "brand"
-      ? "bg-brand-soft text-brand-ink border-[rgba(93,63,211,0.16)]"
+      ? "ui-badge-brand"
       : tone === "sage"
-        ? "bg-sage-soft text-[#365246] border-[rgba(70,110,90,0.14)]"
+        ? "ui-badge-sage"
         : tone === "rose"
-          ? "bg-rose-soft text-[#a34377] border-[rgba(203,96,146,0.16)]"
-          : "bg-slate-soft text-soft border-soft";
+          ? "ui-badge-rose"
+          : "ui-badge-neutral";
 
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium",
-        toneClass,
-      )}
-    >
-      {children}
-    </span>
-  );
+  return <span className={cn("ui-badge", toneClass)}>{children}</span>;
 }
 
 export function SectionHeading({
   eyebrow,
   title,
   description,
+  align = "left",
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
+  align?: "left" | "center";
 }) {
   return (
-    <div className="space-y-2">
+    <div className={cn("space-y-3", align === "center" && "text-center")}>
       {eyebrow ? (
-        <span className="text-brand text-[11px] font-semibold uppercase tracking-[0.24em]">
+        <span className="text-[13px] font-semibold tracking-[0.08em] text-[var(--primary-700)]">
           {eyebrow}
         </span>
       ) : null}
-      <h2 className="heading-serif text-strong text-[30px] leading-[1.18] sm:text-[38px]">
+      <div
+        className={cn(
+          "max-w-4xl text-[34px] font-semibold tracking-[-0.04em] text-strong sm:text-[42px] lg:text-[52px]",
+          align === "center" && "mx-auto",
+        )}
+      >
         {title}
-      </h2>
+      </div>
       {description ? (
-        <p className="text-soft max-w-2xl text-sm leading-7 sm:text-[15px]">
+        <p
+          className={cn(
+            "max-w-2xl text-[15px] leading-7 text-soft sm:text-base",
+            align === "center" && "mx-auto",
+          )}
+        >
           {description}
         </p>
       ) : null}
@@ -95,17 +89,17 @@ export function InfoPanel({
 }) {
   const toneClass =
     tone === "brand"
-      ? "border-[rgba(93,63,211,0.12)] bg-[linear-gradient(180deg,_rgba(241,234,255,0.8)_0%,_rgba(255,255,255,0.88)_100%)]"
+      ? "bg-[rgba(112,70,214,0.06)] border-[rgba(112,70,214,0.12)]"
       : tone === "rose"
-        ? "border-[rgba(203,96,146,0.12)] bg-[linear-gradient(180deg,_rgba(255,234,243,0.72)_0%,_rgba(255,255,255,0.88)_100%)]"
+        ? "bg-[rgba(227,95,151,0.06)] border-[rgba(227,95,151,0.12)]"
         : tone === "sage"
-          ? "border-[rgba(70,110,90,0.14)] bg-[linear-gradient(180deg,_rgba(238,248,242,0.8)_0%,_rgba(255,255,255,0.88)_100%)]"
-          : "border-[rgba(91,70,142,0.1)] bg-white/82";
+          ? "bg-[rgba(22,199,154,0.06)] border-[rgba(22,199,154,0.12)]"
+          : "bg-white border-[rgba(88,51,175,0.08)]";
 
   return (
     <div className={cn("rounded-[24px] border px-5 py-5", toneClass, className)}>
-      <div className="text-strong text-sm font-semibold">{title}</div>
-      <div className="text-soft mt-2 text-sm leading-7">{description}</div>
+      <div className="text-[15px] font-semibold text-strong">{title}</div>
+      <div className="mt-2 text-sm leading-7 text-soft">{description}</div>
       {children}
     </div>
   );
@@ -123,10 +117,10 @@ export function MetricPanel({
   className?: string;
 }) {
   return (
-    <div className={cn("surface-card-muted rounded-[24px] px-5 py-5", className)}>
-      <div className="text-muted text-xs uppercase tracking-[0.2em]">{label}</div>
-      <div className="text-strong mt-2 text-lg font-semibold">{value}</div>
-      {hint ? <div className="text-soft mt-2 text-sm">{hint}</div> : null}
+    <div className={cn("ui-card-muted px-4 py-4", className)}>
+      <div className="text-xs font-medium tracking-[0.08em] text-muted">{label}</div>
+      <div className="mt-2 text-[28px] font-semibold tracking-[-0.03em] text-strong">{value}</div>
+      {hint ? <div className="mt-2 text-sm text-soft">{hint}</div> : null}
     </div>
   );
 }
@@ -142,18 +136,14 @@ export function NoticePanel({
 }) {
   const toneClass =
     tone === "brand"
-      ? "border-[rgba(93,63,211,0.16)] bg-brand-soft text-brand-ink"
+      ? "bg-[rgba(112,70,214,0.08)] text-[var(--primary-700)] border-[rgba(112,70,214,0.12)]"
       : tone === "rose"
-        ? "border-[rgba(203,96,146,0.16)] bg-rose-soft text-[#a34377]"
+        ? "bg-[rgba(227,95,151,0.08)] text-[var(--secondary-700)] border-[rgba(227,95,151,0.12)]"
         : tone === "gold"
-          ? "border-[rgba(232,176,61,0.22)] bg-gold-soft text-[#7a5e1c]"
-          : "border-[rgba(91,70,142,0.1)] bg-slate-soft text-soft";
+          ? "bg-[rgba(245,158,11,0.08)] text-[#8a5a0a] border-[rgba(245,158,11,0.18)]"
+          : "bg-[rgba(245,245,251,1)] text-soft border-[rgba(88,51,175,0.08)]";
 
-  return (
-    <div className={cn("rounded-[22px] border px-4 py-4 text-sm leading-7", toneClass, className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn("rounded-[20px] border px-4 py-4 text-sm leading-7", toneClass, className)}>{children}</div>;
 }
 
 export function EmptyStatePanel({
@@ -166,7 +156,7 @@ export function EmptyStatePanel({
   return (
     <div
       className={cn(
-        "rounded-[24px] border border-dashed border-[rgba(91,70,142,0.14)] bg-white/76 px-5 py-10 text-sm leading-7 text-soft",
+        "rounded-[24px] border border-dashed border-[rgba(88,51,175,0.14)] bg-white px-5 py-10 text-sm leading-7 text-soft",
         className,
       )}
     >
@@ -188,13 +178,7 @@ export function ChoicePill({
 }) {
   return (
     <button
-      className={cn(
-        "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
-        active
-          ? "border-[rgba(93,63,211,0.18)] bg-brand-soft text-brand-ink"
-          : "border-[rgba(91,70,142,0.1)] bg-white/72 text-soft hover:bg-white",
-        className,
-      )}
+      className={cn("ui-pill", active && "ui-pill-active", className)}
       onClick={onClick}
       type="button"
     >
@@ -215,18 +199,17 @@ export function FieldGroup({
   className?: string;
 }) {
   return (
-    <label className={cn("space-y-2", className)}>
+    <label className={cn("space-y-2.5", className)}>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-strong text-sm font-semibold">{label}</span>
-        {hint ? <span className="text-muted text-xs">{hint}</span> : null}
+        <span className="text-sm font-medium text-strong">{label}</span>
+        {hint ? <span className="text-xs text-muted">{hint}</span> : null}
       </div>
       {children}
     </label>
   );
 }
 
-const baseButtonClass =
-  "inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60";
+const baseButtonClass = "ui-btn";
 
 export function ButtonLink({
   className,
@@ -238,17 +221,12 @@ export function ButtonLink({
 }) {
   const variantClass =
     variant === "primary"
-      ? "bg-[linear-gradient(135deg,_var(--primary-500)_0%,_var(--primary-700)_100%)] text-white shadow-[0_16px_34px_rgba(93,63,211,0.28)] hover:brightness-[1.03]"
+      ? "ui-btn-primary"
       : variant === "secondary"
-        ? "border border-[rgba(93,63,211,0.18)] bg-white/86 text-strong hover:bg-white"
-        : "bg-transparent text-soft hover:bg-white/55 hover:text-strong";
+        ? "ui-btn-secondary"
+        : "ui-btn-ghost";
 
-  return (
-    <Link
-      className={cn(baseButtonClass, variantClass, className)}
-      {...props}
-    />
-  );
+  return <Link className={cn(baseButtonClass, variantClass, className)} {...props} />;
 }
 
 export function Button({
@@ -261,15 +239,10 @@ export function Button({
 }) {
   const variantClass =
     variant === "primary"
-      ? "bg-[linear-gradient(135deg,_var(--primary-500)_0%,_var(--primary-700)_100%)] text-white shadow-[0_16px_34px_rgba(93,63,211,0.28)] hover:brightness-[1.03]"
+      ? "ui-btn-primary"
       : variant === "secondary"
-        ? "border border-[rgba(93,63,211,0.18)] bg-white/86 text-strong hover:bg-white"
-        : "bg-transparent text-soft hover:bg-white/55 hover:text-strong";
+        ? "ui-btn-secondary"
+        : "ui-btn-ghost";
 
-  return (
-    <button
-      className={cn(baseButtonClass, variantClass, className)}
-      {...props}
-    />
-  );
+  return <button className={cn(baseButtonClass, variantClass, className)} {...props} />;
 }

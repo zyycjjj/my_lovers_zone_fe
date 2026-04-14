@@ -10,11 +10,9 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const variantStyles: Record<ButtonVariant, string> = {
-  primary:
-    "bg-[linear-gradient(135deg,_var(--primary-500)_0%,_var(--primary-700)_100%)] text-white shadow-[0_16px_34px_rgba(93,63,211,0.28)] hover:brightness-[1.03]",
-  secondary:
-    "border border-[rgba(93,63,211,0.18)] bg-white/86 text-strong hover:bg-white",
-  ghost: "bg-transparent text-soft hover:bg-white/55 hover:text-strong",
+  primary: "ui-btn-primary",
+  secondary: "ui-btn-secondary",
+  ghost: "ui-btn-ghost",
 };
 
 export function UiButton({
@@ -25,7 +23,7 @@ export function UiButton({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60",
+        "ui-btn",
         variantStyles[variant],
         className,
       )}

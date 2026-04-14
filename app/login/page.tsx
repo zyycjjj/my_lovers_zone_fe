@@ -5,7 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { apiRequest, ApiClientError } from "../lib/api";
 import { getNumberAuthEnvironment, getSpToken } from "../lib/number-auth";
 import { useAuthSession, useAuthSessionActions } from "../lib/session-store";
-import { Button, ButtonLink, Card, InfoPanel, NoticePanel, SectionHeading, SoftBadge } from "../components/ui";
+import {
+  CommunityEntryCard,
+  ContentRetentionCard,
+  PromptInputCard,
+  TodayCompanionCard,
+} from "../components/business";
+import { Button, ButtonLink, NoticePanel, SoftBadge } from "../components/ui";
 
 type NumberAuthTokenDto = {
   accessToken: string;
@@ -49,7 +55,7 @@ function LoginPageContent() {
   const [isPreparing, setIsPreparing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [networkHint, setNetworkHint] = useState("");
+  const [networkHint, setNetworkHint] = useState("正在判断当前环境是否适合快捷登录…");
   const [allowDevLogin, setAllowDevLogin] = useState(false);
 
   const intent = useMemo(() => searchParams.get("intent") ?? "", [searchParams]);
@@ -67,14 +73,14 @@ function LoginPageContent() {
       .then((env) => {
         if (!active) return;
         if (env?.isPc) {
-          setNetworkHint("现在像是桌面环境，快捷登录更适合在手机浏览器里完成。");
+          setNetworkHint("当前像是桌面环境，快捷登录更适合在手机浏览器中完成。");
           return;
         }
         if (env?.isWifi) {
-          setNetworkHint("当前连接了 Wi‑Fi，切到移动网络后，快捷认证会更稳一点。");
+          setNetworkHint("现在连接的是 Wi‑Fi，切到移动网络后，快捷登录会更稳一些。");
           return;
         }
-        setNetworkHint("当前环境可以先尝试手机号快捷登录。");
+        setNetworkHint("当前环境可以直接尝试手机号快捷登录。");
       })
       .catch(() => {
         if (active) {
@@ -184,109 +190,82 @@ function LoginPageContent() {
   const working = isPreparing || isSubmitting;
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-      <Card className="surface-card-strong rounded-[34px] p-6 sm:p-8">
-        <div className="space-y-6">
-          <div className="flex flex-wrap items-center gap-3">
-            <SoftBadge tone="brand">手机号快捷登录</SoftBadge>
-            {intent === "trial" ? <SoftBadge tone="rose">继续刚才那一轮</SoftBadge> : null}
-          </div>
-
-          <SectionHeading
-            eyebrow="第一步"
-            title="先登录，再把你的主页接起来"
-            description="第一次来，只需要先把登录走通。后面会顺着你的身份、类目和目标，给你更贴近的内容结果。"
-          />
-
-          <div className="surface-card-muted rounded-[28px] p-5">
-            <div className="text-strong text-sm font-semibold">登录前提醒</div>
-            <p className="text-soft mt-2 text-sm leading-7">
-              推荐在手机浏览器中使用。当前网络不适合快捷认证时，也可以稍后再试。
-            </p>
-            <div className="bg-slate-soft text-soft mt-4 rounded-[20px] px-4 py-4 text-sm leading-7">
-              {networkHint || "正在确认当前环境…"}
-            </div>
-          </div>
-
-          <div className="space-y-3">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+      <PromptInputCard
+        badge={intent === "trial" ? "继续刚才那一轮" : "手机号快捷登录"}
+        className="rounded-[36px] p-6 sm:p-8"
+        description="这里不用密码。第一次登录会自动创建账号，后面把你的身份、主营类目和当前目标补齐，就能直接进入自己的主页。"
+        footer={
+          <>
             <Button
-              className="w-full py-3.5 text-[15px]"
+              className="min-w-[180px]"
               disabled={working}
               onClick={handleQuickLogin}
               type="button"
             >
-              {working ? "正在连接手机号快捷登录…" : "手机号快捷登录"}
+              {working ? "正在连接快捷登录…" : "手机号快捷登录"}
             </Button>
+            <ButtonLink href="/trial" variant="secondary">
+              先回体验页
+            </ButtonLink>
+          </>
+        }
+        title="登录之后，结果、节奏和你的主页才会真正接起来"
+      >
+        <div className="grid gap-4">
+          <NoticePanel tone="brand">{networkHint}</NoticePanel>
 
-            {allowDevLogin ? (
-              <Button
-                className="w-full py-3.5 text-[15px]"
+          {intent === "trial" ? (
+            <NoticePanel tone="gold">
+              你刚才在体验页填过的内容已经临时记住了。登录成功后，我们会把这轮继续接到你的主页里。
+            </NoticePanel>
+          ) : null}
+
+          {error ? <NoticePanel tone="rose">{error}</NoticePanel> : null}
+
+          {allowDevLogin ? (
+            <div className="rounded-[22px] border border-dashed border-[rgba(88,51,175,0.16)] bg-[rgba(112,70,214,0.04)] p-4">
+              <div className="text-sm font-medium text-strong">本地调试入口</div>
+              <div className="mt-1 text-sm leading-7 text-soft">
+                仅开发环境显示，方便先把登录、建档和工作台主链路一起跑通。
+              </div>
+              <button
+                className="ui-btn ui-btn-secondary mt-4"
                 disabled={working}
                 onClick={handleDevLogin}
                 type="button"
-                variant="secondary"
               >
                 本地测试直接进入
-              </Button>
-            ) : null}
-
-            {error ? <NoticePanel tone="rose">{error}</NoticePanel> : null}
-          </div>
+              </button>
+            </div>
+          ) : null}
         </div>
-      </Card>
+      </PromptInputCard>
 
       <div className="grid gap-6">
-        <Card className="rounded-[32px] bg-[linear-gradient(180deg,_rgba(255,255,255,0.94)_0%,_rgba(241,234,255,0.84)_100%)]">
-          <div className="space-y-4">
-            <h2 className="heading-serif text-strong text-[30px] leading-tight">
-              登录之后会更轻一点
-            </h2>
-            <div className="grid gap-3">
-              {[
-                ["先认一下你在做什么", "会先知道你的身份、主营类目和当前目标。"],
-                ["以后回来不用重说一遍", "登录后会保留你的账号和主页入口。"],
-                ["先回到自己的工作台", "资料收好之后，后面每天回来就顺手很多。"],
-              ].map(([title, text]) => (
-                <InfoPanel
-                  key={title}
-                  className="rounded-[22px] px-4 py-4"
-                  description={text}
-                  title={title}
-                />
-              ))}
-            </div>
-          </div>
-        </Card>
+        <TodayCompanionCard
+          description="登录不是为了多一个门槛，而是为了把后面的页面、节奏和结果都挂到你自己的账号下。"
+          items={[
+            { title: "第一次会先认识你在做什么", meta: "建档", tone: "brand" },
+            { title: "以后回来不用重说一遍", meta: "留存", tone: "sage" },
+            { title: "直接回到自己的主页", meta: "工作台", tone: "rose" },
+          ]}
+          title="第一次登录之后，会发生什么"
+        />
 
-        <Card className="rounded-[32px]">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <SoftBadge tone="sage">登录后会保留</SoftBadge>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {["你的手机号", "你的资料", "你的主页入口"].map((item) => (
-                <div
-                  key={item}
-                  className="rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/78 px-4 py-4 text-sm text-soft"
-                >
-                  {item}
-                </div>
-              ))}
-            </div>
+        <ContentRetentionCard
+          actionHref="/trial"
+          actionText="先回体验页"
+          description="体验页和登录之间不是断开的。先试一轮，再登录继续，才会更像一个真的在帮你往前走的产品。"
+          title="不是把你拦在登录页，而是把这轮接住"
+        />
 
-            {allowDevLogin ? (
-              <NoticePanel className="rounded-[24px] px-5 py-5" tone="brand">
-                当前是本地预览环境，可以直接进入测试账号，把整条链路先跑通。
-              </NoticePanel>
-            ) : null}
-
-            <div className="flex justify-start">
-              <ButtonLink href="/" variant="ghost">
-                回首页
-              </ButtonLink>
-            </div>
-          </div>
-        </Card>
+        <CommunityEntryCard
+          actionHref="/workspace"
+          actionText="登录后进入工作台"
+          description="内容做下去这件事，不只是靠工具本身，还靠有人整理方向、有人跑通过程、有人告诉你今天先做哪一步。"
+          title="后面还有主页、社群和长期留存，不止这一页。"
+        />
       </div>
     </div>
   );
@@ -296,9 +275,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <Card className="mx-auto max-w-3xl rounded-[32px] p-8">
-          <p className="text-soft text-sm">正在准备登录入口…</p>
-        </Card>
+        <div className="ui-card rounded-[32px] p-8 text-sm text-soft">正在准备登录入口…</div>
       }
     >
       <LoginPageContent />

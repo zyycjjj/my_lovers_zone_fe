@@ -7,7 +7,7 @@ import { ButtonLink, cn } from "./ui";
 
 const navItems = [
   { href: "/", label: "首页" },
-  { href: "/login", label: "登录" },
+  { href: "/trial", label: "体验" },
   { href: "/workspace", label: "工作台" },
 ];
 
@@ -17,52 +17,44 @@ export function SiteHeader() {
   const session = useAuthSession();
 
   return (
-    <header className="sticky top-0 z-30 border-b border-[rgba(91,70,142,0.08)] bg-[rgba(250,246,255,0.68)] backdrop-blur-2xl">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 border-b border-[rgba(88,51,175,0.06)] bg-[rgba(248,246,255,0.76)] backdrop-blur-xl">
+      <div className="mx-auto flex max-w-[1280px] items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[rgba(93,63,211,0.18)] bg-[linear-gradient(180deg,_rgba(255,255,255,0.96)_0%,_rgba(241,234,255,0.92)_100%)] text-lg font-bold text-brand">
+          <span className="inline-flex h-11 w-11 items-center justify-center rounded-[18px] border border-[rgba(88,51,175,0.12)] bg-white text-base font-semibold text-[var(--primary-700)] shadow-[0_8px_20px_rgba(36,20,74,0.06)]">
             M
           </span>
-          <span className="space-y-0.5">
-            <strong className="text-strong block text-lg font-semibold">
-              Memory
-            </strong>
-            <span className="text-soft block text-xs">
-              轻陪跑式 AI 内容工作台
-            </span>
-          </span>
+          <div className="min-w-0">
+            <div className="truncate text-lg font-semibold tracking-[-0.03em] text-strong">Memory</div>
+            <div className="truncate text-xs text-soft">轻陪跑式 AI 内容工作台</div>
+          </div>
         </Link>
 
-        <div className="hidden items-center gap-2 rounded-full border border-[rgba(91,70,142,0.08)] bg-white/62 p-1 md:flex">
+        <nav className="hidden items-center gap-2 rounded-[18px] border border-[rgba(88,51,175,0.08)] bg-white/82 p-1 md:flex">
           {navItems.map((item) => {
-            const active =
-              item.href === "/"
-                ? pathname === item.href
-                : pathname?.startsWith(item.href);
-
+            const active = item.href === "/" ? pathname === "/" : pathname?.startsWith(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "rounded-full px-4 py-2 text-sm font-medium text-soft",
-                  active && "bg-white text-strong shadow-[0_10px_24px_rgba(74,42,179,0.08)]",
+                  "rounded-[14px] px-4 py-2 text-sm font-medium text-soft",
+                  active && "bg-[rgba(112,70,214,0.1)] text-[var(--primary-700)]",
                 )}
               >
                 {item.label}
               </Link>
             );
           })}
-        </div>
+        </nav>
 
         <div className="flex items-center gap-3">
           {session?.sessionToken ? (
             <>
-              <span className="text-soft hidden text-xs sm:inline">
-                已登录
-              </span>
+              <ButtonLink href="/workspace" variant="secondary" className="hidden sm:inline-flex">
+                进入工作台
+              </ButtonLink>
               <button
-                className="rounded-full border border-[rgba(93,63,211,0.12)] bg-white/72 px-4 py-2 text-sm font-medium text-soft hover:bg-white"
+                className="ui-btn ui-btn-ghost"
                 onClick={() => {
                   clearAuthSession();
                   router.push("/login");
@@ -73,9 +65,7 @@ export function SiteHeader() {
               </button>
             </>
           ) : (
-            <ButtonLink href="/login" className="px-4 py-2.5">
-              开始登录
-            </ButtonLink>
+            <ButtonLink href="/login">登录 / 注册</ButtonLink>
           )}
         </div>
       </div>
