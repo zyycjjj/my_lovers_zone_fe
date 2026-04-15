@@ -135,7 +135,7 @@ function Header() {
         <Brand />
         <Link
           href="/login"
-          className="inline-flex h-9 items-center justify-center rounded-2xl px-4 text-sm font-medium text-[#3f3f46] lg:h-10 lg:px-6"
+          className="inline-flex h-9 items-center justify-center rounded-2xl px-4 text-sm font-medium text-[#3f3f46] hover:-translate-y-0.5 hover:bg-[rgba(74,49,104,0.06)] hover:text-[#4a3168] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#4a3168]/20 lg:h-10 lg:px-6"
         >
           登录
         </Link>
@@ -148,7 +148,7 @@ function PrimaryButton({ href, children }: { href: string; children: React.React
   return (
     <Link
       href={href}
-      className="inline-flex h-[60px] w-full items-center justify-center rounded-2xl bg-[#4a3168] text-[18px] font-medium text-white shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.1)] lg:h-16 lg:w-auto lg:min-w-[192px]"
+      className="inline-flex h-[60px] w-full items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#4a3168_0%,#6f4d96_100%)] text-[18px] font-medium text-white shadow-[0_12px_30px_rgba(74,49,104,0.18)] hover:-translate-y-1 hover:shadow-[0_20px_44px_rgba(74,49,104,0.26)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#4a3168]/18 active:translate-y-0 active:shadow-[0_10px_22px_rgba(74,49,104,0.2)] lg:h-16 lg:w-auto lg:min-w-[192px]"
     >
       {children}
     </Link>
@@ -159,7 +159,7 @@ function SecondaryButton({ href, children }: { href: string; children: React.Rea
   return (
     <Link
       href={href}
-      className="inline-flex h-[60px] w-full items-center justify-center rounded-2xl border-[1.5px] border-[#4a3168] bg-white text-[18px] font-medium text-[#4a3168] lg:h-16 lg:w-auto lg:min-w-[140px]"
+      className="inline-flex h-[60px] w-full items-center justify-center rounded-2xl border-[1.5px] border-[#4a3168] bg-white text-[18px] font-medium text-[#4a3168] shadow-[0_8px_20px_rgba(74,49,104,0.06)] hover:-translate-y-1 hover:bg-[#f8f4fb] hover:shadow-[0_14px_28px_rgba(74,49,104,0.12)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#4a3168]/12 active:translate-y-0 lg:h-16 lg:w-auto lg:min-w-[140px]"
     >
       {children}
     </Link>
@@ -192,13 +192,13 @@ function SectionTitle({
 
 function ExampleCard({ title, time, content }: (typeof examples)[number]) {
   return (
-    <div className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white p-6 shadow-[0_4px_6px_rgba(0,0,0,0.08),0_2px_4px_rgba(0,0,0,0.08)]">
+    <div className="group rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white p-6 shadow-[0_4px_6px_rgba(0,0,0,0.08),0_2px_4px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:border-[rgba(74,49,104,0.16)] hover:shadow-[0_22px_44px_rgba(74,49,104,0.12)]">
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="text-lg font-medium text-[#27272a]">{title}</div>
           <div className="mt-1 text-xs text-[#737378]">{time}</div>
         </div>
-        <div className="inline-flex h-[30px] items-center rounded-full border border-[#10b981] bg-[#d1fae5] px-3 text-sm font-medium text-[#10b981]">
+        <div className="inline-flex h-[30px] items-center rounded-full border border-[#10b981] bg-[#d1fae5] px-3 text-sm font-medium text-[#10b981] shadow-[0_8px_18px_rgba(16,185,129,0.12)]">
           <span className="mr-2 h-1.5 w-1.5 rounded-full bg-[#10b981]" />
           已完成
         </div>
@@ -211,10 +211,10 @@ function ExampleCard({ title, time, content }: (typeof examples)[number]) {
       </div>
 
       <div className="mt-4 flex items-center gap-2 pt-2">
-        <button className="inline-flex h-10 items-center justify-center rounded-2xl border-[1.5px] border-[#4a3168] px-4 text-sm font-medium text-[#4a3168]">
+        <button className="inline-flex h-10 items-center justify-center rounded-2xl border-[1.5px] border-[#4a3168] px-4 text-sm font-medium text-[#4a3168] hover:-translate-y-0.5 hover:bg-[#f7f1fb] hover:shadow-[0_10px_24px_rgba(74,49,104,0.12)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#4a3168]/12">
           复制
         </button>
-        <button className="inline-flex h-9 items-center justify-center rounded-2xl px-4 text-sm font-medium text-[#4a3168]">
+        <button className="inline-flex h-9 items-center justify-center rounded-2xl px-4 text-sm font-medium text-[#4a3168] hover:bg-[rgba(74,49,104,0.06)] hover:text-[#37224c] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#4a3168]/10">
           重新生成
         </button>
       </div>
@@ -232,17 +232,21 @@ function PlanCard({
   recommended,
 }: (typeof plans)[number]) {
   const buttonClass = recommended
-    ? "bg-[#4a3168] text-white shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.1)]"
-    : "border-[1.5px] border-[#4a3168] bg-white text-[#4a3168]";
+    ? "bg-[linear-gradient(135deg,#4a3168_0%,#6f4d96_100%)] text-white shadow-[0_16px_34px_rgba(74,49,104,0.22)] hover:-translate-y-0.5 hover:shadow-[0_22px_42px_rgba(74,49,104,0.3)]"
+    : "border-[1.5px] border-[#4a3168] bg-white text-[#4a3168] hover:-translate-y-0.5 hover:bg-[#f8f4fb] hover:shadow-[0_14px_28px_rgba(74,49,104,0.12)]";
 
   return (
     <div
       className={`relative rounded-[20px] border bg-white p-6 shadow-[0_4px_6px_rgba(0,0,0,0.08),0_2px_4px_rgba(0,0,0,0.08)] ${
         recommended
-          ? "border-2 border-[#4a3168] shadow-[0_10px_40px_rgba(74,49,104,0.25)]"
-          : "border-[rgba(0,0,0,0.08)]"
+          ? "border-2 border-[#4a3168] bg-[linear-gradient(180deg,#ffffff_0%,#fcf9ff_100%)] shadow-[0_18px_48px_rgba(74,49,104,0.2)] hover:-translate-y-3 hover:shadow-[0_28px_68px_rgba(74,49,104,0.28)]"
+          : "border-[rgba(0,0,0,0.08)] hover:-translate-y-2 hover:border-[rgba(74,49,104,0.16)] hover:shadow-[0_24px_56px_rgba(74,49,104,0.14)]"
       }`}
     >
+      {recommended ? (
+        <div className="pointer-events-none absolute inset-x-6 top-5 h-20 rounded-full bg-[radial-gradient(circle,rgba(212,102,143,0.18)_0%,rgba(212,102,143,0)_72%)] opacity-80 blur-2xl" />
+      ) : null}
+
       {recommended ? (
         <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2">
           <div className="inline-flex h-[22px] items-center rounded-full border border-[#f9cfe3] bg-[#fdf4f8] px-2 text-xs font-medium text-[#993d63]">
@@ -272,7 +276,7 @@ function PlanCard({
 
       <Link
         href={action === "联系客服" ? "/login" : "/trial"}
-        className={`mt-6 inline-flex h-[51px] w-full items-center justify-center rounded-2xl text-base font-medium ${buttonClass}`}
+        className={`mt-6 inline-flex h-[51px] w-full items-center justify-center rounded-2xl text-base font-medium focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#4a3168]/14 ${buttonClass}`}
       >
         {action}
       </Link>
@@ -327,9 +331,10 @@ export default function HomePage() {
               {benefits.map((item) => (
                 <div
                   key={item.title}
-                  className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white px-6 py-6 text-center shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.08)]"
+                  className="group relative overflow-hidden rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white px-6 py-6 text-center shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.08)] hover:-translate-y-2 hover:border-[rgba(74,49,104,0.14)] hover:shadow-[0_22px_48px_rgba(74,49,104,0.12)]"
                 >
-                  <div className="text-[36px] leading-10">{item.icon}</div>
+                  <div className="pointer-events-none absolute inset-x-6 top-3 h-16 rounded-full bg-[radial-gradient(circle,rgba(212,102,143,0.14)_0%,rgba(212,102,143,0)_72%)] opacity-0 blur-2xl group-hover:opacity-100" />
+                  <div className="text-[36px] leading-10 group-hover:-translate-y-1 group-hover:scale-[1.06]">{item.icon}</div>
                   <div className="mt-4 text-[20px] font-semibold leading-[27.5px] text-[#27272a]">{item.title}</div>
                   <div className="mt-2 text-sm leading-5 text-[#737378]">{item.description}</div>
                 </div>
@@ -349,7 +354,7 @@ export default function HomePage() {
             </div>
 
             <div className="mt-8 flex justify-center">
-              <button className="inline-flex h-12 items-center justify-center rounded-2xl bg-[#d4668f] px-6 text-base font-medium text-white">
+              <button className="inline-flex h-12 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#d4668f_0%,#e288aa_100%)] px-6 text-base font-medium text-white shadow-[0_14px_32px_rgba(212,102,143,0.22)] hover:-translate-y-1 hover:shadow-[0_22px_40px_rgba(212,102,143,0.28)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#d4668f]/16">
                 查看更多示例
               </button>
             </div>
@@ -364,9 +369,10 @@ export default function HomePage() {
               {audiences.map((item) => (
                 <div
                   key={item.title}
-                  className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white px-6 py-6 text-center shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.08)]"
+                  className="group relative overflow-hidden rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white px-6 py-6 text-center shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.08)] hover:-translate-y-1.5 hover:border-[rgba(74,49,104,0.14)] hover:shadow-[0_20px_44px_rgba(74,49,104,0.12)]"
                 >
-                  <div className="text-5xl leading-[48px]">{item.icon}</div>
+                  <div className="pointer-events-none absolute -right-4 top-2 h-20 w-20 rounded-full bg-[radial-gradient(circle,rgba(74,49,104,0.08)_0%,rgba(74,49,104,0)_72%)] opacity-0 blur-2xl group-hover:opacity-100" />
+                  <div className="text-5xl leading-[48px] group-hover:-translate-y-0.5 group-hover:scale-[1.04]">{item.icon}</div>
                   <div className="mt-4 text-[20px] font-semibold leading-[25px] text-[#27272a]">{item.title}</div>
                   <div className="mt-2 text-sm leading-5 text-[#737378]">{item.description}</div>
                 </div>
@@ -411,13 +417,13 @@ export default function HomePage() {
           <div className="mt-4 flex gap-3">
             <Link
               href="/login"
-              className="inline-flex h-[51px] flex-1 items-center justify-center rounded-2xl border-[1.5px] border-[#4a3168] bg-white text-base font-medium text-[#4a3168]"
+              className="inline-flex h-[51px] flex-1 items-center justify-center rounded-2xl border-[1.5px] border-[#4a3168] bg-white text-base font-medium text-[#4a3168] shadow-[0_8px_18px_rgba(74,49,104,0.08)] hover:-translate-y-0.5 hover:bg-[#f8f4fb] hover:shadow-[0_12px_24px_rgba(74,49,104,0.14)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#4a3168]/12"
             >
               直接登录
             </Link>
             <Link
               href="/trial"
-              className="inline-flex h-[51px] flex-1 items-center justify-center rounded-2xl bg-[#4a3168] text-base font-medium text-white shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.1)]"
+              className="inline-flex h-[51px] flex-1 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#4a3168_0%,#6f4d96_100%)] text-base font-medium text-white shadow-[0_14px_32px_rgba(74,49,104,0.2)] hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(74,49,104,0.26)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#4a3168]/14"
             >
               1元立即体验
             </Link>
