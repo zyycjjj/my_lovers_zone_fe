@@ -31,9 +31,16 @@ function parse(value: string | null): AuthSessionSnapshot | null {
   }
 }
 
+let cachedSnapshot: AuthSessionSnapshot | null = null;
+let cachedValue: string | null = null;
+
 export function getAuthSessionSnapshot() {
   if (typeof window === "undefined") return null;
-  return parse(window.localStorage.getItem(STORAGE_KEY));
+  const value = window.localStorage.getItem(STORAGE_KEY);
+  if (value === cachedValue) return cachedSnapshot;
+  cachedValue = value;
+  cachedSnapshot = parse(value);
+  return cachedSnapshot;
 }
 
 function getServerSnapshot() {
@@ -56,13 +63,18 @@ function subscribe(listener: () => void) {
 
 export function saveAuthSession(session: AuthSessionSnapshot) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+  const value = JSON.stringify(session);
+  window.localStorage.setItem(STORAGE_KEY, value);
+  cachedValue = value;
+  cachedSnapshot = session;
   emit();
 }
 
 export function clearAuthSession() {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(STORAGE_KEY);
+  cachedValue = null;
+  cachedSnapshot = null;
   emit();
 }
 
