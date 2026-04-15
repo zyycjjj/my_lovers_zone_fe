@@ -4,20 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiRequest, ApiClientError } from "../lib/api";
 import { clearAuthSession, useAuthSession } from "../lib/session-store";
-import { PromptInputCard, ResultDisplayCard, StatusSummaryCard } from "../components/business";
-import {
-  Button,
-  ButtonLink,
-  Card,
-  ChoicePill,
-  EmptyStatePanel,
-  FieldGroup,
-  MetricPanel,
-  NoticePanel,
-  SectionHeading,
-  SoftBadge,
-  cn,
-} from "../components/ui";
+import { Button, ButtonLink, Card, ChoicePill, FieldGroup, NoticePanel, cn } from "../components/ui";
 
 type WorkspaceSummary = {
   id: number;
@@ -79,33 +66,58 @@ type CommissionResult = {
 
 const tools: Array<{
   key: ToolKind;
+  icon: string;
   label: string;
   short: string;
   description: string;
+  promptLabel: string;
+  promptPlaceholder: string;
+  emptyTitle: string;
+  emptyDescription: string;
 }> = [
   {
     key: "title",
+    icon: "文",
     label: "标题生成",
     short: "20 条可直接挑选的标题",
     description: "先用一个关键词，把今天要发的标题方向定下来。",
+    promptLabel: "描述你要生成的标题方向",
+    promptPlaceholder: "例如：春季连衣裙上新，想要更适合小红书的种草标题",
+    emptyTitle: "准备好了，开始生成标题吧！",
+    emptyDescription: "在上方输入框描述你的商品和标题方向，AI 会先给你一组可直接参考的标题。",
   },
   {
     key: "script",
+    icon: "稿",
     label: "脚本生成",
     short: "短视频和直播口播都能先出一版",
     description: "先把可讲的内容搭起来，再决定要不要继续细修。",
+    promptLabel: "描述你要生成的脚本内容",
+    promptPlaceholder: "例如：家用小风扇，面向租房上班族，想做一版直播口播脚本",
+    emptyTitle: "准备好了，开始创作吧！",
+    emptyDescription: "在上方输入框描述你的需求，AI 将为你生成一版结构清晰的内容脚本。",
   },
   {
     key: "refine",
+    icon: "改",
     label: "话术提炼",
     short: "把已有话术变得更清楚、更稳妥",
     description: "适合你已经有一版话术，想更顺、更合规地表达。",
+    promptLabel: "贴入你要提炼的话术",
+    promptPlaceholder: "例如：这是我直播间准备讲的一段话术，想更有说服力也更稳妥",
+    emptyTitle: "准备好了，开始整理吧！",
+    emptyDescription: "把已有话术贴进来，我会帮你提炼卖点、识别风险并给出更顺的表达。",
   },
   {
     key: "commission",
+    icon: "算",
     label: "佣金测算",
     short: "先算明白，再决定推不推",
     description: "把价格、佣金和扣点算清楚，避免盲目上链接。",
+    promptLabel: "补充测算背景",
+    promptPlaceholder: "例如：这款商品想看高客单和低客单两种情况下的佣金空间",
+    emptyTitle: "准备好了，开始测算吧！",
+    emptyDescription: "填写价格、佣金和扣点信息后，AI 会帮你快速算清这单值不值得推。",
   },
 ];
 
@@ -123,6 +135,28 @@ function inputClassName(multiline = false) {
   return cn(
     "input-base",
     multiline ? "min-h-[144px] resize-none" : "",
+  );
+}
+
+function SidebarCard({
+  title,
+  eyebrow,
+  children,
+  className,
+}: {
+  title: string;
+  eyebrow?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <Card className={cn("space-y-4 rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]", className)}>
+      <div className="space-y-1">
+        {eyebrow ? <div className="text-xs font-medium text-[#737378]">{eyebrow}</div> : null}
+        <div className="text-base font-semibold text-[#27272A]">{title}</div>
+      </div>
+      {children}
+    </Card>
   );
 }
 
@@ -215,11 +249,71 @@ export default function WorkspacePage() {
     [activeTool],
   );
 
-  const todayLine = useMemo(() => {
-    if (activeTool === "title") return "先定一个标题方向，再往下做会更轻松。";
-    if (activeTool === "script") return "先把一版能讲的脚本写出来，后面再慢慢磨。";
-    if (activeTool === "refine") return "把你已有的话术整理顺一点，会更容易开口。";
-    return "先算清楚这单值不值得推，心里会更稳。";
+  const activeResultExists = useMemo(() => {
+    if (activeTool === "title") return titleResult.length > 0;
+    if (activeTool === "script") return Boolean(scriptResult.trim());
+    if (activeTool === "refine") return Boolean(refineResult);
+    return Boolean(commissionResult);
+  }, [activeTool, titleResult, scriptResult, refineResult, commissionResult]);
+
+  const activeTips = useMemo(() => {
+    if (activeTool === "title") {
+      return [
+        "把商品、卖点和平台场景一起写上，标题会更贴近发布场景。",
+        "如果你想要情绪感或转化感，可以直接写进需求里。",
+        "先出一组，再挑两条继续细化，效率更高。",
+      ];
+    }
+    if (activeTool === "script") {
+      return [
+        "先写清商品、人群和场景，脚本会更具体。",
+        "直播口播建议补充价格和转化目标。",
+        "先跑一版，再拿结果去微调节奏和开场。",
+      ];
+    }
+    if (activeTool === "refine") {
+      return [
+        "原始话术越完整，提炼后的建议越准确。",
+        "把你最担心的表达问题直接写进来，会更有针对性。",
+        "结果里会同时给到卖点、风险和替代表达。",
+      ];
+    }
+    return [
+      "价格和佣金比例是必填，平台扣点建议一起补上。",
+      "如果想比较不同售价，可以看测算结果里的对比区。",
+      "先算佣金空间，再决定主推哪一档链接更稳。",
+    ];
+  }, [activeTool]);
+
+  const examplePrompts = useMemo(() => {
+    if (activeTool === "title") {
+      return [
+        "春季连衣裙上新，想要更适合小红书的种草标题",
+        "厨房收纳架，突出省空间和实用感",
+        "夏季凉感被，想做一组高点击直播预热标题",
+        "香薰蜡烛，偏治愈氛围感的文案标题",
+      ];
+    }
+    if (activeTool === "script") {
+      return [
+        "家用小风扇，适合租房党和办公室场景",
+        "美白精华，想做一版直播口播脚本",
+        "厨房收纳盒，突出使用前后对比",
+        "防晒衣，适合通勤女生的短视频脚本",
+      ];
+    }
+    if (activeTool === "refine") {
+      return [
+        "这款面膜补水特别快，基本敷完就感觉皮肤状态很好，适合熬夜后急救。",
+        "这双鞋真的巨显瘦，而且穿一天都不累，直播间很多姐妹都在回购。",
+        "这个锅不挑灶台，热得快，清洗也方便，厨房新手也能轻松上手。",
+      ];
+    }
+    return [
+      "爆款零食 39.9 元，佣金 25%，平台扣点 5%",
+      "家居小电器 199 元，佣金 18%，平台扣点 8%",
+      "护肤套装 299 元，佣金 30%，平台扣点 10%",
+    ];
   }, [activeTool]);
 
   async function handleLogout() {
@@ -243,6 +337,38 @@ export default function WorkspacePage() {
       setCopiedText("复制失败，请手动复制");
       window.setTimeout(() => setCopiedText(""), 1800);
     }
+  }
+
+  function handleExampleClick(example: string) {
+    setToolError("");
+    setCopiedText("");
+
+    if (activeTool === "title") {
+      setTitleKeyword(example);
+      return;
+    }
+
+    if (activeTool === "script") {
+      setScriptKeyword(example);
+      return;
+    }
+
+    if (activeTool === "refine") {
+      setRefineText(example);
+      return;
+    }
+
+    const priceMatch = example.match(/(\d+(?:\.\d+)?)\s*元/);
+    const commissionMatch = example.match(/佣金\s*(\d+(?:\.\d+)?)%/);
+    const platformMatch = example.match(/扣点\s*(\d+(?:\.\d+)?)%/);
+
+    setCommissionPrice(priceMatch?.[1] ?? "");
+    setCommissionRate(
+      commissionMatch?.[1] ? String(Number(commissionMatch[1]) / 100) : "",
+    );
+    setPlatformRate(
+      platformMatch?.[1] ? String(Number(platformMatch[1]) / 100) : "",
+    );
   }
 
   async function handleSubmitTool() {
@@ -330,161 +456,124 @@ export default function WorkspacePage() {
 
   if (loading) {
     return (
-      <Card className="mx-auto max-w-3xl rounded-[32px] p-8">
-        <p className="text-soft text-sm">正在进入你的工作台…</p>
-      </Card>
+      <div className="min-h-screen bg-[#FAFAFA] px-4 py-8 sm:px-6 lg:px-8">
+        <Card className="mx-auto max-w-[1200px] rounded-[24px] p-8">
+          <p className="text-sm text-[#737378]">正在进入你的工作台…</p>
+        </Card>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card className="surface-card-strong rounded-[34px] bg-[linear-gradient(180deg,_rgba(255,255,255,0.95)_0%,_rgba(241,234,255,0.84)_100%)]">
+    <div className="min-h-screen bg-[#FAFAFA]">
+      <header className="sticky top-0 z-20 border-b border-[rgba(0,0,0,0.08)] bg-[rgba(255,255,255,0.8)] backdrop-blur-xl">
+        <div className="mx-auto flex max-w-[1283px] items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#F5F3F7_0%,#FDF4F8_100%)] text-base font-semibold text-[#4A3168]">
+              M
+            </div>
+            <div className="text-lg font-semibold text-[#27272A]">Memory</div>
+          </div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#F9CFE3] bg-[#FDF4F8] px-3 py-1.5 text-sm font-medium text-[#993D63]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#D4668F]" />
+            体验版
+          </div>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-[1283px] px-4 py-6 sm:px-6 lg:px-8">
+        <section className="mb-8 space-y-2">
+          <h1 className="text-[24px] font-semibold tracking-[-0.02em] text-[#18181B] sm:text-[30px]">
+            开始创作你的内容
+          </h1>
+          <p className="text-base leading-relaxed text-[#737378]">
+            输入你的需求，AI 将为你生成专业内容
+          </p>
+        </section>
+
+        {pageError ? (
+          <NoticePanel className="mb-6" tone="rose">
+            {pageError}
+          </NoticePanel>
+        ) : null}
+
+        <section className="grid gap-6 lg:grid-cols-[minmax(0,824px)_minmax(0,395px)]">
           <div className="space-y-6">
-            <div className="flex flex-wrap items-center gap-3">
-              <SoftBadge tone="brand">内容工作台</SoftBadge>
-              {me?.onboardingCompleted ? <SoftBadge tone="sage">资料已准备好</SoftBadge> : null}
-            </div>
+            <Card className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-[linear-gradient(135deg,rgba(255,255,255,1)_0%,rgba(245,243,247,0.3)_100%)] p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)] sm:p-[25px]">
+              <div className="space-y-5">
+                <div className="flex flex-wrap gap-2">
+                  {tools.map((tool) => {
+                    const active = tool.key === activeTool;
+                    return (
+                      <ChoicePill
+                        key={tool.key}
+                        active={active}
+                        className={cn(
+                          "rounded-full border px-4 py-2 text-sm",
+                          active
+                            ? "border-[#4A3168] bg-[#F5F3F7] text-[#4A3168]"
+                            : "border-[#ECECF0] bg-white text-[#52525B]",
+                        )}
+                        onClick={() => {
+                          setActiveTool(tool.key);
+                          setToolError("");
+                          setCopiedText("");
+                        }}
+                      >
+                        <span className="inline-flex items-center gap-2">
+                          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[rgba(74,49,104,0.08)] text-[11px] font-semibold text-[#4A3168]">
+                            {tool.icon}
+                          </span>
+                          {tool.label}
+                        </span>
+                      </ChoicePill>
+                    );
+                  })}
+                </div>
 
-            <SectionHeading
-              eyebrow="今天先做一轮"
-              title={`欢迎回来，${displayName}`}
-              description="现在直接从一个入口开始就行。今天先把最重要的一轮做出来，后面再慢慢往下接。"
-            />
+                <div className="space-y-2">
+                  <div className="text-[20px] font-semibold text-[#27272A]">
+                    {activeToolMeta.promptLabel}
+                  </div>
+                  <p className="text-sm leading-7 text-[#737378]">
+                    {activeToolMeta.description}
+                  </p>
+                </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <MetricPanel
-                hint={`${getWorkspaceRoleLabel(me?.currentWorkspace?.role)} / ${getWorkspaceTypeLabel(me?.currentWorkspace?.type)}`}
-                label="当前空间"
-                value={me?.currentWorkspace?.name || "个人空间"}
-              />
-              <MetricPanel
-                hint="资料越清楚，后面给你的结果就越贴近。"
-                label="今天建议"
-                value={todayLine}
-              />
-            </div>
+                <FieldGroup label="内容描述">
+                  <textarea
+                    className="min-h-[122px] w-full resize-none rounded-[16px] border border-[#ECECF0] bg-white px-4 py-3 text-base leading-6 text-[#27272A] outline-none transition-colors placeholder:text-[#A3A3AB] focus:border-[#4A3168]"
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      if (activeTool === "title") setTitleKeyword(value);
+                      if (activeTool === "script") setScriptKeyword(value);
+                      if (activeTool === "refine") setRefineText(value);
+                    }}
+                    placeholder={activeToolMeta.promptPlaceholder}
+                    value={
+                      activeTool === "title"
+                        ? titleKeyword
+                        : activeTool === "script"
+                          ? scriptKeyword
+                          : activeTool === "refine"
+                            ? refineText
+                            : ""
+                    }
+                  />
+                </FieldGroup>
 
-            <div className="flex flex-wrap gap-3">
-              <ButtonLink href="/onboarding" variant="secondary">
-                修改资料
-              </ButtonLink>
-              {workspaces.length > 1 ? (
-                <ButtonLink href="/workspace/select" variant="ghost">
-                  切换空间
-                </ButtonLink>
-              ) : null}
-            </div>
-          </div>
-        </Card>
-
-        <StatusSummaryCard
-          description="不需要重开一整套流程，先把今天这一轮继续做下去。"
-          footer={
-            <div className="space-y-4">
-              <NoticePanel>
-                不用一口气把所有事做完。先选一个入口，先做出一版，再继续往下走。
-              </NoticePanel>
-              <div>
-                <Button onClick={handleLogout} type="button" variant="secondary">
-                  退出登录
-                </Button>
-              </div>
-            </div>
-          }
-          rows={[
-            <div
-              key="phone"
-              className="rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-4 text-sm text-soft"
-            >
-              登录手机号：{me?.account.phone || "已登录"}
-            </div>,
-            <div
-              key="count"
-              className="rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-4 text-sm text-soft"
-            >
-              空间数量：{workspaces.length}
-            </div>,
-            <div
-              key="ability"
-              className="rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-4 text-sm text-soft"
-            >
-              现在可用：标题生成、脚本生成、话术整理、佣金测算
-            </div>,
-          ]}
-          title="这次回来先从这里接上"
-        />
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[0.98fr_1.02fr]">
-        <PromptInputCard
-          badge={activeToolMeta.label}
-          description={activeToolMeta.description}
-          footer={
-            <>
-              <Button disabled={loadingTool === activeTool} onClick={handleSubmitTool} type="button">
-                {loadingTool === activeTool ? "正在生成…" : `开始${activeToolMeta.label}`}
-              </Button>
-              <div className="bg-slate-soft text-soft inline-flex items-center rounded-full px-4 py-2 text-sm">
-                {activeToolMeta.short}
-              </div>
-            </>
-          }
-          title="选择一个入口，先把今天这轮做出来"
-        >
-          <div className="flex flex-wrap items-center gap-3">
-            {tools.map((tool) => {
-              const active = tool.key === activeTool;
-              return (
-                <ChoicePill
-                  key={tool.key}
-                  active={active}
-                  onClick={() => {
-                    setActiveTool(tool.key);
-                    setToolError("");
-                    setCopiedText("");
-                  }}
-                >
-                  {tool.label}
-                </ChoicePill>
-              );
-            })}
-          </div>
-
-          <div className="space-y-5">
-              {activeTool === "title" ? (
-                <>
-                  <FieldGroup label="商品关键词">
-                    <input
-                      className={inputClassName()}
-                      onChange={(event) => setTitleKeyword(event.target.value)}
-                      placeholder="比如：香薰蜡烛、夏季凉感被、厨房收纳架"
-                      value={titleKeyword}
-                    />
-                  </FieldGroup>
-
+                {activeTool === "title" ? (
                   <FieldGroup label="风格方向" hint="选填">
                     <input
                       className={inputClassName()}
                       onChange={(event) => setTitleStyle(event.target.value)}
-                      placeholder="比如：口语感、治愈、强转化"
+                      placeholder="比如：口语感、情绪感、强转化"
                       value={titleStyle}
                     />
                   </FieldGroup>
-                </>
-              ) : null}
+                ) : null}
 
-              {activeTool === "script" ? (
-                <>
-                  <FieldGroup label="商品关键词">
-                    <input
-                      className={inputClassName()}
-                      onChange={(event) => setScriptKeyword(event.target.value)}
-                      placeholder="比如：家用小风扇"
-                      value={scriptKeyword}
-                    />
-                  </FieldGroup>
-
+                {activeTool === "script" ? (
                   <div className="grid gap-4 sm:grid-cols-2">
                     <FieldGroup label="价格" hint="选填">
                       <input
@@ -503,43 +592,28 @@ export default function WorkspacePage() {
                         value={scriptAudience}
                       />
                     </FieldGroup>
+                    <FieldGroup className="sm:col-span-2" label="使用场景" hint="选填">
+                      <input
+                        className={inputClassName()}
+                        onChange={(event) => setScriptScene(event.target.value)}
+                        placeholder="比如：办公室、宿舍、通勤"
+                        value={scriptScene}
+                      />
+                    </FieldGroup>
+                    <FieldGroup className="sm:col-span-2" label="输出风格">
+                      <div className="flex flex-wrap gap-3">
+                        <ChoicePill active={scriptStyle === "short"} onClick={() => setScriptStyle("short")}>
+                          短视频种草
+                        </ChoicePill>
+                        <ChoicePill active={scriptStyle === "live"} onClick={() => setScriptStyle("live")}>
+                          直播口播
+                        </ChoicePill>
+                      </div>
+                    </FieldGroup>
                   </div>
+                ) : null}
 
-                  <FieldGroup label="使用场景" hint="选填">
-                    <input
-                      className={inputClassName()}
-                      onChange={(event) => setScriptScene(event.target.value)}
-                      placeholder="比如：办公室、宿舍、通勤"
-                      value={scriptScene}
-                    />
-                  </FieldGroup>
-
-                  <FieldGroup label="输出风格">
-                    <div className="flex flex-wrap gap-3">
-                      <ChoicePill active={scriptStyle === "short"} onClick={() => setScriptStyle("short")}>
-                        短视频种草
-                      </ChoicePill>
-                      <ChoicePill active={scriptStyle === "live"} onClick={() => setScriptStyle("live")}>
-                        直播口播
-                      </ChoicePill>
-                    </div>
-                  </FieldGroup>
-                </>
-              ) : null}
-
-              {activeTool === "refine" ? (
-                <FieldGroup label="原始话术">
-                  <textarea
-                    className={inputClassName(true)}
-                    onChange={(event) => setRefineText(event.target.value)}
-                    placeholder="把你已经写好的话术贴进来，Memory 会帮你理顺表达、提炼卖点，并提醒风险。"
-                    value={refineText}
-                  />
-                </FieldGroup>
-              ) : null}
-
-              {activeTool === "commission" ? (
-                <>
+                {activeTool === "commission" ? (
                   <div className="grid gap-4 sm:grid-cols-2">
                     <FieldGroup label="商品价格">
                       <input
@@ -559,249 +633,358 @@ export default function WorkspacePage() {
                         value={commissionRate}
                       />
                     </FieldGroup>
+                    <FieldGroup className="sm:col-span-2" label="平台扣点" hint="选填">
+                      <input
+                        className={inputClassName()}
+                        inputMode="decimal"
+                        onChange={(event) => setPlatformRate(event.target.value)}
+                        placeholder="比如：0.1"
+                        value={platformRate}
+                      />
+                    </FieldGroup>
+                  </div>
+                ) : null}
+
+                {toolError ? <NoticePanel>{toolError}</NoticePanel> : null}
+
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="text-sm text-[#737378]">{activeToolMeta.short}</div>
+                  <Button
+                    className="rounded-[16px] bg-[#4A3168] px-6 py-3 text-white hover:bg-[#3D2856]"
+                    disabled={loadingTool === activeTool}
+                    onClick={handleSubmitTool}
+                    type="button"
+                  >
+                    {loadingTool === activeTool ? "正在生成..." : `开始${activeToolMeta.label}`}
+                  </Button>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)] sm:p-[25px]">
+              {activeResultExists ? (
+                <div className="space-y-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <div className="text-[20px] font-semibold text-[#27272A]">这轮结果</div>
+                      <div className="mt-1 text-sm text-[#737378]">
+                        先看这一轮结果，再决定下一步怎么继续。
+                      </div>
+                    </div>
+                    {copiedText ? (
+                      <span className="rounded-full bg-[#F5F3F7] px-3 py-1 text-xs font-medium text-[#4A3168]">
+                        {copiedText}
+                      </span>
+                    ) : null}
                   </div>
 
-                  <FieldGroup label="平台扣点" hint="选填">
-                    <input
-                      className={inputClassName()}
-                      inputMode="decimal"
-                      onChange={(event) => setPlatformRate(event.target.value)}
-                      placeholder="比如：0.1"
-                      value={platformRate}
-                    />
-                  </FieldGroup>
-                </>
-              ) : null}
+                  {activeTool === "title" && titleResult.length ? (
+                    <div className="space-y-4">
+                      <div className="grid gap-3">
+                        {titleResult.map((title, index) => (
+                          <div
+                            key={`${title}-${index}`}
+                            className="rounded-[16px] border border-[rgba(0,0,0,0.08)] bg-white px-4 py-4 text-sm leading-7 text-[#27272A]"
+                          >
+                            <span className="mr-2 font-semibold text-[#4A3168]">{index + 1}.</span>
+                            {title}
+                          </div>
+                        ))}
+                      </div>
+                      <Button
+                        onClick={() =>
+                          handleCopy(
+                            titleResult.map((item, index) => `${index + 1}. ${item}`).join("\n"),
+                          )
+                        }
+                        type="button"
+                        variant="secondary"
+                      >
+                        复制这一组标题
+                      </Button>
+                    </div>
+                  ) : null}
+
+                  {activeTool === "script" && scriptResult ? (
+                    <div className="space-y-4">
+                      <pre className="whitespace-pre-wrap rounded-[16px] border border-[rgba(0,0,0,0.08)] bg-[#FAFAFA] px-4 py-4 text-sm leading-7 text-[#27272A]">
+                        {scriptResult}
+                      </pre>
+                      <Button onClick={() => handleCopy(scriptResult)} type="button" variant="secondary">
+                        复制这版脚本
+                      </Button>
+                    </div>
+                  ) : null}
+
+                  {activeTool === "refine" && refineResult ? (
+                    <div className="space-y-4">
+                      <NoticePanel className="rounded-[16px] px-4 py-4">
+                        <div className="text-xs uppercase tracking-[0.2em]">一句话总结</div>
+                        <div className="mt-2 text-base font-semibold leading-8">
+                          {refineResult.summaryLine || "这轮还没有总结结果"}
+                        </div>
+                      </NoticePanel>
+
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-3">
+                          <div className="text-sm font-semibold text-[#27272A]">卖点提炼</div>
+                          {refineResult.sellingPoints.map((item, index) => (
+                            <div
+                              key={`${item}-${index}`}
+                              className="rounded-[16px] border border-[rgba(0,0,0,0.08)] px-4 py-3 text-sm leading-7 text-[#27272A]"
+                            >
+                              {item}
+                            </div>
+                          ))}
+                        </div>
+                        <div className="space-y-3">
+                          <div className="text-sm font-semibold text-[#27272A]">合规建议</div>
+                          {refineResult.suggestions.map((item, index) => (
+                            <div
+                              key={`${item}-${index}`}
+                              className="rounded-[16px] border border-[rgba(0,0,0,0.08)] px-4 py-3 text-sm leading-7 text-[#27272A]"
+                            >
+                              {item}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="text-sm font-semibold text-[#27272A]">风险提示</div>
+                        {refineResult.risks.map((risk, index) => (
+                          <div
+                            key={`${risk.type}-${index}`}
+                            className="rounded-[16px] border border-[rgba(212,102,143,0.2)] bg-[#FFF7FA] px-4 py-3 text-sm leading-7 text-[#27272A]"
+                          >
+                            <div className="font-medium text-[#993D63]">{risk.type}</div>
+                            <div className="mt-1 text-[#737378]">{risk.matches.join("、")}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="text-sm font-semibold text-[#27272A]">更稳妥的表达</div>
+                        {refineResult.safeRewrites.map((item, index) => (
+                          <div
+                            key={`${item}-${index}`}
+                            className="rounded-[16px] border border-[rgba(0,0,0,0.08)] px-4 py-3 text-sm leading-7 text-[#27272A]"
+                          >
+                            {item}
+                          </div>
+                        ))}
+                      </div>
+
+                      <Button
+                        onClick={() =>
+                          handleCopy(
+                            [
+                              `一句话总结：${refineResult.summaryLine}`,
+                              "",
+                              "卖点提炼：",
+                              ...refineResult.sellingPoints.map((item) => `- ${item}`),
+                              "",
+                              "合规建议：",
+                              ...refineResult.suggestions.map((item) => `- ${item}`),
+                              "",
+                              "更稳妥的表达：",
+                              ...refineResult.safeRewrites.map((item) => `- ${item}`),
+                            ].join("\n"),
+                          )
+                        }
+                        type="button"
+                        variant="secondary"
+                      >
+                        复制这轮整理结果
+                      </Button>
+                    </div>
+                  ) : null}
+
+                  {activeTool === "commission" && commissionResult ? (
+                    <div className="space-y-4">
+                      <NoticePanel className="rounded-[16px] px-4 py-4" tone="gold">
+                        <div className="text-xs uppercase tracking-[0.2em]">预计佣金</div>
+                        <div className="mt-2 text-[32px] font-semibold leading-none">
+                          {commissionResult.commission} 元
+                        </div>
+                        <div className="mt-3 text-sm leading-7">{commissionResult.sellingPoint}</div>
+                      </NoticePanel>
+                      <div className="space-y-3">
+                        {commissionResult.comparisons.map((item) => (
+                          <div
+                            key={`${item.price}-${item.commission}`}
+                            className="flex items-center justify-between rounded-[16px] border border-[rgba(0,0,0,0.08)] px-4 py-4 text-sm"
+                          >
+                            <span className="text-[#737378]">售价 {item.price} 元</span>
+                            <span className="font-semibold text-[#27272A]">
+                              佣金 {item.commission} 元
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <Button
+                        onClick={() =>
+                          handleCopy(
+                            [
+                              `预计佣金：${commissionResult.commission} 元`,
+                              commissionResult.sellingPoint,
+                              ...commissionResult.comparisons.map(
+                                (item) => `售价 ${item.price} 元，佣金 ${item.commission} 元`,
+                              ),
+                            ].join("\n"),
+                          )
+                        }
+                        type="button"
+                        variant="secondary"
+                      >
+                        复制测算结果
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="space-y-6 py-4 text-center">
+                  <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[linear-gradient(135deg,#F5F3F7_0%,#FDF4F8_100%)] text-[32px]">
+                    ✦
+                  </div>
+                  <div className="space-y-2">
+                    <div className="text-[20px] font-semibold text-[#27272A]">
+                      {activeToolMeta.emptyTitle}
+                    </div>
+                    <p className="mx-auto max-w-[480px] text-sm leading-7 text-[#737378]">
+                      {activeToolMeta.emptyDescription}
+                    </p>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="text-xs text-[#737378]">💡 试试这些示例：</div>
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {examplePrompts.map((example) => (
+                        <button
+                          key={example}
+                          className="rounded-[12px] bg-[#F5F3F7] px-3 py-2 text-sm text-[#4A3168]"
+                          onClick={() => handleExampleClick(example)}
+                          type="button"
+                        >
+                          {example}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </Card>
           </div>
 
-          {toolError ? <NoticePanel>{toolError}</NoticePanel> : null}
-        </PromptInputCard>
-
-        <ResultDisplayCard
-          badge={copiedText ? <SoftBadge tone="sage">{copiedText}</SoftBadge> : null}
-          description="先看这一轮结果，再决定下一步怎么继续。"
-          title="这轮结果"
-        >
-            {activeTool === "title" ? (
-              titleResult.length ? (
-                <div className="space-y-4">
-                  <div className="grid gap-3">
-                    {titleResult.map((title, index) => (
-                      <div
-                        key={`${title}-${index}`}
-                        className="rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/84 px-4 py-4 text-sm leading-7 text-strong"
-                      >
-                        <span className="text-brand mr-2">{index + 1}.</span>
-                        {title}
-                      </div>
-                    ))}
+          <aside className="space-y-6">
+            <SidebarCard eyebrow="工作台概览" title="创作状态">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <div className="text-[34px] font-semibold tracking-[-0.04em] text-[#27272A]">
+                    {tools.length}
                   </div>
-                  <Button
-                    onClick={() => handleCopy(titleResult.map((item, index) => `${index + 1}. ${item}`).join("\n"))}
-                    type="button"
-                    variant="secondary"
-                  >
-                    复制这一组标题
+                  <div className="text-sm text-[#737378]">已接入创作能力</div>
+                </div>
+                <div className="text-right text-sm text-[#737378]">
+                  <div>空间数量</div>
+                  <div className="mt-1 text-[20px] font-semibold text-[#993D63]">
+                    {workspaces.length}
+                  </div>
+                </div>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-[#F5F3F7]">
+                <div
+                  className="h-full rounded-full bg-[linear-gradient(90deg,#D4668F_0%,#4A3168_100%)]"
+                  style={{ width: `${(tools.length / 4) * 100}%` }}
+                />
+              </div>
+              <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+                <div className="rounded-[16px] bg-[#FAFAFA] px-3 py-3">
+                  <div className="text-xs text-[#A3A3AB]">当前空间</div>
+                  <div className="mt-1 text-sm font-semibold text-[#27272A]">
+                    {me?.currentWorkspace?.name || "个人空间"}
+                  </div>
+                </div>
+                <div className="rounded-[16px] bg-[#FAFAFA] px-3 py-3">
+                  <div className="text-xs text-[#A3A3AB]">空间身份</div>
+                  <div className="mt-1 text-sm font-semibold text-[#27272A]">
+                    {getWorkspaceRoleLabel(me?.currentWorkspace?.role)}
+                  </div>
+                </div>
+                <div className="rounded-[16px] bg-[#FAFAFA] px-3 py-3">
+                  <div className="text-xs text-[#A3A3AB]">空间类型</div>
+                  <div className="mt-1 text-sm font-semibold text-[#27272A]">
+                    {getWorkspaceTypeLabel(me?.currentWorkspace?.type)}
+                  </div>
+                </div>
+              </div>
+            </SidebarCard>
+
+            <SidebarCard
+              className="bg-[linear-gradient(180deg,rgba(255,249,252,1)_0%,rgba(253,244,248,1)_100%)]"
+              eyebrow="推荐入口"
+              title={`现在适合先做「${activeToolMeta.label}」`}
+            >
+              <div className="space-y-3">
+                <div className="rounded-[16px] border border-[#F9CFE3] bg-white/80 px-4 py-3 text-sm text-[#993D63]">
+                  {activeToolMeta.short}
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                  <div className="rounded-[16px] border border-[rgba(0,0,0,0.08)] bg-white px-4 py-3">
+                    <div className="text-sm font-semibold text-[#27272A]">账号资料</div>
+                    <div className="mt-1 text-sm text-[#737378]">
+                      {displayName}
+                      {me?.onboardingCompleted ? " · 已完成建档" : " · 待完善"}
+                    </div>
+                  </div>
+                  <div className="rounded-[16px] border border-[rgba(0,0,0,0.08)] bg-white px-4 py-3">
+                    <div className="text-sm font-semibold text-[#27272A]">登录手机号</div>
+                    <div className="mt-1 text-sm text-[#737378]">
+                      {me?.account.phone || "当前账号已登录"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </SidebarCard>
+
+            <section className="rounded-[20px] bg-[#4A3168] p-5 text-white shadow-[0_12px_32px_rgba(74,49,104,0.2)]">
+              <div className="space-y-4">
+                <div className="text-base font-semibold">💡 专业提示</div>
+                <div className="space-y-3">
+                  {activeTips.map((tip) => (
+                    <div
+                      key={tip}
+                      className="rounded-[14px] border border-white/10 bg-white/8 px-4 py-3 text-sm leading-7 text-white/88"
+                    >
+                      {tip}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            <SidebarCard eyebrow="空间管理" title="保持你的资料和空间状态更新">
+              <div className="space-y-4">
+                <div className="rounded-[999px] bg-[linear-gradient(135deg,#F5F3F7_0%,#FDF4F8_100%)] p-3 text-center text-[#4A3168]">
+                  当前可用：标题生成、脚本生成、话术提炼、佣金测算
+                </div>
+                <div className="space-y-3">
+                  <ButtonLink className="w-full" href="/onboarding">
+                    修改资料
+                  </ButtonLink>
+                  {workspaces.length > 1 ? (
+                    <ButtonLink className="w-full" href="/workspace/select" variant="secondary">
+                      切换空间
+                    </ButtonLink>
+                  ) : null}
+                  <Button className="w-full" onClick={handleLogout} type="button" variant="ghost">
+                    退出登录
                   </Button>
                 </div>
-              ) : (
-                <EmptyStatePanel>
-                  先输一个商品关键词。标题出来之后，你可以直接挑一条先用。
-                </EmptyStatePanel>
-              )
-            ) : null}
-
-            {activeTool === "script" ? (
-              scriptResult ? (
-                <div className="space-y-4">
-                  <pre className="whitespace-pre-wrap rounded-[24px] border border-[rgba(91,70,142,0.1)] bg-white/84 px-5 py-5 text-sm leading-7 text-strong">
-                    {scriptResult}
-                  </pre>
-                  <Button onClick={() => handleCopy(scriptResult)} type="button" variant="secondary">
-                    复制这版脚本
-                  </Button>
-                </div>
-              ) : (
-                <EmptyStatePanel>
-                  先给我一个商品关键词。我会先把开场、脚本和分镜建议整理出来。
-                </EmptyStatePanel>
-              )
-            ) : null}
-
-            {activeTool === "refine" ? (
-              refineResult ? (
-                <div className="space-y-4">
-                  <NoticePanel className="rounded-[24px] px-5 py-5">
-                    <div className="text-brand text-xs uppercase tracking-[0.2em]">一句话总结</div>
-                    <div className="text-brand-ink mt-3 text-base font-semibold leading-8">
-                      {refineResult.summaryLine || "这轮还没有总结结果"}
-                    </div>
-                  </NoticePanel>
-
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-3">
-                      <div className="text-strong text-sm font-semibold">卖点提炼</div>
-                      {refineResult.sellingPoints.length ? (
-                        refineResult.sellingPoints.map((item, index) => (
-                          <div
-                            key={`${item}-${index}`}
-                            className="rounded-[20px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-3 text-sm leading-7 text-strong"
-                          >
-                            {item}
-                          </div>
-                        ))
-                      ) : (
-                        <EmptyStatePanel className="rounded-[20px] px-4 py-3">
-                          暂时没有提炼出新的卖点。
-                        </EmptyStatePanel>
-                      )}
-                    </div>
-
-                    <div className="space-y-3">
-                      <div className="text-strong text-sm font-semibold">合规建议</div>
-                      {refineResult.suggestions.length ? (
-                        refineResult.suggestions.map((item, index) => (
-                          <div
-                            key={`${item}-${index}`}
-                            className="rounded-[20px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-3 text-sm leading-7 text-strong"
-                          >
-                            {item}
-                          </div>
-                        ))
-                      ) : (
-                        <EmptyStatePanel className="rounded-[20px] px-4 py-3">
-                          暂时没有新的提醒。
-                        </EmptyStatePanel>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="text-strong text-sm font-semibold">风险提示</div>
-                    {refineResult.risks.length ? (
-                      refineResult.risks.map((risk, index) => (
-                        <div
-                          key={`${risk.type}-${index}`}
-                          className="rounded-[20px] border border-[rgba(203,96,146,0.16)] bg-white/82 px-4 py-3 text-sm leading-7 text-strong"
-                        >
-                          <div className="text-brand-ink font-medium">{risk.type}</div>
-                          <div className="text-soft mt-1">
-                            {risk.matches.join("、")}
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <EmptyStatePanel className="rounded-[20px] px-4 py-3">
-                        这轮没有明显风险词。
-                      </EmptyStatePanel>
-                    )}
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="text-strong text-sm font-semibold">更稳妥的表达</div>
-                    {refineResult.safeRewrites.length ? (
-                      refineResult.safeRewrites.map((item, index) => (
-                        <div
-                          key={`${item}-${index}`}
-                          className="rounded-[20px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-3 text-sm leading-7 text-strong"
-                        >
-                          {item}
-                        </div>
-                      ))
-                    ) : (
-                      <EmptyStatePanel className="rounded-[20px] px-4 py-3">
-                        这轮还没有替代表达。
-                      </EmptyStatePanel>
-                    )}
-                  </div>
-
-                  <Button
-                    onClick={() =>
-                      handleCopy(
-                        [
-                          `一句话总结：${refineResult.summaryLine}`,
-                          "",
-                          "卖点提炼：",
-                          ...refineResult.sellingPoints.map((item) => `- ${item}`),
-                          "",
-                          "合规建议：",
-                          ...refineResult.suggestions.map((item) => `- ${item}`),
-                          "",
-                          "更稳妥的表达：",
-                          ...refineResult.safeRewrites.map((item) => `- ${item}`),
-                        ].join("\n"),
-                      )
-                    }
-                    type="button"
-                    variant="secondary"
-                  >
-                    复制这轮整理结果
-                  </Button>
-                </div>
-              ) : (
-                <EmptyStatePanel>
-                  把已有话术贴进来，我会帮你提炼重点、提醒风险，并给一版更稳妥的表达。
-                </EmptyStatePanel>
-              )
-            ) : null}
-
-            {activeTool === "commission" ? (
-              commissionResult ? (
-                <div className="space-y-4">
-                  <NoticePanel className="rounded-[24px] px-5 py-5" tone="gold">
-                    <div className="text-brand text-xs uppercase tracking-[0.2em]">预计佣金</div>
-                    <div className="mt-3 text-[32px] font-semibold leading-none text-[#8e5f00]">
-                      {commissionResult.commission} 元
-                    </div>
-                    <div className="mt-3 text-sm leading-7 text-[#7a5e1c]">
-                      {commissionResult.sellingPoint}
-                    </div>
-                  </NoticePanel>
-
-                  <div className="space-y-3">
-                    {commissionResult.comparisons.map((item) => (
-                      <div
-                        key={`${item.price}-${item.commission}`}
-                        className="flex items-center justify-between rounded-[22px] border border-[rgba(91,70,142,0.1)] bg-white/82 px-4 py-4 text-sm"
-                      >
-                        <span className="text-soft">售价 {item.price} 元</span>
-                        <span className="text-strong font-semibold">
-                          佣金 {item.commission} 元
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <Button
-                    onClick={() =>
-                      handleCopy(
-                        [
-                          `预计佣金：${commissionResult.commission} 元`,
-                          commissionResult.sellingPoint,
-                          ...commissionResult.comparisons.map(
-                            (item) => `售价 ${item.price} 元，佣金 ${item.commission} 元`,
-                          ),
-                        ].join("\n"),
-                      )
-                    }
-                    type="button"
-                    variant="secondary"
-                  >
-                    复制测算结果
-                  </Button>
-                </div>
-              ) : (
-                <EmptyStatePanel>
-                  把价格和佣金填上，先算清楚这一单值不值得推。
-                </EmptyStatePanel>
-              )
-            ) : null}
-        </ResultDisplayCard>
-      </section>
-
-      {pageError ? (
-        <NoticePanel tone="rose">{pageError}</NoticePanel>
-      ) : null}
+              </div>
+            </SidebarCard>
+          </aside>
+        </section>
+      </main>
     </div>
   );
 }
