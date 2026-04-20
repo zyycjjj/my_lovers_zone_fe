@@ -24,20 +24,28 @@ export function TrialPreviewCard({
           <div className="text-sm text-[#4A3168]">查看历史</div>
         </div>
 
-        <div className="rounded-[20px] bg-[#FDF4F8] p-4">
-          <div className="text-[20px] font-semibold leading-[28px] text-[#27272a]">解锁完整内容</div>
-          <div className="mt-1 text-sm text-[#737378]">升级后立即查看完整内容</div>
-          <div className="mt-3 flex items-end gap-1">
-            <div className="text-[32px] font-semibold leading-none text-[#27272a]">¥1</div>
-            <div className="pb-1 text-sm text-[#52525B]">/7天</div>
+        <div className="rounded-[20px] bg-[linear-gradient(135deg,#4A3168_0%,#2D1B42_100%)] p-4 text-white shadow-[0_12px_28px_rgba(74,49,104,0.24)]">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/10 text-[#F5A5C8]">✦</div>
+          <div className="mt-4 text-center text-[20px] font-semibold leading-[28px]">解锁完整内容</div>
+          <div className="mt-1 text-center text-sm text-white/80">升级后立即查看完整内容</div>
+          <div className="mt-3 flex items-end justify-center gap-1">
+            <div className="text-[32px] font-semibold leading-none">¥1</div>
+            <div className="pb-1 text-sm text-white/70">/7天</div>
+          </div>
+          <div className="mt-3 rounded-[16px] bg-white/5 px-3 py-3 text-sm text-white/90">
+            <div>完整高质量文案</div>
+            <div className="mt-1">一键复制使用</div>
+            <div className="mt-1">无限次重新生成</div>
+            <div className="mt-1">保存到历史记录</div>
           </div>
           <Link
-            className="mt-3 inline-flex h-11 w-full items-center justify-center rounded-[16px] bg-[#D4668F] text-sm font-medium text-white"
+            className="mt-3 inline-flex h-12 w-full items-center justify-center rounded-[16px] bg-[#D4668F] text-sm font-semibold text-white shadow-[0_8px_20px_rgba(212,102,143,0.3)]"
             href={ctaHref}
+            prefetch={false}
           >
             {ctaText}
           </Link>
-          <div className="mt-2 text-center text-xs text-[#A3A3AB]">7天无理由退款 · 随时可取消</div>
+          <div className="mt-2 text-center text-xs text-white/60">7天无理由退款 · 随时可取消</div>
         </div>
 
         <div className="relative overflow-hidden rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white p-4">

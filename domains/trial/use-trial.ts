@@ -38,6 +38,7 @@ export function useTrial() {
     try {
       const result = await apiRequest<TrialPreview>("/api/trial/preview", {
         method: "POST",
+        timeoutMs: 25000,
         body: {
           prompt: prompt.trim(),
         },

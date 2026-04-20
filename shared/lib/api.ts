@@ -15,6 +15,7 @@ export type ApiOptions = {
   adminPass?: string;
   isForm?: boolean;
   retryOnUnauthorized?: boolean;
+  timeoutMs?: number;
 };
 
 type ApiEnvelope<T> = {
@@ -114,15 +115,26 @@ async function doFetch<T>(
     headers["x-session-token"] = resolvedSessionToken;
   }
 
-  const response = await fetch(`${apiBase}${path}`, {
-    method: options.method ?? (options.body ? "POST" : "GET"),
-    headers,
-    body: options.body
-      ? options.isForm
-        ? (options.body as FormData)
-        : JSON.stringify(options.body)
-      : undefined,
-  });
+  const controller = new AbortController();
+  const timeoutMs = options.timeoutMs && options.timeoutMs > 0 ? options.timeoutMs : 20000;
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  const response = await (async () => {
+    try {
+      return await fetch(`${apiBase}${path}`, {
+        method: options.method ?? (options.body ? "POST" : "GET"),
+        headers,
+        signal: controller.signal,
+        body: options.body
+          ? options.isForm
+            ? (options.body as FormData)
+            : JSON.stringify(options.body)
+          : undefined,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
+  })();
 
   return parseResponse<T>(response);
 }
@@ -173,6 +185,12 @@ export async function apiRequest<T>(
   try {
     return await doFetch<T>(path, options);
   } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new ApiClientError("请求超时，请稍后再试", {
+        code: "TIMEOUT",
+        status: 408,
+      });
+    }
     if (
       error instanceof ApiClientError &&
       error.code === "UNAUTHORIZED" &&

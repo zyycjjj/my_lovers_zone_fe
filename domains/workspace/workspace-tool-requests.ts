@@ -38,6 +38,7 @@ export async function submitWorkspaceTool(
     if (!inputs.titleKeyword.trim()) throw new Error("先填一个商品关键词，再开始生成标题。");
     const data = await apiRequest<TitleResult>("/api/tool/title", {
       method: "POST",
+      timeoutMs: 25000,
       body: {
         keyword: inputs.titleKeyword.trim(),
         style: inputs.titleStyle.trim() || undefined,
@@ -50,6 +51,7 @@ export async function submitWorkspaceTool(
     if (!inputs.scriptKeyword.trim()) throw new Error("先填一个商品关键词，再开始生成脚本。");
     const data = await apiRequest<ScriptResult>("/api/tool/script", {
       method: "POST",
+      timeoutMs: 30000,
       body: {
         keyword: inputs.scriptKeyword.trim(),
         price: parseOptionalNumber(inputs.scriptPrice),
@@ -65,6 +67,7 @@ export async function submitWorkspaceTool(
     if (!inputs.refineText.trim()) throw new Error("先贴一段你要整理的话术。");
     const data = await apiRequest<RefineResult>("/api/tool/refine", {
       method: "POST",
+      timeoutMs: 25000,
       body: { text: inputs.refineText.trim() },
     });
     return { kind: "refine", refineResult: data };
@@ -82,6 +85,7 @@ export async function submitWorkspaceTool(
 
   const data = await apiRequest<CommissionResult>("/api/tool/commission", {
     method: "POST",
+    timeoutMs: 20000,
     body: {
       price: commissionPrice,
       commissionRate,
