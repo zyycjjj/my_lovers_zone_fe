@@ -3,6 +3,7 @@
 import { TrialEditorCard } from "./trial-editor-card";
 import { TrialEmptyCard } from "./trial-empty-card";
 import { TrialHeaderBar } from "./trial-header";
+import { TrialPreviewCard } from "./trial-preview-card";
 import { TrialSidebar } from "./trial-sidebar";
 import { useTrial } from "./use-trial";
 
@@ -30,13 +31,19 @@ export default function TrialPage() {
             <TrialEditorCard
               canContinue={trial.canContinue}
               count={trial.count}
+              error={trial.previewError}
+              loading={trial.previewLoading}
               maxLength={trial.maxPromptLength}
-              onGenerate={trial.generate}
+              onGenerate={() => void trial.generate()}
               onPromptChange={trial.setPrompt}
               prompt={trial.prompt}
               textareaRef={trial.textareaRef}
             />
-            <TrialEmptyCard activeExample={trial.activeExample} onExampleClick={trial.applyExample} />
+            {trial.preview ? (
+              <TrialPreviewCard preview={trial.preview} />
+            ) : (
+              <TrialEmptyCard activeExample={trial.activeExample} onExampleClick={trial.applyExample} />
+            )}
           </div>
 
           <TrialSidebar todayLabel={trial.todayLabel} />

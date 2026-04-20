@@ -2,15 +2,19 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ApiClientError, apiRequest } from "@/shared/lib/api";
 import { saveTrialDraft } from "@/shared/lib/trial-draft";
 import { useAuthSession } from "@/shared/lib/session-store";
-import { examplePrompts, formatMonthDay, maxPromptLength, promptTemplates } from "./trial-model";
+import { examplePrompts, formatMonthDay, maxPromptLength, promptTemplates, type TrialPreview } from "./trial-model";
 
 export function useTrial() {
   const router = useRouter();
   const session = useAuthSession();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [prompt, setPrompt] = useState("");
+  const [preview, setPreview] = useState<TrialPreview | null>(null);
+  const [previewError, setPreviewError] = useState("");
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const todayLabel = useMemo(() => formatMonthDay(new Date()), []);
   const count = prompt.length;
@@ -22,10 +26,12 @@ export function useTrial() {
 
   function applyExample(label: string) {
     setPrompt(promptTemplates[label] ?? label);
+    setPreview(null);
+    setPreviewError("");
     textareaRef.current?.focus();
   }
 
-  function generate() {
+  async function generate() {
     if (!canContinue) return;
 
     saveTrialDraft(prompt);
@@ -35,7 +41,35 @@ export function useTrial() {
       return;
     }
 
-    router.push("/login?intent=trial");
+    setPreviewLoading(true);
+    setPreviewError("");
+
+    try {
+      const result = await apiRequest<TrialPreview>("/api/trial/preview", {
+        method: "POST",
+        body: {
+          prompt: prompt.trim(),
+        },
+        retryOnUnauthorized: false,
+      });
+      setPreview(result);
+    } catch (error) {
+      setPreviewError(
+        error instanceof ApiClientError
+          ? error.message
+          : error instanceof Error
+            ? error.message
+            : "这轮体验预览暂时没有跑通，请稍后再试。",
+      );
+    } finally {
+      setPreviewLoading(false);
+    }
+  }
+
+  function updatePrompt(value: string) {
+    setPrompt(value);
+    setPreview(null);
+    setPreviewError("");
   }
 
   return {
@@ -46,7 +80,10 @@ export function useTrial() {
     generate,
     maxPromptLength,
     prompt,
-    setPrompt,
+    preview,
+    previewError,
+    previewLoading,
+    setPrompt: updatePrompt,
     textareaRef,
     todayLabel,
   };

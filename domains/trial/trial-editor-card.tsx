@@ -9,6 +9,8 @@ import {
 export function TrialEditorCard({
   canContinue,
   count,
+  error,
+  loading,
   maxLength,
   prompt,
   textareaRef,
@@ -17,6 +19,8 @@ export function TrialEditorCard({
 }: {
   canContinue: boolean;
   count: number;
+  error?: string;
+  loading?: boolean;
   maxLength: number;
   prompt: string;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
@@ -43,16 +47,19 @@ export function TrialEditorCard({
         </label>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-sm leading-5 text-[#737378]">
-            {count} / {maxLength} 字
+          <div className="space-y-1">
+            <div className="text-sm leading-5 text-[#737378]">
+              {count} / {maxLength} 字
+            </div>
+            {error ? <div className="text-sm leading-5 text-[#d4668f]">{error}</div> : null}
           </div>
           <ExperienceActionButton
             className="w-full sm:w-[140px]"
-            disabled={!canContinue}
+            disabled={!canContinue || loading}
             onClick={onGenerate}
           >
             <SparkIcon className="h-5 w-5" />
-            <span>开始生成</span>
+            <span>{loading ? "正在生成" : "开始生成"}</span>
           </ExperienceActionButton>
         </div>
       </div>

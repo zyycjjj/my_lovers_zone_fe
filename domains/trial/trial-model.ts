@@ -2,6 +2,14 @@
 
 export const maxPromptLength = 500;
 
+export type TrialPreview = {
+  title: string;
+  previewText: string;
+  truncated: boolean;
+  hiddenChars: number;
+  continueHint: string;
+};
+
 export const examplePrompts = [
   "小红书美妆种草",
   "直播带货话术",
