@@ -74,11 +74,11 @@ export const tools: Array<{
     icon: "文",
     label: "标题生成",
     short: "20 条可直接挑选的标题",
-    description: "先用一个关键词，把今天要发的标题方向定下来。",
+    description: "先用一个关键词，快速确定今天要发的标题方向。",
     promptLabel: "描述你要生成的标题方向",
     promptPlaceholder: "例如：春季连衣裙上新，想要更适合小红书的种草标题",
     emptyTitle: "准备好了，开始生成标题吧！",
-    emptyDescription: "在上方输入框描述你的商品和标题方向，AI 会先给你一组可直接参考的标题。",
+    emptyDescription: "在上方输入框描述你的商品和标题方向，我会先给你一组可直接参考的标题。",
   },
   {
     key: "script",
@@ -87,9 +87,9 @@ export const tools: Array<{
     short: "短视频和直播口播都能先出一版",
     description: "先把可讲的内容搭起来，再决定要不要继续细修。",
     promptLabel: "描述你要生成的脚本内容",
-    promptPlaceholder: "例如：家用小风扇，面向租房上班族，想做一版直播口播脚本",
+    promptPlaceholder: "例如：帮我写一份抖音卖货文案，产品是问几许葡萄酒，面向年轻人",
     emptyTitle: "准备好了，开始创作吧！",
-    emptyDescription: "在上方输入框描述你的需求，AI 将为你生成一版结构清晰的内容脚本。",
+    emptyDescription: "在上方输入框描述你的需求，我会先生成一版可直接使用的内容。",
   },
   {
     key: "refine",
@@ -111,7 +111,7 @@ export const tools: Array<{
     promptLabel: "补充测算背景",
     promptPlaceholder: "例如：这款商品想看高客单和低客单两种情况下的佣金空间",
     emptyTitle: "准备好了，开始测算吧！",
-    emptyDescription: "填写价格、佣金和扣点信息后，AI 会帮你快速算清这单值不值得推。",
+    emptyDescription: "填写价格、佣金和扣点信息后，我会帮你快速算清这单值不值得推。",
   },
 ];
 
@@ -145,30 +145,16 @@ export function parseCommissionExample(example: string) {
 
 export function buildActiveTips(activeTool: ToolKind) {
   if (activeTool === "title") {
-    return [
-      "把商品、卖点和平台场景一起写上，标题会更贴近发布场景。",
-      "如果你想要情绪感或转化感，可以直接写进需求里。",
-      "先出一组，再挑两条继续细化，效率更高。",
-    ];
+    return ["描述越详细，生成内容越精准。", "可指定平台、风格和字数。", "不满意可基于结果继续修改。"];
   }
   if (activeTool === "script") {
-    return [
-      "先写清商品、人群和场景，脚本会更具体。",
-      "直播口播建议补充价格和转化目标。",
-      "先跑一版，再拿结果去微调节奏和开场。",
-    ];
+    return ["描述越详细，生成内容越精准。", "可指定人群、场景和价格。", "先生成一版，再继续微调。"];
   }
   if (activeTool === "refine") {
-    return [
-      "原始话术越完整，提炼后的建议越准确。",
-      "把你最担心的表达问题直接写进来，会更有针对性。",
-      "结果里会同时给到卖点、风险和替代表达。",
-    ];
+    return ["原始话术越完整，提炼结果越准确。", "可直接写明你担心的表达风险。", "结果会同步给出替代表达建议。"];
   }
   return [
-    "价格和佣金比例是必填，平台扣点建议一起补上。",
-    "如果想比较不同售价，可以看测算结果里的对比区。",
-    "先算佣金空间，再决定主推哪一档链接更稳。",
+    "价格与佣金比例尽量填写完整。", "建议同时填写平台扣点便于测算。", "先看结果对比再决定主推档位。",
   ];
 }
 
@@ -183,10 +169,10 @@ export function buildExamplePrompts(activeTool: ToolKind) {
   }
   if (activeTool === "script") {
     return [
-      "家用小风扇，适合租房党和办公室场景",
-      "美白精华，想做一版直播口播脚本",
-      "厨房收纳盒，突出使用前后对比",
-      "防晒衣，适合通勤女生的短视频脚本",
+      "小红书美妆种草",
+      "直播带货话术",
+      "抖音短视频脚本",
+      "产品详情页文案",
     ];
   }
   if (activeTool === "refine") {
@@ -202,4 +188,3 @@ export function buildExamplePrompts(activeTool: ToolKind) {
     "护肤套装 299 元，佣金 30%，平台扣点 10%",
   ];
 }
-
