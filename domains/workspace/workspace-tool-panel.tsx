@@ -10,8 +10,6 @@ import { WorkspaceTitleStyleField } from "./workspace-tool-panel/title-style-fie
 
 type ToolMeta = {
   label: string;
-  short: string;
-  description: string;
   promptLabel: string;
   promptPlaceholder: string;
 };
@@ -82,11 +80,10 @@ export function WorkspaceToolPanel({
       <div className="space-y-5">
         <ToolTabs activeTool={activeTool} onChange={onToolChange} />
 
-        <div className="space-y-2">
+        <div>
           <div className="text-[20px] font-semibold text-[#27272A]">
             {activeToolMeta.promptLabel}
           </div>
-          <p className="text-sm leading-7 text-[#737378]">{activeToolMeta.description}</p>
         </div>
 
         <WorkspacePromptField
@@ -130,15 +127,14 @@ export function WorkspaceToolPanel({
 
         {toolError ? <NoticePanel>{toolError}</NoticePanel> : null}
 
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="text-sm text-[#737378]">{activeToolMeta.short}</div>
+        <div className="flex justify-end">
           <Button
             className="rounded-[16px] bg-[#4A3168] px-6 py-3 text-white hover:bg-[#3D2856]"
             disabled={loadingTool === activeTool}
             onClick={onSubmit}
             type="button"
           >
-            {loadingTool === activeTool ? "正在生成..." : `开始${activeToolMeta.label}`}
+            {loadingTool === activeTool ? "正在生成" : "开始生成"}
           </Button>
         </div>
       </div>

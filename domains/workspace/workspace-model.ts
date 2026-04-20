@@ -87,9 +87,9 @@ export const tools: Array<{
     short: "短视频和直播口播都能先出一版",
     description: "先把可讲的内容搭起来，再决定要不要继续细修。",
     promptLabel: "描述你要生成的脚本内容",
-    promptPlaceholder: "例如：帮我写一份抖音卖货文案，产品是问几许葡萄酒，面向年轻人",
+    promptPlaceholder: "例如：帮我写一篇春季新品发布的小红书文案，产品是连衣裙，强调设计感和舒适度...",
     emptyTitle: "准备好了，开始创作吧！",
-    emptyDescription: "在上方输入框描述你的需求，我会先生成一版可直接使用的内容。",
+    emptyDescription: "在上方输入框描述你的需求，AI将为你生成内容",
   },
   {
     key: "refine",
@@ -145,17 +145,15 @@ export function parseCommissionExample(example: string) {
 
 export function buildActiveTips(activeTool: ToolKind) {
   if (activeTool === "title") {
-    return ["描述越详细，生成内容越精准。", "可指定平台、风格和字数。", "不满意可基于结果继续修改。"];
+    return ["描述越详细，生成内容越精准", "可以指定平台、风格、字数等", "对生成结果不满意可重新生成"];
   }
   if (activeTool === "script") {
-    return ["描述越详细，生成内容越精准。", "可指定人群、场景和价格。", "先生成一版，再继续微调。"];
+    return ["描述越详细，生成内容越精准", "可以指定平台、风格、字数等", "对生成结果不满意可重新生成"];
   }
   if (activeTool === "refine") {
-    return ["原始话术越完整，提炼结果越准确。", "可直接写明你担心的表达风险。", "结果会同步给出替代表达建议。"];
+    return ["描述越详细，生成内容越精准", "可以指定平台、风格、字数等", "对生成结果不满意可重新生成"];
   }
-  return [
-    "价格与佣金比例尽量填写完整。", "建议同时填写平台扣点便于测算。", "先看结果对比再决定主推档位。",
-  ];
+  return ["描述越详细，生成内容越精准", "可以指定平台、风格、字数等", "对生成结果不满意可重新生成"];
 }
 
 export function buildExamplePrompts(activeTool: ToolKind) {

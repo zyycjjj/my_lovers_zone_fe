@@ -1,15 +1,11 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ApiClientError, apiRequest } from "@/shared/lib/api";
 import { saveTrialDraft } from "@/shared/lib/trial-draft";
-import { useAuthSession } from "@/shared/lib/session-store";
 import { examplePrompts, formatMonthDay, maxPromptLength, promptTemplates, type TrialPreview } from "./trial-model";
 
 export function useTrial() {
-  const router = useRouter();
-  const session = useAuthSession();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [prompt, setPrompt] = useState("");
   const [preview, setPreview] = useState<TrialPreview | null>(null);
@@ -35,11 +31,6 @@ export function useTrial() {
     if (!canContinue) return;
 
     saveTrialDraft(prompt);
-
-    if (session?.sessionToken) {
-      router.push("/workspace");
-      return;
-    }
 
     setPreviewLoading(true);
     setPreviewError("");

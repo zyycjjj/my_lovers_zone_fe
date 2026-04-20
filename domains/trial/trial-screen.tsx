@@ -40,7 +40,11 @@ export default function TrialPage() {
               textareaRef={trial.textareaRef}
             />
             {trial.preview ? (
-              <TrialPreviewCard preview={trial.preview} />
+              <TrialPreviewCard
+                onRegenerate={() => void trial.generate()}
+                preview={trial.preview}
+                regenerating={trial.previewLoading}
+              />
             ) : (
               <TrialEmptyCard activeExample={trial.activeExample} onExampleClick={trial.applyExample} />
             )}

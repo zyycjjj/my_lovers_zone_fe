@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, ButtonLink } from "@/shared/ui/ui";
+import { ButtonLink } from "@/shared/ui/ui";
 import { type AuthMe, type WorkspaceSummary } from "./workspace-model";
 
 type ToolMeta = {
@@ -18,11 +18,11 @@ type Props = {
 };
 
 export function WorkspaceSidebar({
-  activeToolMeta,
+  activeToolMeta: _activeToolMeta,
   activeTips,
   displayName: _displayName,
   me: _me,
-  onLogout,
+  onLogout: _onLogout,
   workspaces: _workspaces,
 }: Props) {
   const quotaTotal = 50;
@@ -96,16 +96,6 @@ export function WorkspaceSidebar({
         <ButtonLink className="mt-4 w-full" href="/#plans">
           查看套餐
         </ButtonLink>
-        <div className="mt-3 text-xs text-[#A3A3AB]">当前推荐：{activeToolMeta.label}</div>
-      </section>
-
-      <section className="grid grid-cols-2 gap-3">
-        <ButtonLink className="w-full" href="/onboarding" variant="secondary">
-          修改资料
-        </ButtonLink>
-        <Button className="w-full" onClick={onLogout} type="button" variant="ghost">
-          退出登录
-        </Button>
       </section>
     </aside>
   );
