@@ -24,6 +24,7 @@ export type Plan = {
   features: string[];
   action: string;
   recommended?: boolean;
+  checkoutMode?: boolean;
 };
 
 export type Stat = {
@@ -115,4 +116,3 @@ export const stats: Stat[] = [
   { value: "98%", label: "用户满意度" },
   { value: "4.9", label: "用户评分" },
 ];
-

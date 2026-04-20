@@ -2,7 +2,7 @@ import type { Plan } from "./home-model";
 import { HomePlanCard } from "./home-plan-card";
 import { HomeSectionTitle } from "./home-section-title";
 
-export function HomePlansSection({ items }: { items: Plan[] }) {
+export function HomePlansSection({ items, checkoutMode = false }: { items: Plan[]; checkoutMode?: boolean }) {
   return (
     <section className="py-16 lg:py-20" id="plans">
       <div className="mx-auto max-w-[1280px] px-4">
@@ -10,11 +10,10 @@ export function HomePlansSection({ items }: { items: Plan[] }) {
 
         <div className="mt-12 grid gap-6 lg:grid-cols-3">
           {items.map((plan) => (
-            <HomePlanCard key={plan.name} {...plan} />
+            <HomePlanCard key={plan.name} {...plan} checkoutMode={checkoutMode} />
           ))}
         </div>
       </div>
     </section>
   );
 }
-

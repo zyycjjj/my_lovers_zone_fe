@@ -16,7 +16,7 @@ export default function PricingPage() {
         </div>
       </header>
       <main>
-        <HomePlansSection items={plans} />
+        <HomePlansSection checkoutMode items={plans} />
       </main>
     </div>
   );

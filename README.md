@@ -29,6 +29,10 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 前端环境变量（服务器 `/srv/my_lovers_zone_fe/.env` 或部署平台环境变量）：
 
 - NEXT_PUBLIC_API_BASE_URL：后端地址，例如 `https://love.zychenyao.cn`
+- NEXT_PUBLIC_PAYMENT_LINK_UNIFIED：统一支付链接（可选，优先）
+- NEXT_PUBLIC_PAYMENT_LINK_ALIPAY：支付宝支付链接（可选）
+- NEXT_PUBLIC_PAYMENT_LINK_WECHAT：微信支付链接（可选）
+- NEXT_PUBLIC_PAYMENT_CONTACT：未配置支付链接时的提示文案（可选）
 
 后端环境变量（服务器 `/srv/my_lovers_zone_me/.env` 或 GitHub Actions Secrets）：
 

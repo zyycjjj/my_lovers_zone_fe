@@ -9,7 +9,15 @@ export function HomePlanCard({
   features,
   action,
   recommended,
+  checkoutMode = false,
 }: Plan) {
+  const planSlug = name === "体验版" ? "experience" : name === "专业版" ? "pro" : "team";
+  const ctaHref = checkoutMode
+    ? `/checkout?plan=${planSlug}`
+    : action === "联系客服"
+      ? "/login"
+      : "/trial";
+
   const buttonClass = recommended
     ? "bg-[linear-gradient(135deg,#4a3168_0%,#6f4d96_100%)] text-white shadow-[0_16px_34px_rgba(74,49,104,0.22)] hover:-translate-y-0.5 hover:shadow-[0_22px_42px_rgba(74,49,104,0.3)]"
     : "border-[1.5px] border-[#4a3168] bg-white text-[#4a3168] hover:-translate-y-0.5 hover:bg-[#f8f4fb] hover:shadow-[0_14px_28px_rgba(74,49,104,0.12)]";
@@ -54,7 +62,7 @@ export function HomePlanCard({
       </ul>
 
       <Link
-        href={action === "联系客服" ? "/login" : "/trial"}
+        href={ctaHref}
         className={`mt-6 inline-flex h-[51px] w-full items-center justify-center rounded-2xl text-base font-medium focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#4a3168]/14 ${buttonClass}`}
       >
         {action}
@@ -62,4 +70,3 @@ export function HomePlanCard({
     </div>
   );
 }
-

@@ -29,6 +29,10 @@ jobs:
           cat > .env <<EOF
           PORT=${{ secrets.PORT }}
           NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}
+          NEXT_PUBLIC_PAYMENT_LINK_UNIFIED=${{ secrets.NEXT_PUBLIC_PAYMENT_LINK_UNIFIED }}
+          NEXT_PUBLIC_PAYMENT_LINK_ALIPAY=${{ secrets.NEXT_PUBLIC_PAYMENT_LINK_ALIPAY }}
+          NEXT_PUBLIC_PAYMENT_LINK_WECHAT=${{ secrets.NEXT_PUBLIC_PAYMENT_LINK_WECHAT }}
+          NEXT_PUBLIC_PAYMENT_CONTACT=${{ secrets.NEXT_PUBLIC_PAYMENT_CONTACT }}
           EOF
       - name: validate secrets
         env:
