@@ -24,7 +24,7 @@ export function TrialEditorCard({
   onPromptChange: (value: string) => void;
 }) {
   return (
-    <ExperienceCard className="p-6 lg:px-[25px] lg:py-[25px]">
+    <ExperienceCard className="p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.08)] hover:translate-y-0 hover:shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.08)] lg:px-[25px] lg:py-[25px]">
       <div className="space-y-[15px]">
         <div className="text-[20px] font-semibold leading-[28px] tracking-[-0.02em] text-[#27272a]">
           描述你要生成的内容
@@ -59,4 +59,3 @@ export function TrialEditorCard({
     </ExperienceCard>
   );
 }
-

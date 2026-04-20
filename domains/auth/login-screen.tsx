@@ -13,15 +13,15 @@ function LoginPageContent() {
   const login = useLogin();
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#fafafa] px-4 py-6 sm:px-6 sm:py-8">
+    <div className="relative min-h-screen overflow-hidden bg-[#fafafa] px-4 py-6 sm:px-6 sm:py-4">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute right-[-72px] top-16 size-72 rounded-full bg-[#d1c7dd] opacity-40 blur-3xl" />
         <div className="absolute left-[-48px] top-[36%] size-96 rounded-full bg-[#f9cfe3] opacity-40 blur-3xl" />
       </div>
 
-      <div className="relative mx-auto flex min-h-[calc(100vh-3rem)] max-w-[448px] flex-col justify-center gap-6 sm:min-h-[calc(100vh-4rem)]">
+      <div className="relative mx-auto flex min-h-[calc(100vh-3rem)] max-w-[448px] flex-col justify-center gap-5 sm:min-h-[calc(100vh-2rem)]">
         <Link
-          className="inline-flex items-center gap-2 self-start text-[15px] font-medium text-[#52525a] hover:text-[#18181b]"
+          className="inline-flex items-center gap-2 self-start text-[15px] font-medium text-[#52525a] hover:text-[#18181b] sm:hidden"
           href="/"
         >
           <ArrowLeftIcon />

@@ -10,19 +10,23 @@ export default function TrialPage() {
   const trial = useTrial();
 
   return (
-    <div className="min-h-screen bg-[#fafafa] text-[#18181b]">
+    <div className="relative min-h-screen overflow-hidden bg-[#fafafa] text-[#18181b]">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute right-[-96px] top-24 size-80 rounded-full bg-[#d8d1e1] opacity-35 blur-[72px]" />
+        <div className="absolute left-[-72px] top-[42%] size-[420px] rounded-full bg-[#f6d6e4] opacity-35 blur-[72px]" />
+      </div>
       <TrialHeaderBar />
 
-      <main className="mx-auto max-w-[1283px] px-4 pb-16 pt-6 lg:pt-6">
-        <div className="max-w-[271px]">
+      <main className="relative mx-auto max-w-[1283px] px-4 pb-16 pt-6 lg:pt-6">
+        <div className="max-w-[300px]">
           <h1 className="text-[24px] font-semibold leading-[30px] tracking-[-0.02em] text-[#18181b] lg:text-[30px] lg:leading-[38px]">
             开始创作你的内容
           </h1>
           <p className="mt-2 text-base leading-[26px] text-[#737378]">输入你的需求，AI将为你生成专业内容</p>
         </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,824px)_400px] lg:items-start">
-          <div className="grid gap-6">
+        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,824px)_398px] lg:items-start">
+          <div className="grid gap-5">
             <TrialEditorCard
               canContinue={trial.canContinue}
               count={trial.count}

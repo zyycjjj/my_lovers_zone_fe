@@ -47,8 +47,8 @@ export function LoginAuthCard({
   onSubmit,
 }: Props) {
   return (
-    <section className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white px-6 py-[25px] shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.08)] sm:px-[25px]">
-      <div className="space-y-5">
+    <section className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white px-6 py-6 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.08)] sm:px-[25px]">
+      <div className="space-y-[18px]">
         <ModeSwitch mode={mode} onChange={onModeChange} />
 
         <Field error={fieldErrors.phone} label="手机号">
@@ -158,7 +158,7 @@ export function LoginAuthCard({
         </div>
       </div>
 
-      <div className="mt-5 text-center text-[12px] leading-4 text-[#737378]">
+      <div className="mt-4 text-center text-[12px] leading-4 text-[#737378]">
         登录即表示同意
         <span className="text-[#4a3168]">《用户协议》</span>
         和

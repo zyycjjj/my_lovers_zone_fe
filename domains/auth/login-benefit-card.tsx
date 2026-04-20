@@ -7,10 +7,9 @@ export function LoginBenefitCard() {
         <GiftIcon />
       </InlineIconCircle>
       <div>
-        <div className="text-[20px] font-semibold">新用户专享福利</div>
-        <div className="mt-1 text-[14px] text-white/80">1元体验7天全部功能 · 随时可退款</div>
+        <div className="text-[20px] font-semibold leading-[28px]">新用户专享福利</div>
+        <div className="mt-0.5 text-[14px] leading-5 text-white/80">1元体验7天全部功能 · 随时可退款</div>
       </div>
     </section>
   );
 }
-
