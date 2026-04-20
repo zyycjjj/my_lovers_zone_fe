@@ -1,8 +1,12 @@
 "use client";
 
-import { Button, Card, ChoicePill, FieldGroup, NoticePanel } from "@/shared/ui/ui";
+import { Button, Card, NoticePanel } from "@/shared/ui/ui";
 import { ToolTabs } from "./tool-tabs";
-import { inputClassName, type ToolKind } from "./workspace-model";
+import type { ToolKind } from "./workspace-model";
+import { WorkspaceCommissionFields } from "./workspace-tool-panel/commission-fields";
+import { WorkspacePromptField } from "./workspace-tool-panel/prompt-field";
+import { WorkspaceScriptFields } from "./workspace-tool-panel/script-fields";
+import { WorkspaceTitleStyleField } from "./workspace-tool-panel/title-style-field";
 
 type ToolMeta = {
   label: string;
@@ -85,109 +89,43 @@ export function WorkspaceToolPanel({
           <p className="text-sm leading-7 text-[#737378]">{activeToolMeta.description}</p>
         </div>
 
-        <FieldGroup label="内容描述">
-          <textarea
-            className="min-h-[122px] w-full resize-none rounded-[16px] border border-[#ECECF0] bg-white px-4 py-3 text-base leading-6 text-[#27272A] outline-none transition-colors placeholder:text-[#A3A3AB] focus:border-[#4A3168]"
-            onChange={(event) => {
-              const value = event.target.value;
-              if (activeTool === "title") setTitleKeyword(value);
-              if (activeTool === "script") setScriptKeyword(value);
-              if (activeTool === "refine") setRefineText(value);
-            }}
-            placeholder={activeToolMeta.promptPlaceholder}
-            value={
-              activeTool === "title"
-                ? titleKeyword
-                : activeTool === "script"
-                  ? scriptKeyword
-                  : activeTool === "refine"
-                    ? refineText
-                    : ""
-            }
-          />
-        </FieldGroup>
+        <WorkspacePromptField
+          activeTool={activeTool}
+          onRefineTextChange={setRefineText}
+          onScriptKeywordChange={setScriptKeyword}
+          onTitleKeywordChange={setTitleKeyword}
+          placeholder={activeToolMeta.promptPlaceholder}
+          refineText={refineText}
+          scriptKeyword={scriptKeyword}
+          titleKeyword={titleKeyword}
+        />
 
         {activeTool === "title" ? (
-          <FieldGroup hint="选填" label="风格方向">
-            <input
-              className={inputClassName()}
-              onChange={(event) => setTitleStyle(event.target.value)}
-              placeholder="比如：口语感、情绪感、强转化"
-              value={titleStyle}
-            />
-          </FieldGroup>
+          <WorkspaceTitleStyleField onTitleStyleChange={setTitleStyle} titleStyle={titleStyle} />
         ) : null}
 
         {activeTool === "script" ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FieldGroup hint="选填" label="价格">
-              <input
-                className={inputClassName()}
-                inputMode="decimal"
-                onChange={(event) => setScriptPrice(event.target.value)}
-                placeholder="比如：99"
-                value={scriptPrice}
-              />
-            </FieldGroup>
-            <FieldGroup hint="选填" label="目标人群">
-              <input
-                className={inputClassName()}
-                onChange={(event) => setScriptAudience(event.target.value)}
-                placeholder="比如：租房党、上班族"
-                value={scriptAudience}
-              />
-            </FieldGroup>
-            <FieldGroup className="sm:col-span-2" hint="选填" label="使用场景">
-              <input
-                className={inputClassName()}
-                onChange={(event) => setScriptScene(event.target.value)}
-                placeholder="比如：办公室、宿舍、通勤"
-                value={scriptScene}
-              />
-            </FieldGroup>
-            <FieldGroup className="sm:col-span-2" label="输出风格">
-              <div className="flex flex-wrap gap-3">
-                <ChoicePill active={scriptStyle === "short"} onClick={() => setScriptStyle("short")}>
-                  短视频种草
-                </ChoicePill>
-                <ChoicePill active={scriptStyle === "live"} onClick={() => setScriptStyle("live")}>
-                  直播口播
-                </ChoicePill>
-              </div>
-            </FieldGroup>
-          </div>
+          <WorkspaceScriptFields
+            onScriptAudienceChange={setScriptAudience}
+            onScriptPriceChange={setScriptPrice}
+            onScriptSceneChange={setScriptScene}
+            onScriptStyleChange={setScriptStyle}
+            scriptAudience={scriptAudience}
+            scriptPrice={scriptPrice}
+            scriptScene={scriptScene}
+            scriptStyle={scriptStyle}
+          />
         ) : null}
 
         {activeTool === "commission" ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <FieldGroup label="商品价格">
-              <input
-                className={inputClassName()}
-                inputMode="decimal"
-                onChange={(event) => setCommissionPrice(event.target.value)}
-                placeholder="比如：199"
-                value={commissionPrice}
-              />
-            </FieldGroup>
-            <FieldGroup label="佣金比例">
-              <input
-                className={inputClassName()}
-                inputMode="decimal"
-                onChange={(event) => setCommissionRate(event.target.value)}
-                placeholder="比如：0.2"
-                value={commissionRate}
-              />
-            </FieldGroup>
-            <FieldGroup className="sm:col-span-2" hint="选填" label="平台扣点">
-              <input
-                className={inputClassName()}
-                inputMode="decimal"
-                onChange={(event) => setPlatformRate(event.target.value)}
-                placeholder="比如：0.1"
-                value={platformRate}
-              />
-            </FieldGroup>
-          </div>
+          <WorkspaceCommissionFields
+            commissionPrice={commissionPrice}
+            commissionRate={commissionRate}
+            onCommissionPriceChange={setCommissionPrice}
+            onCommissionRateChange={setCommissionRate}
+            onPlatformRateChange={setPlatformRate}
+            platformRate={platformRate}
+          />
         ) : null}
 
         {toolError ? <NoticePanel>{toolError}</NoticePanel> : null}
