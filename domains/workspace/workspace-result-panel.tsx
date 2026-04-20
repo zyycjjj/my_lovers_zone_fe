@@ -21,11 +21,15 @@ type Props = {
   commissionResult: CommissionResult | null;
   copiedText: string;
   examplePrompts: string[];
+  loadingTool: ToolKind | null;
   refineResult: RefineResult | null;
+  resumedDraftPrompt: string;
   scriptResult: string;
   titleResult: string[];
   onCopy: (text: string) => void;
   onExampleClick: (example: string) => void;
+  onGenerateTitlesFromScript: () => void;
+  onRefineCurrentScript: () => void;
 };
 
 export function WorkspaceResultPanel({
@@ -35,9 +39,13 @@ export function WorkspaceResultPanel({
   commissionResult,
   copiedText,
   examplePrompts,
+  loadingTool,
   onCopy,
   onExampleClick,
+  onGenerateTitlesFromScript,
+  onRefineCurrentScript,
   refineResult,
+  resumedDraftPrompt,
   scriptResult,
   titleResult,
 }: Props) {
@@ -52,7 +60,14 @@ export function WorkspaceResultPanel({
           ) : null}
 
           {activeTool === "script" && scriptResult ? (
-            <WorkspaceScriptResult script={scriptResult} onCopy={onCopy} />
+            <WorkspaceScriptResult
+              loadingTool={loadingTool}
+              onCopy={onCopy}
+              onGenerateTitles={onGenerateTitlesFromScript}
+              onRefine={onRefineCurrentScript}
+              originPrompt={resumedDraftPrompt}
+              script={scriptResult}
+            />
           ) : null}
 
           {activeTool === "refine" && refineResult ? (

@@ -97,6 +97,97 @@ export function useWorkspaceTools() {
     setCopiedText("");
   }
 
+  async function refineCurrentScript() {
+    const normalizedScript = scriptResult.trim();
+    if (!normalizedScript) {
+      setToolError("先生成一版脚本，再继续提炼话术。");
+      return;
+    }
+
+    setActiveTool("refine");
+    setRefineText(normalizedScript);
+    setToolError("");
+    setCopiedText("");
+    setLoadingTool("refine");
+
+    try {
+      const result = await submitWorkspaceTool("refine", {
+        commissionPrice,
+        commissionRate,
+        platformRate,
+        refineText: normalizedScript,
+        scriptAudience,
+        scriptKeyword,
+        scriptPrice,
+        scriptScene,
+        scriptStyle,
+        titleKeyword,
+        titleStyle,
+      });
+
+      if (result.kind === "refine") {
+        setRefineResult(result.refineResult);
+      }
+    } catch (err) {
+      setToolError(
+        err instanceof ApiClientError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "这轮提炼暂时没有跑通，请稍后再试。",
+      );
+    } finally {
+      setLoadingTool(null);
+    }
+  }
+
+  async function generateTitlesFromScript() {
+    const normalizedScript = scriptResult.trim();
+    const normalizedKeyword = scriptKeyword.trim();
+    const derivedKeyword = normalizedKeyword || resumedDraftPrompt.trim() || normalizedScript.replace(/\s+/g, " ").slice(0, 36);
+
+    if (!derivedKeyword) {
+      setToolError("先生成一版内容，再继续帮你出标题。");
+      return;
+    }
+
+    setActiveTool("title");
+    setTitleKeyword(derivedKeyword);
+    setToolError("");
+    setCopiedText("");
+    setLoadingTool("title");
+
+    try {
+      const result = await submitWorkspaceTool("title", {
+        commissionPrice,
+        commissionRate,
+        platformRate,
+        refineText,
+        scriptAudience,
+        scriptKeyword,
+        scriptPrice,
+        scriptScene,
+        scriptStyle,
+        titleKeyword: derivedKeyword,
+        titleStyle: titleStyle.trim() || "种草感",
+      });
+
+      if (result.kind === "title") {
+        setTitleResult(result.titleResult);
+      }
+    } catch (err) {
+      setToolError(
+        err instanceof ApiClientError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "这轮标题暂时没有跑通，请稍后再试。",
+      );
+    } finally {
+      setLoadingTool(null);
+    }
+  }
+
   const resumeTrialDraft = useCallback(
     async (prompt: string) => {
       const normalizedPrompt = prompt.trim();
@@ -208,10 +299,12 @@ export function useWorkspaceTools() {
     handleSubmitTool,
     loadingTool,
     platformRate,
+    refineCurrentScript,
     refineResult,
     refineText,
     resumedDraftPrompt,
     resumeTrialDraft,
+    generateTitlesFromScript,
     scriptAudience,
     scriptKeyword,
     scriptPrice,
