@@ -17,6 +17,13 @@ type PaymentOrder = {
   createdAt: string;
 };
 
+type Subscription = {
+  id: number;
+  planKey: PlanKey;
+  status: string;
+  expiredAt?: string | null;
+};
+
 const PLAN_MAP: Record<PlanKey, { name: string; price: string; desc: string }> = {
   experience: { name: "体验版", price: "¥1/7天", desc: "新用户专享，体验全部功能" },
   pro: { name: "专业版", price: "¥99/月", desc: "适合个人和小团队" },
@@ -44,6 +51,7 @@ export default function CheckoutPage() {
   const [proofNote, setProofNote] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
 
   const hasPaymentLink = useMemo(
     () => Boolean(unifiedPayLink || alipayLink || wechatPayLink),
@@ -85,6 +93,25 @@ export default function CheckoutPage() {
     }
   }
 
+  async function refreshOrderStatus() {
+    if (!order) return;
+    setLoading(true);
+    setMessage("");
+    try {
+      const [nextOrder, mySub] = await Promise.all([
+        apiRequest<PaymentOrder>(`/api/payments/orders/${order.id}`),
+        apiRequest<Subscription | null>("/api/payments/subscription/me"),
+      ]);
+      setOrder(nextOrder);
+      setSubscription(mySub);
+      setMessage(nextOrder.status === "activated" ? "已开通套餐，可返回工作台继续使用。" : "已刷新订单状态。");
+    } catch (err) {
+      setMessage(err instanceof ApiClientError ? err.message : "刷新状态失败");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#fafafa] px-4 py-8 text-[#18181b]">
       <div className="mx-auto max-w-[560px]">
@@ -117,6 +144,22 @@ export default function CheckoutPage() {
             <div className="mt-4 rounded-[12px] border border-[#ECECF0] bg-white px-3 py-3 text-sm text-[#52525B]">
               <div>订单号：{order.orderNo}</div>
               <div className="mt-1">状态：{order.status}</div>
+              <button
+                className="mt-2 inline-flex h-9 items-center justify-center rounded-[10px] border border-[#4A3168] px-3 text-xs text-[#4A3168]"
+                disabled={loading}
+                onClick={() => void refreshOrderStatus()}
+                type="button"
+              >
+                刷新订单状态
+              </button>
+            </div>
+          ) : null}
+
+          {subscription ? (
+            <div className="mt-3 rounded-[12px] border border-[#ECECF0] bg-[#FAFAFA] px-3 py-3 text-sm text-[#52525B]">
+              <div>当前订阅：{subscription.planKey}</div>
+              <div className="mt-1">状态：{subscription.status}</div>
+              {subscription.expiredAt ? <div className="mt-1">到期：{subscription.expiredAt}</div> : null}
             </div>
           ) : null}
 
