@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { ApiClientError } from "@/shared/lib/api";
 import {
   buildActiveTips,
@@ -18,6 +18,7 @@ export function useWorkspaceTools() {
   const [toolError, setToolError] = useState("");
   const [loadingTool, setLoadingTool] = useState<ToolKind | null>(null);
   const [copiedText, setCopiedText] = useState("");
+  const [resumedDraftPrompt, setResumedDraftPrompt] = useState("");
 
   const [titleKeyword, setTitleKeyword] = useState("");
   const [titleStyle, setTitleStyle] = useState("");
@@ -96,6 +97,66 @@ export function useWorkspaceTools() {
     setCopiedText("");
   }
 
+  const resumeTrialDraft = useCallback(
+    async (prompt: string) => {
+      const normalizedPrompt = prompt.trim();
+      if (!normalizedPrompt) return;
+
+      setActiveTool("script");
+      setScriptKeyword(normalizedPrompt);
+      setResumedDraftPrompt(normalizedPrompt);
+      setToolError("");
+      setCopiedText("");
+      setTitleResult([]);
+      setScriptResult("");
+      setRefineResult(null);
+      setCommissionResult(null);
+      setLoadingTool("script");
+
+      try {
+        const result = await submitWorkspaceTool("script", {
+          commissionPrice,
+          commissionRate,
+          platformRate,
+          refineText,
+          scriptAudience,
+          scriptKeyword: normalizedPrompt,
+          scriptPrice,
+          scriptScene,
+          scriptStyle,
+          titleKeyword,
+          titleStyle,
+        });
+
+        if (result.kind === "script") {
+          setScriptResult(result.scriptResult);
+        }
+      } catch (err) {
+        setToolError(
+          err instanceof ApiClientError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : "体验页那轮内容已经带过来了，你可以补两句再继续生成。",
+        );
+      } finally {
+        setLoadingTool(null);
+      }
+    },
+    [
+      commissionPrice,
+      commissionRate,
+      platformRate,
+      refineText,
+      scriptAudience,
+      scriptPrice,
+      scriptScene,
+      scriptStyle,
+      titleKeyword,
+      titleStyle,
+    ],
+  );
+
   async function handleSubmitTool() {
     setToolError("");
     setCopiedText("");
@@ -149,6 +210,8 @@ export function useWorkspaceTools() {
     platformRate,
     refineResult,
     refineText,
+    resumedDraftPrompt,
+    resumeTrialDraft,
     scriptAudience,
     scriptKeyword,
     scriptPrice,

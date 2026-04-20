@@ -2,8 +2,9 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { saveTrialDraft } from "@/shared/lib/trial-draft";
 import { useAuthSession } from "@/shared/lib/session-store";
-import { examplePrompts, formatMonthDay, maxPromptLength, promptTemplates, saveTrialDraft } from "./trial-model";
+import { examplePrompts, formatMonthDay, maxPromptLength, promptTemplates } from "./trial-model";
 
 export function useTrial() {
   const router = useRouter();
@@ -50,4 +51,3 @@ export function useTrial() {
     todayLabel,
   };
 }
-

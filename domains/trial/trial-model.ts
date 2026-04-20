@@ -23,17 +23,3 @@ export const promptTemplates: Record<string, string> = {
 export function formatMonthDay(date: Date) {
   return `${date.getMonth() + 1}月${date.getDate()}日`;
 }
-
-export function saveTrialDraft(prompt: string) {
-  if (typeof window === "undefined") return;
-
-  window.sessionStorage.setItem(
-    "memory.trialDraft",
-    JSON.stringify({
-      prompt,
-      updatedAt: Date.now(),
-      source: "experience_page",
-    }),
-  );
-}
-

@@ -40,6 +40,12 @@ export default function WorkspaceScreen() {
           </NoticePanel>
         ) : null}
 
+        {ws.resumedDraftPrompt ? (
+          <NoticePanel className="mb-6" tone="brand">
+            已经把你在体验页那轮内容接过来了，当前先按“脚本生成”帮你继续往下跑。
+          </NoticePanel>
+        ) : null}
+
         <section className="grid gap-6 lg:grid-cols-[minmax(0,824px)_minmax(0,395px)]">
           <div className="space-y-6">
             <WorkspaceToolPanel
