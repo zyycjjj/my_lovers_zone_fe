@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ApiClientError, apiRequest } from "@/shared/lib/api";
 import { saveTrialDraft } from "@/shared/lib/trial-draft";
 import { examplePrompts, formatMonthDay, maxPromptLength, promptTemplates, type TrialPreview } from "./trial-model";
@@ -11,6 +11,7 @@ export function useTrial() {
   const [preview, setPreview] = useState<TrialPreview | null>(null);
   const [previewError, setPreviewError] = useState("");
   const [previewLoading, setPreviewLoading] = useState(false);
+  const [pendingOrderCount, setPendingOrderCount] = useState(0);
 
   const todayLabel = useMemo(() => formatMonthDay(new Date()), []);
   const count = prompt.length;
@@ -58,6 +59,21 @@ export function useTrial() {
     }
   }
 
+  useEffect(() => {
+    void (async () => {
+      try {
+        const pending = await apiRequest<{ count: number }>("/api/payments/pending/me", {
+          retryOnUnauthorized: false,
+          timeoutMs: 12000,
+        });
+        setPendingOrderCount(pending.count || 0);
+      } catch {
+        setPendingOrderCount(0);
+      }
+    })();
+    return undefined;
+  }, []);
+
   function updatePrompt(value: string) {
     setPrompt(value);
     setPreview(null);
@@ -75,6 +91,7 @@ export function useTrial() {
     preview,
     previewError,
     previewLoading,
+    pendingOrderCount,
     setPrompt: updatePrompt,
     textareaRef,
     todayLabel,

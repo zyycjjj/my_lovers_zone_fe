@@ -46,6 +46,20 @@ export default function WorkspaceScreen() {
           </NoticePanel>
         ) : null}
 
+        {ws.pendingSummary?.count ? (
+          <NoticePanel className="mb-6" tone="rose">
+            你有 {ws.pendingSummary.count} 笔支付订单待处理（最新：{ws.pendingSummary.latest?.status || "pending"}）。
+            支付后可前往结算页刷新状态，管理员审核通过后自动开通套餐。
+          </NoticePanel>
+        ) : null}
+
+        {ws.subscription ? (
+          <NoticePanel className="mb-6" tone="brand">
+            当前套餐：{ws.subscription.planKey}（状态：{ws.subscription.status}
+            {ws.subscription.expiredAt ? `，到期：${ws.subscription.expiredAt}` : ""}）
+          </NoticePanel>
+        ) : null}
+
         <section className="grid gap-6 lg:grid-cols-[minmax(0,824px)_minmax(0,395px)]">
           <div className="space-y-6">
             <WorkspaceToolPanel

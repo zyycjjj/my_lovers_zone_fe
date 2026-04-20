@@ -7,6 +7,7 @@ import { TrialPreviewActions } from "./trial-preview-actions";
 import { TrialPreviewCard } from "./trial-preview-card";
 import { TrialSidebar } from "./trial-sidebar";
 import { useTrial } from "./use-trial";
+import { NoticePanel } from "@/shared/ui/ui";
 
 export default function TrialPage() {
   const trial = useTrial();
@@ -35,6 +36,11 @@ export default function TrialPage() {
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,824px)_398px] lg:items-start">
           <div className="grid gap-5">
+            {trial.pendingOrderCount > 0 ? (
+              <NoticePanel tone="rose">
+                你有 {trial.pendingOrderCount} 笔支付订单待审核，审核通过后会自动开通套餐。
+              </NoticePanel>
+            ) : null}
             <TrialEditorCard
               canContinue={trial.canContinue}
               count={trial.count}
