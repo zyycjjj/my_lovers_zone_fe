@@ -1,15 +1,63 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AdminControlPanel } from "./admin-control-panel";
-import { AdminEchoPanel } from "./admin-echo-panel";
 import { AdminPaymentConfigPanel } from "./admin-payment-config-panel";
-import { AdminLiveActivity } from "./admin-live-activity";
 import { AdminPaymentOrdersPanel } from "./admin-payment-orders-panel";
-import { AdminSummaryPanel } from "./admin-summary-panel";
 import { useAdmin } from "./use-admin";
+import { useAuthSession } from "@/shared/lib/session-store";
+import { apiRequest } from "@/shared/lib/api";
 
 export default function AdminScreen() {
   const admin = useAdmin();
+  const router = useRouter();
+  const session = useAuthSession();
+  const [authState, setAuthState] = useState<"checking" | "ok" | "no_session" | "forbidden">("checking");
+
+  useEffect(() => {
+    if (!session?.sessionToken) {
+      setAuthState("no_session");
+      return;
+    }
+    void (async () => {
+      try {
+        await apiRequest("/api/me/admin-check", { sessionToken: session.sessionToken, timeoutMs: 10000 });
+        setAuthState("ok");
+      } catch {
+        setAuthState("forbidden");
+      }
+    })();
+  }, [session?.sessionToken]);
+
+  if (authState === "checking") {
+    return <div className="rounded-2xl border border-rose-100 bg-white p-6 text-sm text-slate-600">正在校验管理员权限...</div>;
+  }
+
+  if (authState === "no_session") {
+    return (
+      <div className="rounded-2xl border border-rose-100 bg-white p-6">
+        <h1 className="text-xl font-semibold text-slate-800">请先登录</h1>
+        <p className="mt-2 text-sm text-slate-600">管理员页面需要先登录账号。</p>
+        <button
+          className="mt-4 inline-flex h-10 items-center justify-center rounded-xl bg-[#4A3168] px-4 text-sm font-medium text-white"
+          onClick={() => router.replace("/login?intent=admin")}
+          type="button"
+        >
+          去登录
+        </button>
+      </div>
+    );
+  }
+
+  if (authState === "forbidden") {
+    return (
+      <div className="rounded-2xl border border-rose-100 bg-white p-6">
+        <h1 className="text-xl font-semibold text-slate-800">无管理员权限</h1>
+        <p className="mt-2 text-sm text-slate-600">当前账号不在管理员白名单，请联系系统管理员配置。</p>
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-6">
@@ -17,32 +65,7 @@ export default function AdminScreen() {
         error={admin.error}
         loading={admin.loading}
         onFetchSummary={() => void admin.fetchSummary()}
-        onSeedUsers={() => void admin.seedUsers()}
-        onStartStream={() => admin.startStream()}
-        streaming={admin.streaming}
         success={admin.success}
-      />
-
-      <div className="grid gap-6 md:grid-cols-2">
-        <AdminLiveActivity activities={admin.activities} />
-        <AdminEchoPanel
-          echoText={admin.echoText}
-          echoToken={admin.echoToken}
-          onEchoTextChange={admin.setEchoText}
-          onEchoTokenChange={admin.setEchoToken}
-          onSend={() => void admin.sendEcho()}
-        />
-      </div>
-
-      <AdminSummaryPanel
-        eventStats={admin.eventStats}
-        logs={admin.logs}
-        maskToken={admin.maskToken}
-        onCopyToken={(value) => void admin.copyToken(value)}
-        onToggleShowTokens={() => admin.setShowTokens((prev) => !prev)}
-        showTokens={admin.showTokens}
-        summary={admin.summary}
-        users={admin.users}
       />
 
       <AdminPaymentOrdersPanel
