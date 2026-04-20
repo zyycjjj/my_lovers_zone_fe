@@ -2,6 +2,7 @@
 
 import { AdminControlPanel } from "./admin-control-panel";
 import { AdminEchoPanel } from "./admin-echo-panel";
+import { AdminPaymentConfigPanel } from "./admin-payment-config-panel";
 import { AdminLiveActivity } from "./admin-live-activity";
 import { AdminPaymentOrdersPanel } from "./admin-payment-orders-panel";
 import { AdminSummaryPanel } from "./admin-summary-panel";
@@ -13,10 +14,8 @@ export default function AdminScreen() {
   return (
     <div className="grid gap-6">
       <AdminControlPanel
-        adminPass={admin.adminPass}
         error={admin.error}
         loading={admin.loading}
-        onAdminPassChange={admin.setAdminPass}
         onFetchSummary={() => void admin.fetchSummary()}
         onSeedUsers={() => void admin.seedUsers()}
         onStartStream={() => admin.startStream()}
@@ -52,6 +51,14 @@ export default function AdminScreen() {
         onRefresh={() => void admin.fetchSummary()}
         onReject={(orderId) => void admin.rejectPaymentOrder(orderId)}
         orders={admin.paymentOrders}
+      />
+
+      <AdminPaymentConfigPanel
+        loading={admin.loading}
+        onChange={(patch) => admin.setPaymentConfig((prev) => ({ ...prev, ...patch }))}
+        onReload={() => void admin.fetchSummary()}
+        onSave={() => void admin.savePaymentConfig()}
+        value={admin.paymentConfig}
       />
     </div>
   );

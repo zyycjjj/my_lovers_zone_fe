@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { ApiClientError, apiRequest } from "@/shared/lib/api";
 
@@ -24,6 +24,15 @@ type Subscription = {
   expiredAt?: string | null;
 };
 
+type PaymentConfig = {
+  unifiedLink?: string;
+  alipayLink?: string;
+  wechatLink?: string;
+  alipayQrImage?: string;
+  wechatQrImage?: string;
+  contactText?: string;
+};
+
 const PLAN_MAP: Record<PlanKey, { name: string; price: string; desc: string }> = {
   experience: { name: "体验版", price: "¥1/7天", desc: "新用户专享，体验全部功能" },
   pro: { name: "专业版", price: "¥99/月", desc: "适合个人和小团队" },
@@ -41,10 +50,14 @@ export default function CheckoutPage() {
   const planKey = resolvePlan(searchParams.get("plan"));
   const plan = PLAN_MAP[planKey];
 
-  const unifiedPayLink = process.env.NEXT_PUBLIC_PAYMENT_LINK_UNIFIED || "";
-  const alipayLink = process.env.NEXT_PUBLIC_PAYMENT_LINK_ALIPAY || "";
-  const wechatPayLink = process.env.NEXT_PUBLIC_PAYMENT_LINK_WECHAT || "";
-  const fallbackContact = process.env.NEXT_PUBLIC_PAYMENT_CONTACT || "请联系客服完成支付";
+  const [paymentConfig, setPaymentConfig] = useState<PaymentConfig>({
+    unifiedLink: process.env.NEXT_PUBLIC_PAYMENT_LINK_UNIFIED || "",
+    alipayLink: process.env.NEXT_PUBLIC_PAYMENT_LINK_ALIPAY || "",
+    wechatLink: process.env.NEXT_PUBLIC_PAYMENT_LINK_WECHAT || "",
+    alipayQrImage: process.env.NEXT_PUBLIC_PAYMENT_QR_ALIPAY || "",
+    wechatQrImage: process.env.NEXT_PUBLIC_PAYMENT_QR_WECHAT || "",
+    contactText: process.env.NEXT_PUBLIC_PAYMENT_CONTACT || "请联系客服完成支付",
+  });
 
   const [order, setOrder] = useState<PaymentOrder | null>(null);
   const [paymentRef, setPaymentRef] = useState("");
@@ -54,9 +67,30 @@ export default function CheckoutPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
 
   const hasPaymentLink = useMemo(
-    () => Boolean(unifiedPayLink || alipayLink || wechatPayLink),
-    [alipayLink, unifiedPayLink, wechatPayLink],
+    () =>
+      Boolean(
+        paymentConfig.unifiedLink ||
+          paymentConfig.alipayLink ||
+          paymentConfig.wechatLink ||
+          paymentConfig.alipayQrImage ||
+          paymentConfig.wechatQrImage,
+      ),
+    [paymentConfig],
   );
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const config = await apiRequest<PaymentConfig>("/api/payments/config/public", {
+          retryOnUnauthorized: false,
+          timeoutMs: 12000,
+        });
+        setPaymentConfig((prev) => ({ ...prev, ...(config || {}) }));
+      } catch {
+        // keep env fallback
+      }
+    })();
+  }, []);
 
   async function createOrder() {
     setLoading(true);
@@ -164,10 +198,10 @@ export default function CheckoutPage() {
           ) : null}
 
           <div className="mt-5 space-y-3">
-            {unifiedPayLink ? (
+            {paymentConfig.unifiedLink ? (
               <a
                 className="inline-flex h-11 w-full items-center justify-center rounded-[16px] border border-[#4A3168] text-sm font-medium text-[#4A3168]"
-                href={unifiedPayLink}
+                href={paymentConfig.unifiedLink}
                 rel="noreferrer"
                 target="_blank"
               >
@@ -175,10 +209,10 @@ export default function CheckoutPage() {
               </a>
             ) : null}
 
-            {alipayLink ? (
+            {paymentConfig.alipayLink ? (
               <a
                 className="inline-flex h-11 w-full items-center justify-center rounded-[16px] border border-[#4A3168] text-sm font-medium text-[#4A3168]"
-                href={alipayLink}
+                href={paymentConfig.alipayLink}
                 rel="noreferrer"
                 target="_blank"
               >
@@ -186,10 +220,10 @@ export default function CheckoutPage() {
               </a>
             ) : null}
 
-            {wechatPayLink ? (
+            {paymentConfig.wechatLink ? (
               <a
                 className="inline-flex h-11 w-full items-center justify-center rounded-[16px] border border-[#4A3168] text-sm font-medium text-[#4A3168]"
-                href={wechatPayLink}
+                href={paymentConfig.wechatLink}
                 rel="noreferrer"
                 target="_blank"
               >
@@ -198,9 +232,26 @@ export default function CheckoutPage() {
             ) : null}
           </div>
 
+          {paymentConfig.alipayQrImage || paymentConfig.wechatQrImage ? (
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {paymentConfig.alipayQrImage ? (
+                <div className="rounded-[12px] border border-[#ECECF0] bg-white p-3">
+                  <div className="mb-2 text-xs text-[#737378]">支付宝收款码</div>
+                  <img alt="支付宝收款码" className="w-full rounded-[8px]" src={paymentConfig.alipayQrImage} />
+                </div>
+              ) : null}
+              {paymentConfig.wechatQrImage ? (
+                <div className="rounded-[12px] border border-[#ECECF0] bg-white p-3">
+                  <div className="mb-2 text-xs text-[#737378]">微信收款码</div>
+                  <img alt="微信收款码" className="w-full rounded-[8px]" src={paymentConfig.wechatQrImage} />
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           {!hasPaymentLink ? (
             <div className="mt-4 rounded-[12px] border border-[#F9CFE3] bg-[#FDF4F8] px-3 py-3 text-sm text-[#993D63]">
-              尚未配置支付链接：{fallbackContact}
+              尚未配置支付链接：{paymentConfig.contactText || "请联系客服完成支付"}
             </div>
           ) : null}
 

@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { apiRequest } from "@/shared/lib/api";
+import { useAuthSession } from "@/shared/lib/session-store";
 import { useProfiles } from "@/shared/lib/use-client-token";
 import {
-  adminPassStorageKey,
   maskToken,
   type ActivityEvent,
   type EventLog,
+  type PaymentConfig,
   type PaymentOrder,
   type SeedUsersResult,
   type Summary,
@@ -17,12 +18,14 @@ import {
 const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 export function useAdmin() {
+  const session = useAuthSession();
+  const sessionToken = session?.sessionToken || "";
   const { profiles, setProfiles } = useProfiles();
-  const [adminPass, setAdminPass] = useState("");
   const [summary, setSummary] = useState<Summary | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [logs, setLogs] = useState<EventLog[]>([]);
   const [paymentOrders, setPaymentOrders] = useState<PaymentOrder[]>([]);
+  const [paymentConfig, setPaymentConfig] = useState<PaymentConfig>({});
   const [activities, setActivities] = useState<ActivityEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [streaming, setStreaming] = useState(false);
@@ -41,26 +44,14 @@ export function useAdmin() {
   }, [summary]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (adminPass) return;
-    const stored = localStorage.getItem(adminPassStorageKey);
-    if (stored) setAdminPass(stored);
-  }, [adminPass]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (adminPass) {
-      localStorage.setItem(adminPassStorageKey, adminPass);
-    } else {
-      localStorage.removeItem(adminPassStorageKey);
-    }
-  }, [adminPass]);
-
-  useEffect(() => {
     if (!streaming) return;
+    if (!sessionToken) {
+      setStreaming(false);
+      setError("请先登录管理员账号");
+      return;
+    }
     const url = new URL(`${apiBase}/api/event/stream`, window.location.origin);
-    const trimmedPass = adminPass.trim();
-    if (trimmedPass) url.searchParams.set("adminPass", trimmedPass);
+    url.searchParams.set("sessionToken", sessionToken);
     const source = new EventSource(url.toString());
     source.onmessage = (event) => {
       try {
@@ -81,10 +72,10 @@ export function useAdmin() {
     source.onerror = () => {
       source.close();
       setStreaming(false);
-      setError("实时流连接失败，请确认 Admin Pass 和 API 地址");
+      setError("实时流连接失败，请确认管理员账号权限和 API 地址");
     };
     return () => source.close();
-  }, [adminPass, streaming]);
+  }, [sessionToken, streaming]);
 
   useEffect(() => {
     if (!profiles.girlfriend) return;
@@ -126,28 +117,35 @@ export function useAdmin() {
   }
 
   async function fetchSummary() {
+    if (!sessionToken) {
+      setError("请先登录管理员账号");
+      return;
+    }
     setLoading(true);
     resetMessages();
     try {
-      const trimmedPass = adminPass.trim();
-      const [data, userList, eventLogs, payments] = await Promise.all([
+      const [data, userList, eventLogs, payments, config] = await Promise.all([
         apiRequest<Summary>("/api/me/summary", {
-          adminPass: trimmedPass || undefined,
+          sessionToken,
         }),
         apiRequest<User[]>("/api/me/users", {
-          adminPass: trimmedPass || undefined,
+          sessionToken,
         }),
         apiRequest<EventLog[]>("/api/me/events", {
-          adminPass: trimmedPass || undefined,
+          sessionToken,
         }),
         apiRequest<PaymentOrder[]>("/api/me/payment-orders", {
-          adminPass: trimmedPass || undefined,
+          sessionToken,
+        }),
+        apiRequest<PaymentConfig>("/api/me/payment-config", {
+          sessionToken,
         }),
       ]);
       setSummary(data);
       setUsers(userList ?? []);
       setLogs(eventLogs ?? []);
       setPaymentOrders(payments ?? []);
+      setPaymentConfig(config ?? {});
       syncProfilesFromUsers(userList ?? []);
       setSuccess("汇总已更新");
     } catch (err) {
@@ -158,15 +156,18 @@ export function useAdmin() {
   }
 
   async function sendEcho() {
+    if (!sessionToken) {
+      setError("请先登录管理员账号");
+      return;
+    }
     if (!echoToken.trim() || !echoText.trim()) {
       setError("请填写 token 和回声内容");
       return;
     }
     resetMessages();
     try {
-      const trimmedPass = adminPass.trim();
       await apiRequest("/api/echo", {
-        adminPass: trimmedPass || undefined,
+        sessionToken,
         body: { token: echoToken.trim(), text: echoText.trim() },
       });
       setEchoText("");
@@ -178,11 +179,14 @@ export function useAdmin() {
   }
 
   async function seedUsers() {
+    if (!sessionToken) {
+      setError("请先登录管理员账号");
+      return;
+    }
     resetMessages();
     try {
-      const trimmedPass = adminPass.trim();
       const data = await apiRequest<SeedUsersResult>("/api/me/seed-users", {
-        adminPass: trimmedPass || undefined,
+        sessionToken,
         body: {},
         method: "POST",
       });
@@ -203,12 +207,15 @@ export function useAdmin() {
   }
 
   async function approvePaymentOrder(orderId: number) {
+    if (!sessionToken) {
+      setError("请先登录管理员账号");
+      return;
+    }
     resetMessages();
     try {
-      const trimmedPass = adminPass.trim();
       await apiRequest("/api/me/payment-orders/approve", {
         method: "POST",
-        adminPass: trimmedPass || undefined,
+        sessionToken,
         body: { orderId },
       });
       await fetchSummary();
@@ -219,12 +226,15 @@ export function useAdmin() {
   }
 
   async function rejectPaymentOrder(orderId: number) {
+    if (!sessionToken) {
+      setError("请先登录管理员账号");
+      return;
+    }
     resetMessages();
     try {
-      const trimmedPass = adminPass.trim();
       await apiRequest("/api/me/payment-orders/reject", {
         method: "POST",
-        adminPass: trimmedPass || undefined,
+        sessionToken,
         body: { orderId },
       });
       await fetchSummary();
@@ -234,9 +244,30 @@ export function useAdmin() {
     }
   }
 
+  async function savePaymentConfig() {
+    if (!sessionToken) {
+      setError("请先登录管理员账号");
+      return;
+    }
+    resetMessages();
+    setLoading(true);
+    try {
+      const next = await apiRequest<PaymentConfig>("/api/me/payment-config", {
+        method: "POST",
+        sessionToken,
+        body: paymentConfig,
+      });
+      setPaymentConfig(next || {});
+      setSuccess("支付配置已保存");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "保存配置失败");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return {
     activities,
-    adminPass,
     copyToken,
     echoText,
     echoToken,
@@ -246,12 +277,14 @@ export function useAdmin() {
     loading,
     logs,
     paymentOrders,
+    paymentConfig,
     maskToken,
     approvePaymentOrder,
     seedUsers,
     rejectPaymentOrder,
+    savePaymentConfig,
     sendEcho,
-    setAdminPass,
+    setPaymentConfig,
     setEchoText,
     setEchoToken,
     setShowTokens,

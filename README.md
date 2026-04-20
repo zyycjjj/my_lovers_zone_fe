@@ -32,12 +32,15 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 - NEXT_PUBLIC_PAYMENT_LINK_UNIFIED：统一支付链接（可选，优先）
 - NEXT_PUBLIC_PAYMENT_LINK_ALIPAY：支付宝支付链接（可选）
 - NEXT_PUBLIC_PAYMENT_LINK_WECHAT：微信支付链接（可选）
+- NEXT_PUBLIC_PAYMENT_QR_ALIPAY：支付宝收款码图片地址（可选）
+- NEXT_PUBLIC_PAYMENT_QR_WECHAT：微信收款码图片地址（可选）
 - NEXT_PUBLIC_PAYMENT_CONTACT：未配置支付链接时的提示文案（可选）
 
 后端环境变量（服务器 `/srv/my_lovers_zone_me/.env` 或 GitHub Actions Secrets）：
 
 - DATABASE_URL
-- ADMIN_PASS
+- ADMIN_ACCOUNT_IDS（可选，逗号分隔）
+- ADMIN_ACCOUNT_PHONES（推荐，逗号分隔）
 - AI_BASE_URL
 - AI_API_KEY
 - AI_MODEL
@@ -47,7 +50,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 ### 1) 管理员初始化
 
 1. 打开 `http://localhost:3000/admin`
-2. 填写 `Admin Pass`（与后端 `ADMIN_PASS` 一致）
+2. 使用白名单手机号登录（需在后端配置 `ADMIN_ACCOUNT_PHONES`）
 3. 点击“一键生成三人 Token”
 4. 再点击“获取汇总”，用户列表里会出现随机 Token
 
@@ -58,7 +61,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 基础必填：
 
 - DATABASE_URL：数据库连接串
-- ADMIN_PASS：管理口令
+- ADMIN_ACCOUNT_PHONES：管理员手机号白名单（逗号分隔）
 
 可选（用于生成类功能脚本/标题/提炼）：
 
@@ -87,7 +90,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 ### 4) 回声与活动流
 
 - 回声：首页会展示最新回声
-- 活动流：仅 me/test 可见，输入 Admin Pass 后开启
+- 活动流：仅管理员账号可开启
 
 ### 4.1) 多链接消息接收规则
 

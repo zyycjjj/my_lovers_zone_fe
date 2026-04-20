@@ -58,7 +58,14 @@ export type PaymentOrder = {
   updatedAt: string;
 };
 
-export const adminPassStorageKey = "love.adminPass";
+export type PaymentConfig = {
+  unifiedLink?: string;
+  alipayLink?: string;
+  wechatLink?: string;
+  alipayQrImage?: string;
+  wechatQrImage?: string;
+  contactText?: string;
+};
 
 export function maskToken(value: string) {
   if (value.length <= 8) return value;
