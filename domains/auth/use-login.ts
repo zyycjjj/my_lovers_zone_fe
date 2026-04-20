@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { apiRequest } from "@/shared/lib/api";
 import { getSpToken } from "@/shared/lib/number-auth";
@@ -44,9 +44,17 @@ export function useLogin() {
 
   const quickLoginAvailable = useQuickLoginAvailability();
 
+  const handleCaptchaError = useCallback((message: string) => {
+    setFieldErrors((current) => ({ ...current, captcha: message }));
+  }, []);
+
+  const handleCaptchaResetCode = useCallback(() => {
+    setCaptchaCode("");
+  }, []);
+
   const { captcha, isRefreshingCaptcha, refreshPasswordCaptcha } = useLoginCaptcha({
-    onError: (message) => setFieldErrors((current) => ({ ...current, captcha: message })),
-    onResetCode: () => setCaptchaCode(""),
+    onError: handleCaptchaError,
+    onResetCode: handleCaptchaResetCode,
   });
 
   function patchFieldError(name: FieldName, value: string) {
