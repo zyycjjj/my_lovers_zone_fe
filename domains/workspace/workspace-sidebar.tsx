@@ -5,7 +5,6 @@ import { type AuthMe, type WorkspaceSummary } from "./workspace-model";
 
 type ToolMeta = {
   label: string;
-  short: string;
 };
 
 type Props = {
@@ -93,7 +92,7 @@ export function WorkspaceSidebar({
         </div>
         <div className="mt-3 text-[18px] font-medium leading-[1.4] text-[#27272A]">升级专业版</div>
         <div className="mt-1 text-sm text-[#737378]">解锁更多功能和模板</div>
-        <ButtonLink className="mt-4 w-full" href="/#plans">
+        <ButtonLink className="mt-4 w-full" href="/pricing">
           查看套餐
         </ButtonLink>
       </section>

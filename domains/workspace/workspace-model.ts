@@ -62,8 +62,6 @@ export const tools: Array<{
   key: ToolKind;
   icon: string;
   label: string;
-  short: string;
-  description: string;
   promptLabel: string;
   promptPlaceholder: string;
   emptyTitle: string;
@@ -73,8 +71,6 @@ export const tools: Array<{
     key: "title",
     icon: "文",
     label: "标题生成",
-    short: "20 条可直接挑选的标题",
-    description: "先用一个关键词，快速确定今天要发的标题方向。",
     promptLabel: "描述你要生成的标题方向",
     promptPlaceholder: "例如：春季连衣裙上新，想要更适合小红书的种草标题",
     emptyTitle: "准备好了，开始生成标题吧！",
@@ -84,8 +80,6 @@ export const tools: Array<{
     key: "script",
     icon: "稿",
     label: "脚本生成",
-    short: "短视频和直播口播都能先出一版",
-    description: "先把可讲的内容搭起来，再决定要不要继续细修。",
     promptLabel: "描述你要生成的脚本内容",
     promptPlaceholder: "例如：帮我写一篇春季新品发布的小红书文案，产品是连衣裙，强调设计感和舒适度...",
     emptyTitle: "准备好了，开始创作吧！",
@@ -95,8 +89,6 @@ export const tools: Array<{
     key: "refine",
     icon: "改",
     label: "话术提炼",
-    short: "把已有话术变得更清楚、更稳妥",
-    description: "适合你已经有一版话术，想更顺、更合规地表达。",
     promptLabel: "贴入你要提炼的话术",
     promptPlaceholder: "例如：这是我直播间准备讲的一段话术，想更有说服力也更稳妥",
     emptyTitle: "准备好了，开始整理吧！",
@@ -106,8 +98,6 @@ export const tools: Array<{
     key: "commission",
     icon: "算",
     label: "佣金测算",
-    short: "先算明白，再决定推不推",
-    description: "把价格、佣金和扣点算清楚，避免盲目上链接。",
     promptLabel: "补充测算背景",
     promptPlaceholder: "例如：这款商品想看高客单和低客单两种情况下的佣金空间",
     emptyTitle: "准备好了，开始测算吧！",

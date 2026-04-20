@@ -82,7 +82,7 @@ export function TrialSidebar({
         <div className="mt-3 text-[18px] font-medium leading-[25px] text-[#27272a]">升级专业版</div>
         <div className="mt-1 text-sm leading-5 text-[#737378]">解锁更多功能和模板</div>
 
-        <ExperienceActionLink className="mt-4 w-full" href="/#plans">
+        <ExperienceActionLink className="mt-4 w-full" href="/pricing">
           查看套餐
         </ExperienceActionLink>
       </ExperienceCard>

@@ -7,21 +7,12 @@ import type { TrialPreview } from "./trial-model";
 
 export function TrialPreviewCard({
   preview,
-  onRegenerate,
-  regenerating,
 }: {
   preview: TrialPreview;
-  onRegenerate: () => void;
-  regenerating: boolean;
 }) {
   const session = useAuthSession();
-  const ctaHref = session?.sessionToken ? "/#plans" : "/login?intent=trial";
+  const ctaHref = session?.sessionToken ? "/pricing" : "/login?intent=trial";
   const ctaText = "立即解锁";
-
-  async function copyPreview() {
-    if (typeof navigator === "undefined" || !navigator.clipboard) return;
-    await navigator.clipboard.writeText(preview.previewText);
-  }
 
   return (
     <ExperienceCard className="min-h-[369px] px-6 py-6 shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.08)] hover:translate-y-0 hover:shadow-[0_1px_3px_rgba(0,0,0,0.08),0_1px_2px_rgba(0,0,0,0.08)] lg:px-[25px] lg:py-[25px]">
@@ -64,29 +55,6 @@ export function TrialPreviewCard({
             完整内容已生成，解锁后即可复制使用
             {preview.hiddenChars > 0 ? `（还有约 ${preview.hiddenChars} 字未展开）` : ""}
           </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-3">
-          <button
-            className="inline-flex h-11 items-center justify-center rounded-[16px] border border-[#4A3168] text-sm font-medium text-[#4A3168]"
-            onClick={onRegenerate}
-            type="button"
-          >
-            {regenerating ? "生成中" : "再来一版"}
-          </button>
-          <button
-            className="inline-flex h-11 items-center justify-center rounded-[16px] border border-[#4A3168] text-sm font-medium text-[#4A3168]"
-            onClick={() => void copyPreview()}
-            type="button"
-          >
-            复制预览
-          </button>
-          <Link
-            className="inline-flex h-11 items-center justify-center rounded-[16px] bg-[#4A3168] text-sm font-medium text-white"
-            href={ctaHref}
-          >
-            解锁完整
-          </Link>
         </div>
       </div>
     </ExperienceCard>

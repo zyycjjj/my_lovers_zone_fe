@@ -3,12 +3,19 @@
 import { TrialEditorCard } from "./trial-editor-card";
 import { TrialEmptyCard } from "./trial-empty-card";
 import { TrialHeaderBar } from "./trial-header";
+import { TrialPreviewActions } from "./trial-preview-actions";
 import { TrialPreviewCard } from "./trial-preview-card";
 import { TrialSidebar } from "./trial-sidebar";
 import { useTrial } from "./use-trial";
 
 export default function TrialPage() {
   const trial = useTrial();
+  const hasPreview = Boolean(trial.preview);
+
+  function copyPreview() {
+    if (!trial.preview || typeof navigator === "undefined" || !navigator.clipboard) return;
+    void navigator.clipboard.writeText(trial.preview.previewText);
+  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#fafafa] text-[#18181b]">
@@ -18,7 +25,7 @@ export default function TrialPage() {
       </div>
       <TrialHeaderBar />
 
-      <main className="relative mx-auto max-w-[1283px] px-4 pb-16 pt-6 lg:pt-6">
+      <main className="relative mx-auto max-w-[1283px] px-4 pb-24 pt-6 lg:pb-16 lg:pt-6">
         <div className="max-w-[300px]">
           <h1 className="text-[24px] font-semibold leading-[30px] tracking-[-0.02em] text-[#18181b] lg:text-[30px] lg:leading-[38px]">
             开始创作你的内容
@@ -40,11 +47,7 @@ export default function TrialPage() {
               textareaRef={trial.textareaRef}
             />
             {trial.preview ? (
-              <TrialPreviewCard
-                onRegenerate={() => void trial.generate()}
-                preview={trial.preview}
-                regenerating={trial.previewLoading}
-              />
+              <TrialPreviewCard preview={trial.preview} />
             ) : (
               <TrialEmptyCard activeExample={trial.activeExample} onExampleClick={trial.applyExample} />
             )}
@@ -53,6 +56,13 @@ export default function TrialPage() {
           <TrialSidebar todayLabel={trial.todayLabel} />
         </div>
       </main>
+      {hasPreview ? (
+        <TrialPreviewActions
+          onCopyPreview={copyPreview}
+          onRegenerate={() => void trial.generate()}
+          regenerating={trial.previewLoading}
+        />
+      ) : null}
     </div>
   );
 }

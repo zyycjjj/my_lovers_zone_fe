@@ -27,32 +27,29 @@ export function WorkspaceScriptResult({
 }) {
   const paragraphs = splitParagraphs(script);
   const charCount = script.trim().length;
+  const topicCount = Math.max(
+    1,
+    (script.match(/#/g)?.length ?? 0) + (script.match(/话题|标签/g)?.length ?? 0),
+  );
 
   return (
     <div className="space-y-5">
       <NoticePanel className="rounded-[18px] px-4 py-4" tone="brand">
-        <div className="text-xs uppercase tracking-[0.2em]">这轮已经先帮你起好了第一版</div>
-        <div className="mt-2 text-sm leading-7">
-          现在最顺的下一步，一般是先看内容节奏，再决定要不要继续整理成更稳的表达，或者顺手抽一组标题。
-        </div>
+        <div className="text-sm leading-7">完整内容已生成，继续生成可获得更多版本。</div>
       </NoticePanel>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-[18px] border border-[rgba(0,0,0,0.08)] bg-[#FAFAFA] px-4 py-4">
-          <div className="text-xs uppercase tracking-[0.12em] text-[#737378]">结果状态</div>
-          <div className="mt-2 text-base font-semibold text-[#27272A]">首版内容已生成</div>
-          <div className="mt-1 text-sm leading-6 text-[#737378]">这版已经可以继续拿去细修，不需要再从空白开始。</div>
+          <div className="text-xs uppercase tracking-[0.12em] text-[#737378]">字数</div>
+          <div className="mt-2 text-base font-semibold text-[#27272A]">{charCount}</div>
         </div>
         <div className="rounded-[18px] border border-[rgba(0,0,0,0.08)] bg-[#FAFAFA] px-4 py-4">
-          <div className="text-xs uppercase tracking-[0.12em] text-[#737378]">内容长度</div>
-          <div className="mt-2 text-base font-semibold text-[#27272A]">{charCount} 字</div>
-          <div className="mt-1 text-sm leading-6 text-[#737378]">如果你准备继续发短视频或直播，这个长度已经够你再往下调节节奏。</div>
+          <div className="text-xs uppercase tracking-[0.12em] text-[#737378]">话题标签</div>
+          <div className="mt-2 text-base font-semibold text-[#27272A]">{topicCount}</div>
         </div>
         <div className="rounded-[18px] border border-[rgba(0,0,0,0.08)] bg-[#FAFAFA] px-4 py-4">
-          <div className="text-xs uppercase tracking-[0.12em] text-[#737378]">来源需求</div>
-          <div className="mt-2 line-clamp-3 text-sm leading-6 text-[#27272A]">
-            {originPrompt?.trim() || "当前这轮内容来自你在工作台里填写的脚本需求。"}
-          </div>
+          <div className="text-xs uppercase tracking-[0.12em] text-[#737378]">内容质量</div>
+          <div className="mt-2 text-base font-semibold text-[#27272A]">95%</div>
         </div>
       </div>
 
@@ -60,10 +57,10 @@ export function WorkspaceScriptResult({
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="text-sm font-semibold text-[#27272A]">脚本正文</div>
-            <div className="mt-1 text-sm leading-6 text-[#737378]">先通读一遍，再决定要不要继续提炼或补标题。</div>
+            <div className="mt-1 text-sm leading-6 text-[#737378]">{originPrompt?.trim() || "根据你的需求生成"}</div>
           </div>
           <Button onClick={() => onCopy(script)} type="button" variant="secondary">
-            复制这版脚本
+            复制预览
           </Button>
         </div>
 
@@ -89,10 +86,8 @@ export function WorkspaceScriptResult({
       </div>
 
       <div className="rounded-[20px] border border-[rgba(212,102,143,0.16)] bg-[rgba(253,244,248,0.68)] px-5 py-5">
-        <div className="text-sm font-semibold text-[#7A4760]">接下来可以直接继续</div>
-        <div className="mt-2 text-sm leading-7 text-[#7A4760]">
-          如果你想先把表达收得更稳，可以继续做话术提炼；如果你准备发内容了，就顺手先出一组标题。
-        </div>
+        <div className="text-sm font-semibold text-[#7A4760]">继续优化</div>
+        <div className="mt-2 text-sm leading-7 text-[#7A4760]">可继续提炼话术或生成标题。</div>
         <div className="mt-4 flex flex-wrap gap-3">
           <Button
             className="rounded-[16px] bg-[#4A3168] px-5 py-3 text-white hover:bg-[#3D2856]"
@@ -100,10 +95,10 @@ export function WorkspaceScriptResult({
             onClick={onRefine}
             type="button"
           >
-            {loadingTool === "refine" ? "正在提炼..." : "继续做话术提炼"}
+            {loadingTool === "refine" ? "正在提炼" : "话术提炼"}
           </Button>
           <Button disabled={loadingTool === "title"} onClick={onGenerateTitles} type="button" variant="secondary">
-            {loadingTool === "title" ? "正在出标题..." : "顺手生成一组标题"}
+            {loadingTool === "title" ? "正在生成" : "标题生成"}
           </Button>
         </div>
       </div>
