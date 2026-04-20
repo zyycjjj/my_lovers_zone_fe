@@ -8,6 +8,7 @@ import {
   maskToken,
   type ActivityEvent,
   type EventLog,
+  type PaymentOrder,
   type SeedUsersResult,
   type Summary,
   type User,
@@ -21,6 +22,7 @@ export function useAdmin() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [logs, setLogs] = useState<EventLog[]>([]);
+  const [paymentOrders, setPaymentOrders] = useState<PaymentOrder[]>([]);
   const [activities, setActivities] = useState<ActivityEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [streaming, setStreaming] = useState(false);
@@ -128,7 +130,7 @@ export function useAdmin() {
     resetMessages();
     try {
       const trimmedPass = adminPass.trim();
-      const [data, userList, eventLogs] = await Promise.all([
+      const [data, userList, eventLogs, payments] = await Promise.all([
         apiRequest<Summary>("/api/me/summary", {
           adminPass: trimmedPass || undefined,
         }),
@@ -138,10 +140,14 @@ export function useAdmin() {
         apiRequest<EventLog[]>("/api/me/events", {
           adminPass: trimmedPass || undefined,
         }),
+        apiRequest<PaymentOrder[]>("/api/me/payment-orders", {
+          adminPass: trimmedPass || undefined,
+        }),
       ]);
       setSummary(data);
       setUsers(userList ?? []);
       setLogs(eventLogs ?? []);
+      setPaymentOrders(payments ?? []);
       syncProfilesFromUsers(userList ?? []);
       setSuccess("汇总已更新");
     } catch (err) {
@@ -196,6 +202,38 @@ export function useAdmin() {
     await navigator.clipboard.writeText(value);
   }
 
+  async function approvePaymentOrder(orderId: number) {
+    resetMessages();
+    try {
+      const trimmedPass = adminPass.trim();
+      await apiRequest("/api/me/payment-orders/approve", {
+        method: "POST",
+        adminPass: trimmedPass || undefined,
+        body: { orderId },
+      });
+      await fetchSummary();
+      setSuccess("订单已审核通过并开通套餐");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "审核失败");
+    }
+  }
+
+  async function rejectPaymentOrder(orderId: number) {
+    resetMessages();
+    try {
+      const trimmedPass = adminPass.trim();
+      await apiRequest("/api/me/payment-orders/reject", {
+        method: "POST",
+        adminPass: trimmedPass || undefined,
+        body: { orderId },
+      });
+      await fetchSummary();
+      setSuccess("订单已驳回");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "驳回失败");
+    }
+  }
+
   return {
     activities,
     adminPass,
@@ -207,8 +245,11 @@ export function useAdmin() {
     fetchSummary,
     loading,
     logs,
+    paymentOrders,
     maskToken,
+    approvePaymentOrder,
     seedUsers,
+    rejectPaymentOrder,
     sendEcho,
     setAdminPass,
     setEchoText,
@@ -222,4 +263,3 @@ export function useAdmin() {
     users,
   };
 }
-

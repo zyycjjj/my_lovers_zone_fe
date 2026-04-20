@@ -3,6 +3,7 @@
 import { AdminControlPanel } from "./admin-control-panel";
 import { AdminEchoPanel } from "./admin-echo-panel";
 import { AdminLiveActivity } from "./admin-live-activity";
+import { AdminPaymentOrdersPanel } from "./admin-payment-orders-panel";
 import { AdminSummaryPanel } from "./admin-summary-panel";
 import { useAdmin } from "./use-admin";
 
@@ -43,6 +44,14 @@ export default function AdminScreen() {
         showTokens={admin.showTokens}
         summary={admin.summary}
         users={admin.users}
+      />
+
+      <AdminPaymentOrdersPanel
+        loading={admin.loading}
+        onApprove={(orderId) => void admin.approvePaymentOrder(orderId)}
+        onRefresh={() => void admin.fetchSummary()}
+        onReject={(orderId) => void admin.rejectPaymentOrder(orderId)}
+        orders={admin.paymentOrders}
       />
     </div>
   );

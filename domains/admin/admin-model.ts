@@ -43,10 +43,24 @@ export type SeedUsersResult = {
   test: User;
 };
 
+export type PaymentOrder = {
+  id: number;
+  orderNo: string;
+  userId: number;
+  accountId?: number | null;
+  planKey: "experience" | "pro" | "team";
+  amountFen: number;
+  status: "pending" | "paid" | "activated" | "rejected" | "refunded";
+  paymentRef?: string | null;
+  proofNote?: string | null;
+  adminNote?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export const adminPassStorageKey = "love.adminPass";
 
 export function maskToken(value: string) {
   if (value.length <= 8) return value;
   return `${value.slice(0, 3)}***${value.slice(-3)}`;
 }
-
