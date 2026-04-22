@@ -1,8 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { HomePlansSection } from "@/domains/landing/home-plans-section";
-import { plans } from "@/domains/landing/home-model";
+import { usePublicPlans } from "@/domains/landing/use-public-plans";
 
 export default function PricingPage() {
+  const plans = usePublicPlans();
+
   return (
     <div className="min-h-screen bg-[#fafafa] text-[#18181b]">
       <header className="sticky top-0 z-20 border-b border-[rgba(0,0,0,0.08)] bg-white/90 backdrop-blur">

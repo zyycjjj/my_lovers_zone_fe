@@ -1,6 +1,10 @@
 import Link from "next/link";
 import type { Plan } from "./home-model";
 
+type Props = Omit<Plan, "key"> & {
+  planKey: Plan["key"];
+};
+
 export function HomePlanCard({
   name,
   desc,
@@ -10,10 +14,10 @@ export function HomePlanCard({
   action,
   recommended,
   checkoutMode = false,
-}: Plan) {
-  const planSlug = name === "体验版" ? "experience" : name === "专业版" ? "pro" : "team";
+  planKey,
+}: Props) {
   const ctaHref = checkoutMode
-    ? `/checkout?plan=${planSlug}`
+    ? `/checkout?plan=${planKey}`
     : action === "联系客服"
       ? "/login"
       : "/trial";

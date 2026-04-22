@@ -1,4 +1,6 @@
-import { benefits, audiences, examples, plans, stats } from "./home-model";
+"use client";
+
+import { benefits, audiences, examples, stats } from "./home-model";
 import { HomeAudiencesSection } from "./home-audiences-section";
 import { HomeBenefitsSection } from "./home-benefits-section";
 import { HomeExamplesSection } from "./home-examples-section";
@@ -7,12 +9,15 @@ import { HomeHeroSection } from "./home-hero-section";
 import { HomeMobileCtaBar } from "./home-mobile-cta";
 import { HomePlansSection } from "./home-plans-section";
 import { HomeStatsSection } from "./home-stats-section";
+import { usePublicPlans } from "./use-public-plans";
 
 export default function HomePage() {
   return <HomeScreen />;
 }
 
 function HomeScreen() {
+  const plans = usePublicPlans();
+
   return (
     <div className="bg-[#fafafa] text-[#18181b]">
       <HomeHeader />

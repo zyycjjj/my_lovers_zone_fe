@@ -33,10 +33,19 @@ type PaymentConfig = {
   contactText?: string;
 };
 
-const PLAN_MAP: Record<PlanKey, { name: string; price: string; desc: string }> = {
-  experience: { name: "体验版", price: "¥1/7天", desc: "新用户专享，体验全部功能" },
-  pro: { name: "专业版", price: "¥99/月", desc: "适合个人和小团队" },
-  team: { name: "团队版", price: "¥299/月", desc: "适合团队协作使用" },
+type PublicPlan = {
+  key: PlanKey;
+  name: string;
+  desc: string;
+  priceText?: string;
+  price?: string;
+  suffix: string;
+};
+
+const DEFAULT_PLAN_MAP: Record<PlanKey, { name: string; price: string; desc: string }> = {
+  experience: { name: "体验版", price: "¥1/7天", desc: "3条生成和1次爆款复刻，先看结果再解锁" },
+  pro: { name: "专业版", price: "¥9.9/月", desc: "每日10条生成，适合稳定日更" },
+  team: { name: "终身版", price: "¥66/终身", desc: "每日5条生成，适合长期轻量使用" },
 };
 
 function resolvePlan(plan?: string | null): PlanKey {
@@ -48,7 +57,8 @@ function resolvePlan(plan?: string | null): PlanKey {
 export function CheckoutClientPage() {
   const searchParams = useSearchParams();
   const planKey = resolvePlan(searchParams.get("plan"));
-  const plan = PLAN_MAP[planKey];
+  const [planMap, setPlanMap] = useState(DEFAULT_PLAN_MAP);
+  const plan = planMap[planKey] ?? DEFAULT_PLAN_MAP.experience;
 
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig>({
     unifiedLink: process.env.NEXT_PUBLIC_PAYMENT_LINK_UNIFIED || "",
@@ -88,6 +98,23 @@ export function CheckoutClientPage() {
         setPaymentConfig((prev) => ({ ...prev, ...(config || {}) }));
       } catch {
         // keep env fallback
+      }
+      try {
+        const publicPlans = await apiRequest<PublicPlan[]>("/api/payments/plans/public", {
+          retryOnUnauthorized: false,
+          timeoutMs: 12000,
+        });
+        const next = { ...DEFAULT_PLAN_MAP };
+        publicPlans.forEach((item) => {
+          next[item.key] = {
+            name: item.name,
+            desc: item.desc,
+            price: `${item.priceText || item.price || ""}${item.suffix || ""}`,
+          };
+        });
+        setPlanMap(next);
+      } catch {
+        // keep default plans
       }
     })();
   }, []);

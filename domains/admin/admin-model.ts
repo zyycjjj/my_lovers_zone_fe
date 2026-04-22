@@ -67,6 +67,26 @@ export type PaymentConfig = {
   contactText?: string;
 };
 
+export type PlanConfigItem = {
+  key: "experience" | "pro" | "team";
+  name: string;
+  desc: string;
+  priceFen: number;
+  priceText: string;
+  suffix: string;
+  durationDays: number | null;
+  quotaLimit: number;
+  quotaWindow: "daily" | "total";
+  features: string[];
+  action: string;
+  enabled: boolean;
+  recommended: boolean;
+};
+
+export type PlanConfig = {
+  plans: PlanConfigItem[];
+};
+
 export function maskToken(value: string) {
   if (value.length <= 8) return value;
   return `${value.slice(0, 3)}***${value.slice(-3)}`;

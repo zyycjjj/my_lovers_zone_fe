@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiClientError, apiRequest } from "@/shared/lib/api";
 import { clearAuthSession, useAuthSession } from "@/shared/lib/session-store";
-import type { AuthMe, RoutingResult, WorkspaceList, WorkspaceSummary } from "./workspace-model";
+import type { AuthMe, EntitlementStatus, RoutingResult, WorkspaceList, WorkspaceSummary } from "./workspace-model";
 
 type Subscription = {
   id: number;
@@ -32,6 +32,18 @@ export function useWorkspaceBootstrap() {
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [pendingSummary, setPendingSummary] = useState<PendingSummary | null>(null);
+  const [entitlement, setEntitlement] = useState<EntitlementStatus | null>(null);
+
+  async function refreshEntitlement() {
+    try {
+      const next = await apiRequest<EntitlementStatus>("/api/payments/entitlement/me");
+      setEntitlement(next);
+      return next;
+    } catch {
+      setEntitlement(null);
+      return null;
+    }
+  }
 
   useEffect(() => {
     if (!session?.sessionToken) {
@@ -47,13 +59,15 @@ export function useWorkspaceBootstrap() {
       apiRequest<WorkspaceList>("/api/workspaces"),
       apiRequest<Subscription | null>("/api/payments/subscription/me"),
       apiRequest<PendingSummary>("/api/payments/pending/me"),
+      apiRequest<EntitlementStatus>("/api/payments/entitlement/me"),
     ])
-      .then(([nextMe, nextRouting, list, sub, pending]) => {
+      .then(([nextMe, nextRouting, list, sub, pending, nextEntitlement]) => {
         if (!active) return;
         setMe(nextMe);
         setWorkspaces(list.items || []);
         setSubscription(sub);
         setPendingSummary(pending);
+        setEntitlement(nextEntitlement);
 
         if (nextRouting.routeType === "onboarding") {
           router.replace("/onboarding");
@@ -101,11 +115,13 @@ export function useWorkspaceBootstrap() {
 
   return {
     displayName,
+    entitlement,
     handleLogout,
     loading,
     me,
     pageError,
     pendingSummary,
+    refreshEntitlement,
     subscription,
     workspaces,
   };

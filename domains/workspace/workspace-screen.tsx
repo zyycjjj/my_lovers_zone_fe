@@ -55,7 +55,7 @@ export default function WorkspaceScreen() {
 
         {ws.subscription ? (
           <NoticePanel className="mb-6" tone="brand">
-            当前套餐：{ws.subscription.planKey}（状态：{ws.subscription.status}
+            当前套餐：{ws.entitlement?.planLabel || ws.subscription.planKey}（状态：{ws.subscription.status}
             {ws.subscription.expiredAt ? `，到期：${ws.subscription.expiredAt}` : ""}）
           </NoticePanel>
         ) : null}
@@ -116,6 +116,7 @@ export default function WorkspaceScreen() {
             activeToolMeta={ws.activeToolMeta}
             activeTips={ws.activeTips}
             displayName={ws.displayName}
+            entitlement={ws.entitlement}
             me={ws.me}
             onLogout={() => void ws.handleLogout()}
             workspaces={ws.workspaces}

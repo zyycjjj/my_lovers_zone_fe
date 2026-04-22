@@ -7,7 +7,7 @@ import { useWorkspaceTools } from "./use-workspace-tools";
 
 export function useWorkspace() {
   const bootstrap = useWorkspaceBootstrap();
-  const toolsState = useWorkspaceTools();
+  const toolsState = useWorkspaceTools(bootstrap.refreshEntitlement);
   const hasResumedDraftRef = useRef(false);
   const { resumeTrialDraft } = toolsState;
 

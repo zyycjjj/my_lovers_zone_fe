@@ -8,6 +8,7 @@ import {
   maskToken,
   type ActivityEvent,
   type EventLog,
+  type PlanConfig,
   type PaymentConfig,
   type PaymentOrder,
   type SeedUsersResult,
@@ -26,6 +27,7 @@ export function useAdmin() {
   const [logs, setLogs] = useState<EventLog[]>([]);
   const [paymentOrders, setPaymentOrders] = useState<PaymentOrder[]>([]);
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig>({});
+  const [planConfig, setPlanConfig] = useState<PlanConfig>({ plans: [] });
   const [activities, setActivities] = useState<ActivityEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [streaming, setStreaming] = useState(false);
@@ -124,7 +126,7 @@ export function useAdmin() {
     setLoading(true);
     resetMessages();
     try {
-      const [data, userList, eventLogs, payments, config] = await Promise.all([
+      const [data, userList, eventLogs, payments, config, plans] = await Promise.all([
         apiRequest<Summary>("/api/me/summary", {
           sessionToken,
         }),
@@ -140,12 +142,16 @@ export function useAdmin() {
         apiRequest<PaymentConfig>("/api/me/payment-config", {
           sessionToken,
         }),
+        apiRequest<PlanConfig>("/api/me/plan-config", {
+          sessionToken,
+        }),
       ]);
       setSummary(data);
       setUsers(userList ?? []);
       setLogs(eventLogs ?? []);
       setPaymentOrders(payments ?? []);
       setPaymentConfig(config ?? {});
+      setPlanConfig(plans ?? { plans: [] });
       syncProfilesFromUsers(userList ?? []);
       setSuccess("汇总已更新");
     } catch (err) {
@@ -266,6 +272,28 @@ export function useAdmin() {
     }
   }
 
+  async function savePlanConfig() {
+    if (!sessionToken) {
+      setError("请先登录管理员账号");
+      return;
+    }
+    resetMessages();
+    setLoading(true);
+    try {
+      const next = await apiRequest<PlanConfig>("/api/me/plan-config", {
+        method: "POST",
+        sessionToken,
+        body: planConfig,
+      });
+      setPlanConfig(next || { plans: [] });
+      setSuccess("套餐配置已保存");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "保存套餐失败");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return {
     activities,
     copyToken,
@@ -278,13 +306,16 @@ export function useAdmin() {
     logs,
     paymentOrders,
     paymentConfig,
+    planConfig,
     maskToken,
     approvePaymentOrder,
     seedUsers,
     rejectPaymentOrder,
     savePaymentConfig,
+    savePlanConfig,
     sendEcho,
     setPaymentConfig,
+    setPlanConfig,
     setEchoText,
     setEchoToken,
     setShowTokens,

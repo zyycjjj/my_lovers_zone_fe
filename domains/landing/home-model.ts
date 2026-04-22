@@ -17,12 +17,18 @@ export type Audience = {
 };
 
 export type Plan = {
+  key: "experience" | "pro" | "team";
   name: string;
   desc: string;
   price: string;
+  priceFen?: number;
   suffix: string;
+  durationDays?: number | null;
+  quotaLimit?: number;
+  quotaWindow?: "daily" | "total";
   features: string[];
   action: string;
+  enabled?: boolean;
   recommended?: boolean;
   checkoutMode?: boolean;
 };
@@ -84,29 +90,32 @@ export const audiences: Audience[] = [
 
 export const plans: Plan[] = [
   {
+    key: "experience",
     name: "体验版",
-    desc: "新用户专享，体验全部功能",
+    desc: "先看结果，再决定是否继续",
     price: "¥1",
     suffix: "/7天",
-    features: ["每日50次生成", "全部AI模型", "10+内容模板", "7天历史记录", "社群支持"],
+    features: ["3条内容生成", "1次爆款复刻", "结果截断预览", "7天体验期", "可升级正式套餐"],
     action: "立即体验",
   },
   {
+    key: "pro",
     name: "专业版",
-    desc: "适合个人和小团队",
-    price: "¥99",
+    desc: "适合持续做内容的个人创作者",
+    price: "¥9.9",
     suffix: "/月",
-    features: ["每日200次生成", "高级AI模型", "50+内容模板", "无限历史记录", "优先客服", "自定义模板"],
+    features: ["每日10条生成", "完整内容解锁", "模板保存", "社群入口", "适合稳定日更"],
     action: "立即订阅",
     recommended: true,
   },
   {
-    name: "团队版",
-    desc: "适合团队协作使用",
-    price: "¥299",
-    suffix: "/月",
-    features: ["无限次生成", "顶级AI模型", "无限模板库", "团队协作", "专属客服", "API接入"],
-    action: "联系客服",
+    key: "team",
+    name: "终身版",
+    desc: "适合长期轻量使用",
+    price: "¥66",
+    suffix: "/终身",
+    features: ["每日5条生成", "永久模板", "完整内容解锁", "社群入口", "长期复用"],
+    action: "立即购买",
   },
 ];
 

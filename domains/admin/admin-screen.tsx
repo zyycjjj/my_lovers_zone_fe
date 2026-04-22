@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AdminControlPanel } from "./admin-control-panel";
+import { AdminPlanConfigPanel } from "./admin-plan-config-panel";
 import { AdminPaymentConfigPanel } from "./admin-payment-config-panel";
 import { AdminPaymentOrdersPanel } from "./admin-payment-orders-panel";
 import { useAdmin } from "./use-admin";
@@ -13,11 +14,10 @@ export default function AdminScreen() {
   const admin = useAdmin();
   const router = useRouter();
   const session = useAuthSession();
-  const [authState, setAuthState] = useState<"checking" | "ok" | "no_session" | "forbidden">("checking");
+  const [authState, setAuthState] = useState<"checking" | "ok" | "forbidden">("checking");
 
   useEffect(() => {
     if (!session?.sessionToken) {
-      setAuthState("no_session");
       return;
     }
     void (async () => {
@@ -30,11 +30,13 @@ export default function AdminScreen() {
     })();
   }, [session?.sessionToken]);
 
-  if (authState === "checking") {
+  const resolvedAuthState = session?.sessionToken ? authState : "no_session";
+
+  if (resolvedAuthState === "checking") {
     return <div className="rounded-2xl border border-rose-100 bg-white p-6 text-sm text-slate-600">正在校验管理员权限...</div>;
   }
 
-  if (authState === "no_session") {
+  if (resolvedAuthState === "no_session") {
     return (
       <div className="rounded-2xl border border-rose-100 bg-white p-6">
         <h1 className="text-xl font-semibold text-slate-800">请先登录</h1>
@@ -50,7 +52,7 @@ export default function AdminScreen() {
     );
   }
 
-  if (authState === "forbidden") {
+  if (resolvedAuthState === "forbidden") {
     return (
       <div className="rounded-2xl border border-rose-100 bg-white p-6">
         <h1 className="text-xl font-semibold text-slate-800">无管理员权限</h1>
@@ -82,6 +84,14 @@ export default function AdminScreen() {
         onReload={() => void admin.fetchSummary()}
         onSave={() => void admin.savePaymentConfig()}
         value={admin.paymentConfig}
+      />
+
+      <AdminPlanConfigPanel
+        loading={admin.loading}
+        onChange={admin.setPlanConfig}
+        onReload={() => void admin.fetchSummary()}
+        onSave={() => void admin.savePlanConfig()}
+        value={admin.planConfig}
       />
     </div>
   );

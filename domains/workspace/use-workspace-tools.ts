@@ -13,7 +13,7 @@ import {
 } from "./workspace-model";
 import { submitWorkspaceTool } from "./workspace-tool-requests";
 
-export function useWorkspaceTools() {
+export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unknown>) {
   const [activeTool, setActiveTool] = useState<ToolKind>("title");
   const [toolError, setToolError] = useState("");
   const [loadingTool, setLoadingTool] = useState<ToolKind | null>(null);
@@ -138,6 +138,7 @@ export function useWorkspaceTools() {
       );
     } finally {
       setLoadingTool(null);
+      void onEntitlementChange?.();
     }
   }
 
@@ -185,6 +186,7 @@ export function useWorkspaceTools() {
       );
     } finally {
       setLoadingTool(null);
+      void onEntitlementChange?.();
     }
   }
 
@@ -232,6 +234,7 @@ export function useWorkspaceTools() {
         );
       } finally {
         setLoadingTool(null);
+        void onEntitlementChange?.();
       }
     },
     [
@@ -245,6 +248,7 @@ export function useWorkspaceTools() {
       scriptStyle,
       titleKeyword,
       titleStyle,
+      onEntitlementChange,
     ],
   );
 
@@ -281,6 +285,7 @@ export function useWorkspaceTools() {
       );
     } finally {
       setLoadingTool(null);
+      void onEntitlementChange?.();
     }
   }
 

@@ -29,6 +29,18 @@ export type WorkspaceList = {
   items: WorkspaceSummary[];
 };
 
+export type EntitlementStatus = {
+  active: boolean;
+  planKey: "experience" | "pro" | "team" | null;
+  planLabel: string;
+  limitWindow: "daily" | "total";
+  limit: number;
+  used: number;
+  remaining: number;
+  date: string;
+  resetHint: string;
+};
+
 export type ToolKind = "title" | "script" | "refine" | "commission";
 
 export type TitleResult = {

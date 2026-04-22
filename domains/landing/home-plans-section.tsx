@@ -9,8 +9,8 @@ export function HomePlansSection({ items, checkoutMode = false }: { items: Plan[
         <HomeSectionTitle badge="限时优惠" title="选择适合你的方案" description="7天无理由退款，零风险试用" />
 
         <div className="mt-12 grid gap-6 lg:grid-cols-3">
-          {items.map((plan) => (
-            <HomePlanCard key={plan.name} {...plan} checkoutMode={checkoutMode} />
+          {items.map(({ key: planKey, ...plan }) => (
+            <HomePlanCard key={planKey} {...plan} checkoutMode={checkoutMode} planKey={planKey} />
           ))}
         </div>
       </div>
