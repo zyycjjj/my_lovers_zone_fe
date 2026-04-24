@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { ApiClientError } from "@/shared/lib/api";
+import { apiRequest, ApiClientError } from "@/shared/lib/api";
 import {
   buildActiveTips,
   buildExamplePrompts,
@@ -13,11 +13,36 @@ import {
 } from "./workspace-model";
 import { submitWorkspaceTool } from "./workspace-tool-requests";
 
+function buildRefineText(result: RefineResult) {
+  return [
+    `一句话总结：${result.summaryLine || "暂无"}`,
+    "",
+    "卖点提炼：",
+    ...result.sellingPoints.map((item, index) => `${index + 1}. ${item}`),
+    "",
+    "合规建议：",
+    ...result.suggestions.map((item, index) => `${index + 1}. ${item}`),
+    "",
+    "更稳妥的表达：",
+    ...result.safeRewrites.map((item, index) => `${index + 1}. ${item}`),
+  ].join("\n");
+}
+
+function buildCommissionText(result: CommissionResult) {
+  return [
+    `预计佣金：${result.commission} 元`,
+    result.sellingPoint,
+    ...result.comparisons.map((item) => `售价 ${item.price} 元，佣金 ${item.commission} 元`),
+  ].join("\n");
+}
+
 export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unknown>) {
   const [activeTool, setActiveTool] = useState<ToolKind>("title");
   const [toolError, setToolError] = useState("");
   const [loadingTool, setLoadingTool] = useState<ToolKind | null>(null);
   const [copiedText, setCopiedText] = useState("");
+  const [resultActionMessage, setResultActionMessage] = useState("");
+  const [savingAsset, setSavingAsset] = useState(false);
   const [resumedDraftPrompt, setResumedDraftPrompt] = useState("");
 
   const [titleKeyword, setTitleKeyword] = useState("");
@@ -51,6 +76,44 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
     return Boolean(commissionResult);
   }, [activeTool, titleResult, scriptResult, refineResult, commissionResult]);
 
+  const activeResultText = useMemo(() => {
+    if (activeTool === "title") {
+      return titleResult.map((item, index) => `${index + 1}. ${item}`).join("\n");
+    }
+    if (activeTool === "script") return scriptResult.trim();
+    if (activeTool === "refine" && refineResult) return buildRefineText(refineResult);
+    if (activeTool === "commission" && commissionResult) return buildCommissionText(commissionResult);
+    return "";
+  }, [activeTool, titleResult, scriptResult, refineResult, commissionResult]);
+
+  const activeResultTitle = useMemo(() => {
+    if (activeTool === "title") return titleKeyword.trim() || "标题生成结果";
+    if (activeTool === "script") return scriptKeyword.trim() || resumedDraftPrompt.trim() || "脚本生成结果";
+    if (activeTool === "refine") return "话术提炼结果";
+    return "佣金测算结果";
+  }, [activeTool, titleKeyword, scriptKeyword, resumedDraftPrompt]);
+
+  const activeSourcePrompt = useMemo(() => {
+    if (activeTool === "title") return titleKeyword.trim();
+    if (activeTool === "script") return scriptKeyword.trim() || resumedDraftPrompt.trim();
+    if (activeTool === "refine") return refineText.trim();
+    if (activeTool === "commission") {
+      return [commissionPrice && `售价 ${commissionPrice}`, commissionRate && `佣金 ${commissionRate}`, platformRate && `扣点 ${platformRate}`]
+        .filter(Boolean)
+        .join("，");
+    }
+    return "";
+  }, [
+    activeTool,
+    titleKeyword,
+    scriptKeyword,
+    resumedDraftPrompt,
+    refineText,
+    commissionPrice,
+    commissionRate,
+    platformRate,
+  ]);
+
   const activeTips = useMemo(() => buildActiveTips(activeTool), [activeTool]);
   const examplePrompts = useMemo(() => buildExamplePrompts(activeTool), [activeTool]);
 
@@ -64,6 +127,54 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
       setCopiedText("复制失败，请手动复制");
       window.setTimeout(() => setCopiedText(""), 1800);
     }
+  }
+
+  async function saveCurrentResult(markCompleted = false) {
+    const content = activeResultText.trim();
+    if (!content) {
+      setResultActionMessage("先生成内容，再保存或标记完成。");
+      window.setTimeout(() => setResultActionMessage(""), 2200);
+      return;
+    }
+
+    setSavingAsset(true);
+    setResultActionMessage("");
+
+    try {
+      await apiRequest("/api/content-assets", {
+        body: {
+          toolKey: activeTool,
+          title: activeResultTitle,
+          content,
+          sourcePrompt: activeSourcePrompt,
+          markCompleted,
+        },
+      });
+      setResultActionMessage(markCompleted ? "已记录完成，明天可以接着这条继续。" : "已保存到内容记录。");
+      window.setTimeout(() => setResultActionMessage(""), 2400);
+    } catch (err) {
+      setResultActionMessage(
+        err instanceof ApiClientError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "保存失败，请稍后再试。",
+      );
+    } finally {
+      setSavingAsset(false);
+    }
+  }
+
+  async function copyAndCompleteCurrentResult() {
+    const content = activeResultText.trim();
+    if (!content) {
+      setResultActionMessage("先生成内容，再标记完成。");
+      window.setTimeout(() => setResultActionMessage(""), 2200);
+      return;
+    }
+
+    await handleCopy(content);
+    await saveCurrentResult(true);
   }
 
   function handleExampleClick(example: string) {
@@ -291,12 +402,14 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
 
   return {
     activeResultExists,
+    activeResultText,
     activeTips,
     activeTool,
     activeToolMeta,
     commissionPrice,
     commissionRate,
     commissionResult,
+    copyAndCompleteCurrentResult,
     copiedText,
     examplePrompts,
     handleCopy,
@@ -307,8 +420,11 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
     refineCurrentScript,
     refineResult,
     refineText,
+    resultActionMessage,
     resumedDraftPrompt,
     resumeTrialDraft,
+    saveCurrentResult,
+    savingAsset,
     generateTitlesFromScript,
     scriptAudience,
     scriptKeyword,

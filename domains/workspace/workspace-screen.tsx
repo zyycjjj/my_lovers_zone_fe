@@ -98,13 +98,16 @@ export default function WorkspaceScreen() {
               activeTool={ws.activeTool}
               activeToolMeta={ws.activeToolMeta}
               commissionResult={ws.commissionResult}
-              copiedText={ws.copiedText}
+              copiedText={ws.copiedText || ws.resultActionMessage}
+              isSavingAsset={ws.savingAsset}
               examplePrompts={ws.examplePrompts}
               loadingTool={ws.loadingTool}
               onCopy={(text) => void ws.handleCopy(text)}
+              onCopyAndComplete={() => void ws.copyAndCompleteCurrentResult()}
               onExampleClick={(example) => ws.handleExampleClick(example)}
               onGenerateTitlesFromScript={() => void ws.generateTitlesFromScript()}
               onRefineCurrentScript={() => void ws.refineCurrentScript()}
+              onSaveCurrentResult={() => void ws.saveCurrentResult()}
               refineResult={ws.refineResult}
               resumedDraftPrompt={ws.resumedDraftPrompt}
               scriptResult={ws.scriptResult}
