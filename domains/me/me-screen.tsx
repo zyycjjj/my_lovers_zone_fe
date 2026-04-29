@@ -136,6 +136,8 @@ export default function MeScreen() {
   const [assets, setAssets] = useState<ContentAsset[]>([]);
   const [contentStats, setContentStats] = useState<ContentStats | null>(null);
   const [completingId, setCompletingId] = useState<number | null>(null);
+  const [filterTab, setFilterTab] = useState<"all" | "saved" | "completed">("all");
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!session?.sessionToken) {
@@ -222,6 +224,9 @@ export default function MeScreen() {
         method: "POST",
       });
       setAssets((current) => current.map((item) => (item.id === assetId ? updated : item)));
+      setContentStats((prev) =>
+        prev ? { ...prev, totalCompleted: prev.totalCompleted + 1, totalSaved: Math.max(0, prev.totalSaved - 1) } : prev,
+      );
       setActionMessage("已标记完成，明天会更容易接着做。");
       window.setTimeout(() => setActionMessage(""), 2400);
     } catch (err) {
@@ -236,6 +241,29 @@ export default function MeScreen() {
       setCompletingId(null);
     }
   }
+
+  async function handleDelete(assetId: number) {
+    if (!window.confirm("确定要删除这条内容记录吗？")) return;
+    setDeletingId(assetId);
+    setActionMessage("");
+    try {
+      await apiRequest(`/api/content-assets/${assetId}`, { method: "DELETE" });
+      setAssets((current) => current.filter((item) => item.id !== assetId));
+      setActionMessage("已删除。");
+      window.setTimeout(() => setActionMessage(""), 1600);
+    } catch (err) {
+      setActionMessage(
+        err instanceof ApiClientError ? err.message : err instanceof Error ? err.message : "删除失败，请稍后再试。",
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  const filteredAssets = useMemo(
+    () => (filterTab === "all" ? assets : assets.filter((a) => a.status === filterTab)),
+    [assets, filterTab],
+  );
 
   if (loading) {
     return (
@@ -337,13 +365,33 @@ export default function MeScreen() {
         <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
           <Card className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white p-0 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
             <div className="border-b border-[rgba(0,0,0,0.08)] px-5 py-4">
-              <div className="text-lg font-semibold text-[#27272A]">内容记录</div>
-              <div className="mt-1 text-sm text-[#737378]">保存、完成和明天继续都从这里接住。</div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-lg font-semibold text-[#27272A]">内容记录</div>
+                  <div className="mt-1 text-sm text-[#737378]">保存、完成和明天继续都从这里接住。</div>
+                </div>
+                <div className="flex rounded-full bg-[#FAFAFA] p-1">
+                  {(["all", "saved", "completed"] as const).map((tab) => {
+                    const labels = { all: "全部", saved: "已保存", completed: "已完成" };
+                    return (
+                      <button
+                        key={tab}
+                        onClick={() => setFilterTab(tab)}
+                        className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                          filterTab === tab ? "bg-white text-[#4A3168] shadow-sm" : "text-[#737378]"
+                        }`}
+                      >
+                        {labels[tab]}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
             <div className="divide-y divide-[rgba(0,0,0,0.08)]">
-              {assets.length ? (
-                assets.map((asset) => (
-                  <article key={asset.id} className="px-5 py-4">
+              {filteredAssets.length ? (
+                filteredAssets.map((asset) => (
+                  <article key={asset.id} className="group px-5 py-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
@@ -363,19 +411,36 @@ export default function MeScreen() {
                           {asset.content}
                         </p>
                       </div>
-                      {asset.status !== "completed" ? (
-                        <Button
-                          className="min-h-10 shrink-0 rounded-[14px] px-4"
-                          disabled={completingId === asset.id}
-                          onClick={() => void handleComplete(asset.id)}
-                          variant="secondary"
+                      <div className="flex items-center gap-2 shrink-0">
+                        {asset.status !== "completed" ? (
+                          <Button
+                            className="min-h-10 rounded-[14px] px-4"
+                            disabled={completingId === asset.id}
+                            onClick={() => void handleComplete(asset.id)}
+                            variant="secondary"
+                          >
+                            {completingId === asset.id ? "标记中" : "标记完成"}
+                          </Button>
+                        ) : null}
+                        <button
+                          disabled={deletingId === asset.id}
+                          onClick={() => void handleDelete(asset.id)}
+                          className="min-h-10 w-10 flex items-center justify-center rounded-full text-[#C4C4CC] opacity-0 transition-opacity hover:bg-[rgba(239,68,68,0.08)] hover:text-[#EF4444] group-hover:opacity-100"
+                          title="删除"
                         >
-                          {completingId === asset.id ? "标记中" : "标记完成"}
-                        </Button>
-                      ) : null}
+                          {deletingId === asset.id ? "…" : "✕"}
+                        </button>
+                      </div>
                     </div>
                   </article>
                 ))
+              ) : assets.length ? (
+                <div className="px-5 py-12 text-center">
+                  <div className="text-base font-semibold text-[#27272A]">该筛选下没有内容</div>
+                  <div className="mx-auto mt-2 max-w-[360px] text-sm leading-7 text-[#737378]">
+                    切换到「全部」查看所有内容记录。
+                  </div>
+                </div>
               ) : (
                 <div className="px-5 py-12 text-center">
                   <div className="text-base font-semibold text-[#27272A]">还没有保存内容</div>

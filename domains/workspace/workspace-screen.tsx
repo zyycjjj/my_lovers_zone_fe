@@ -102,6 +102,7 @@ export default function WorkspaceScreen() {
             />
 
             <WorkspaceToolPanel
+              activeGoalKey={ws.activeGoalKey}
               activeTool={ws.activeTool}
               activeToolMeta={ws.activeToolMeta}
               commissionPrice={ws.commissionPrice}
@@ -163,6 +164,8 @@ export default function WorkspaceScreen() {
             me={ws.me}
             onLogout={() => void ws.handleLogout()}
             workspaces={ws.workspaces}
+            todayCount={contentStats?.todayCreated ?? 0}
+            totalAllCount={contentStats?.totalAll ?? 0}
           />
         </section>
       </main>

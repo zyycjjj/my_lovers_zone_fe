@@ -1,7 +1,13 @@
 "use client";
 
+import { useMemo } from "react";
 import { ButtonLink } from "@/shared/ui/ui";
 import { type AuthMe, type EntitlementStatus, type WorkspaceSummary } from "./workspace-model";
+
+function getTodayLabel() {
+  const d = new Date();
+  return `${d.getMonth() + 1}月${d.getDate()}日`;
+}
 
 type ToolMeta = {
   label: string;
@@ -15,11 +21,15 @@ type Props = {
   me: AuthMe | null;
   onLogout: () => void;
   workspaces: WorkspaceSummary[];
+  todayCount?: number;
+  totalAllCount?: number;
 };
 
 export function WorkspaceSidebar({
   activeTips,
   entitlement,
+  todayCount = 0,
+  totalAllCount = 0,
 }: Props) {
   const quotaTotal = entitlement?.limit ?? 0;
   const quotaUsed = entitlement?.used ?? 0;
@@ -55,7 +65,7 @@ export function WorkspaceSidebar({
         <div className="flex items-start justify-between">
           <div>
             <div className="text-[18px] font-medium leading-[1.4] text-[#27272A]">今日陪跑</div>
-            <div className="mt-1 text-sm text-[#737378]">4月15日</div>
+            <div className="mt-1 text-sm text-[#737378]">{getTodayLabel()}</div>
           </div>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#E87CAD_0%,#D4668F_100%)] text-white shadow-[0_10px_24px_rgba(212,102,143,0.25)]">
             <span className="text-base">✦</span>
@@ -64,11 +74,11 @@ export function WorkspaceSidebar({
         <div className="mt-4 grid grid-cols-2 gap-3">
           <div className="rounded-[16px] border border-white bg-white/70 px-4 py-3">
             <div className="text-sm text-[#737378]">今日生成</div>
-            <div className="mt-1 text-[24px] font-semibold leading-none tracking-[-0.03em] text-[#4A3168]">5</div>
+            <div className="mt-1 text-[24px] font-semibold leading-none tracking-[-0.03em] text-[#4A3168]">{todayCount}</div>
           </div>
           <div className="rounded-[16px] border border-white bg-white/70 px-4 py-3">
             <div className="text-sm text-[#737378]">累计生成</div>
-            <div className="mt-1 text-[24px] font-semibold leading-none tracking-[-0.03em] text-[#4A3168]">5</div>
+            <div className="mt-1 text-[24px] font-semibold leading-none tracking-[-0.03em] text-[#4A3168]">{totalAllCount || todayCount}</div>
           </div>
         </div>
         <div className="mt-4 rounded-[16px] border border-white bg-white/85 px-3 py-3 text-center text-sm text-[#52525B]">

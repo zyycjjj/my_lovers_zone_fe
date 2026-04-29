@@ -1,12 +1,19 @@
 "use client";
 
 import { Button, Card, NoticePanel } from "@/shared/ui/ui";
+import type { Goal } from "./workspace-goal-picker";
 import { ToolTabs } from "./tool-tabs";
 import type { ToolKind } from "./workspace-model";
 import { WorkspaceCommissionFields } from "./workspace-tool-panel/commission-fields";
 import { WorkspacePromptField } from "./workspace-tool-panel/prompt-field";
 import { WorkspaceScriptFields } from "./workspace-tool-panel/script-fields";
 import { WorkspaceTitleStyleField } from "./workspace-tool-panel/title-style-field";
+
+const goalHints: Record<string, string> = {
+  publish: "输入今天要发布的内容主题或产品关键词，AI 会帮你生成适合发布的文案",
+  new_product: "输入新上架的商品名称或关键词，AI 会生成吸引人的标题和文案",
+  convert: "粘贴需要优化的话术或脚本，AI 会提炼卖点并替换高风险表达",
+};
 
 type ToolMeta = {
   label: string;
@@ -19,6 +26,7 @@ type Props = {
   activeToolMeta: ToolMeta;
   loadingTool: ToolKind | null;
   toolError: string;
+  activeGoalKey: string | null;
   titleKeyword: string;
   titleStyle: string;
   scriptKeyword: string;
@@ -46,6 +54,7 @@ type Props = {
 };
 
 export function WorkspaceToolPanel({
+  activeGoalKey,
   activeTool,
   activeToolMeta,
   commissionPrice,
@@ -84,6 +93,9 @@ export function WorkspaceToolPanel({
           <div className="text-[20px] font-semibold text-[#27272A]">
             {activeToolMeta.promptLabel}
           </div>
+          {activeGoalKey && goalHints[activeGoalKey] ? (
+            <p className="mt-1 text-sm leading-6 text-[#8961F2]">{goalHints[activeGoalKey]}</p>
+          ) : null}
         </div>
 
         <WorkspacePromptField
