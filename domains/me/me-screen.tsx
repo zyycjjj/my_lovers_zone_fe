@@ -92,15 +92,23 @@ function getYesterdayKey() {
   return getDateKey(date.toISOString());
 }
 
-function buildContinueHint(asset?: ContentAsset | null, stats?: ContentStats | null) {
-  if (!asset) return "先从一个最明确的内容任务开始，生成后保存下来，明天就有东西可以接。";
+function buildContinueHint(asset?: ContentAsset | null, stats?: ContentStats | null, streak = 0) {
+  if (!asset) {
+    if (streak >= 3) return "你已经连续开工好几天了，选一个目标开始今天的第一条内容吧。";
+    return "先从一个最明确的内容任务开始，生成后保存下来，明天就有东西可以接。";
+  }
   if (stats && stats.todayCreated === 0) {
-    return `上次做了「${asset.title || toolLabels[asset.toolKey as ContentAsset["toolKey"]] || "内容"}」，今天还没开始，先生成一条吧。`;
+    const toolLabel = asset.title || toolLabels[asset.toolKey as ContentAsset["toolKey"]] || "内容";
+    if (streak >= 2) return `上次做了「${toolLabel}」，连续 ${streak} 天在坚持，今天继续吧。`;
+    return `上次做了「${toolLabel}」，今天还没开始，先生成一条吧。`;
   }
   if (asset.status === "completed") {
-    return `上次完成了「${asset.title || toolLabels[asset.toolKey as ContentAsset["toolKey"]] || "内容"}」，今天可以继续做下一条转化内容。`;
+    const toolLabel = asset.title || toolLabels[asset.toolKey as ContentAsset["toolKey"]] || "内容";
+    if (streak >= 3) return `已完成「${toolLabel}」，你已经在持续积累了，今天可以尝试新的方向。`;
+    return `上次完成了「${toolLabel}」，今天可以继续做下一条转化内容。`;
   }
-  return `上次保存了「${asset.title || toolLabels[asset.toolKey as ContentAsset["toolKey"]] || "内容"}」，今天先把它整理到可发布版本。`;
+  const toolLabel = asset.title || toolLabels[asset.toolKey as ContentAsset["toolKey"]] || "内容";
+  return `上次保存了「${toolLabel}」，今天先把它整理到可发布版本。`;
 }
 
 function buildTodaySuggestion(
@@ -109,7 +117,14 @@ function buildTodaySuggestion(
   savedCount: number,
   completedCount: number,
   todayCount: number,
+  streak = 0,
 ): { text: string; actionLabel: string; actionHref: string } {
+  if (streak >= 3 && todayCount === 0) {
+    return { text: `已经连续 ${streak} 天开工了，今天选个目标继续积累你的内容素材吧。`, actionLabel: "开始生成", actionHref: "/workspace" };
+  }
+  if (streak >= 5) {
+    return { text: `你已经是连续 ${streak} 天开工的常客了，保持这个节奏，每周都会看到明显变化。`, actionLabel: "继续生成", actionHref: "/workspace" };
+  }
   if (planLabel === "体验版" && savedCount > 0 && quotaRemaining <= 0) {
     return { text: "体验额度已用完，升级后可继续生成并解锁更多权益。", actionLabel: "查看套餐", actionHref: "/pricing" };
   }
@@ -137,6 +152,7 @@ export default function MeScreen() {
   const [pendingSummary, setPendingSummary] = useState<PendingSummary | null>(null);
   const [assets, setAssets] = useState<ContentAsset[]>([]);
   const [contentStats, setContentStats] = useState<ContentStats | null>(null);
+  const [checkinStreak, setCheckinStreak] = useState(0);
   const [completingId, setCompletingId] = useState<number | null>(null);
   const [filterTab, setFilterTab] = useState<"all" | "saved" | "completed">("all");
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -158,8 +174,9 @@ export default function MeScreen() {
       apiRequest<PendingSummary>("/api/payments/pending/me"),
       apiRequest<ContentAsset[]>("/api/content-assets/me?limit=30"),
       apiRequest<ContentStats>("/api/content-assets/stats/me").catch(() => null),
+      apiRequest<{ streak: number }>("/api/checkins/streak").then((d) => d.streak ?? 0).catch(() => 0),
     ])
-      .then(([nextMe, nextEntitlement, nextSubscription, nextPending, nextAssets, nextStats]) => {
+      .then(([nextMe, nextEntitlement, nextSubscription, nextPending, nextAssets, nextStats, nextStreak]) => {
         if (!active) return;
         setMe(nextMe);
         setEntitlement(nextEntitlement);
@@ -167,6 +184,7 @@ export default function MeScreen() {
         setPendingSummary(nextPending);
         setAssets(nextAssets || []);
         setContentStats(nextStats);
+        setCheckinStreak(nextStreak);
         setLoading(false);
       })
       .catch((err) => {
@@ -296,12 +314,19 @@ export default function MeScreen() {
         <ErrorBoundary fallbackTitle="我的页出了点问题" fallbackDescription="内容记录暂时无法显示，刷新后重试。">
         <section className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <div className="text-sm font-medium text-[#737378]">{displayName}</div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-[#737378]">{displayName}</span>
+              {checkinStreak >= 2 ? (
+                <span className="rounded-full bg-[linear-gradient(135deg,#F5F3F7_0%,#FDF4F8_100%)] px-3 py-1 text-xs font-semibold text-[#D4668F] border border-[rgba(212,102,143,0.18)]">
+                  🔥 连续 {checkinStreak} 天
+                </span>
+              ) : null}
+            </div>
             <h1 className="mt-2 text-[28px] font-semibold text-[#18181B] sm:text-[34px]">
               今天继续做内容
             </h1>
             <p className="mt-2 max-w-[620px] text-sm leading-7 text-[#737378]">
-              {buildContinueHint(latestAsset, contentStats)}
+              {buildContinueHint(latestAsset, contentStats, checkinStreak)}
             </p>
           </div>
           <ButtonLink href="/workspace">开始生成</ButtonLink>
@@ -462,6 +487,7 @@ export default function MeScreen() {
                   contentStats?.totalSaved ?? savedAssets.length,
                   contentStats?.totalCompleted ?? completedAssets.length,
                   contentStats?.todayCreated ?? todayAssets.length,
+                  checkinStreak,
                 ).text}
               </div>
               <ButtonLink
@@ -472,6 +498,7 @@ export default function MeScreen() {
                   contentStats?.totalSaved ?? savedAssets.length,
                   contentStats?.totalCompleted ?? completedAssets.length,
                   contentStats?.todayCreated ?? todayAssets.length,
+                  checkinStreak,
                 ).actionHref}
               >
                 {buildTodaySuggestion(
@@ -480,6 +507,7 @@ export default function MeScreen() {
                   contentStats?.totalSaved ?? savedAssets.length,
                   contentStats?.totalCompleted ?? completedAssets.length,
                   contentStats?.todayCreated ?? todayAssets.length,
+                  checkinStreak,
                 ).actionLabel}
               </ButtonLink>
             </Card>

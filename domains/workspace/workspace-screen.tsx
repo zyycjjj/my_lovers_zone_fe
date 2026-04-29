@@ -5,7 +5,7 @@ import { Card, NoticePanel } from "@/shared/ui/ui";
 import { WorkspaceSkeleton } from "@/shared/ui/skeletons";
 import { ErrorBoundary } from "@/shared/ui/error-boundary";
 import { apiRequest } from "@/shared/lib/api";
-import { WorkspaceGoalPicker } from "./workspace-goal-picker";
+import { WorkspaceCheckinPanel } from "./workspace-checkin-panel";
 import { WorkspaceHeader } from "./workspace-header";
 import type { ContentStats } from "@/domains/me/me-screen";
 import { WorkspaceResultPanel } from "./workspace-result-panel";
@@ -91,11 +91,10 @@ export default function WorkspaceScreen() {
 
         <section className="grid gap-6 lg:grid-cols-[minmax(0,824px)_minmax(0,395px)]">
           <div className="space-y-6">
-            <WorkspaceGoalPicker
+            <WorkspaceCheckinPanel
               activeGoalKey={ws.activeGoalKey}
               activeTool={ws.activeTool}
-              onSelect={(goal) => ws.handleGoalSelect(goal)}
-              onClear={() => ws.handleGoalClear()}
+              onGoalSelect={(goal) => ws.handleGoalSelect(goal)}
             />
 
             <WorkspaceToolPanel

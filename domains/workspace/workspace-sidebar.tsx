@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ButtonLink } from "@/shared/ui/ui";
+import { apiRequest } from "@/shared/lib/api";
 import { type AuthMe, type EntitlementStatus, type WorkspaceSummary } from "./workspace-model";
 
 function getTodayLabel() {
@@ -37,6 +38,26 @@ export function WorkspaceSidebar({
   const quotaPercent = quotaTotal > 0 ? Math.min((quotaUsed / quotaTotal) * 100, 100) : 0;
   const quotaTitle = entitlement?.limitWindow === "total" ? "体验剩余额度" : "今日剩余额度";
 
+  // 加载打卡状态和轻反馈
+  const [checkinStreak, setCheckinStreak] = useState(0);
+  const [checkedInToday, setCheckedInToday] = useState(false);
+
+  useEffect(() => {
+    apiRequest<{ streak: number }>("/api/checkins/streak")
+      .then((data) => setCheckinStreak(data.streak ?? 0))
+      .catch(() => {});
+    apiRequest("/api/checkins/today")
+      .then((data) => setCheckedInToday(!!data))
+      .catch(() => {});
+  }, []);
+
+  const encouragementText = useMemo(() => {
+    if (todayCount === 0 && checkedInToday) return "已开工，选个目标开始今天的第一条内容吧。";
+    if (todayCount >= 3 && checkinStreak >= 2) return `今天已生成 ${todayCount} 条，连续 ${checkinStreak} 天在坚持，很棒！`;
+    if (todayCount > 0) return "继续保持这个节奏，每多一条都是在积累你的素材库。";
+    return quotaRemain > 0 ? "先生成一版能发的内容，再继续细修下一步。" : "额度用完时，先保留当前结果，明天或升级后继续。";
+  }, [todayCount, checkedInToday, checkinStreak, quotaRemain]);
+
   return (
     <aside className="space-y-6">
       <section className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-[linear-gradient(161deg,#F5F3F7_0%,rgba(253,244,248,0.5)_100%)] p-[25px] shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
@@ -64,11 +85,18 @@ export function WorkspaceSidebar({
       <section className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-[linear-gradient(161deg,#FDF9FC_0%,#F7EEF4_100%)] p-[25px] shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
         <div className="flex items-start justify-between">
           <div>
-            <div className="text-[18px] font-medium leading-[1.4] text-[#27272A]">今日陪跑</div>
+            <div className="flex items-center gap-2">
+              <div className="text-[18px] font-medium leading-[1.4] text-[#27272A]">今日陪跑</div>
+              {checkinStreak >= 2 ? (
+                <span className="rounded-full bg-[rgba(212,102,143,0.12)] px-2 py-0.5 text-xs font-semibold text-[#D4668F]">
+                  连续 {checkinStreak} 天
+                </span>
+              ) : null}
+            </div>
             <div className="mt-1 text-sm text-[#737378]">{getTodayLabel()}</div>
           </div>
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#E87CAD_0%,#D4668F_100%)] text-white shadow-[0_10px_24px_rgba(212,102,143,0.25)]">
-            <span className="text-base">✦</span>
+            <span className="text-base">{checkedInToday ? "✓" : "✦"}</span>
           </div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3">
@@ -82,7 +110,7 @@ export function WorkspaceSidebar({
           </div>
         </div>
         <div className="mt-4 rounded-[16px] border border-white bg-white/85 px-3 py-3 text-center text-sm text-[#52525B]">
-          {quotaRemain > 0 ? "先生成一版能发的内容，再继续细修下一步。" : "额度用完时，先保留当前结果，明天或升级后继续。"}
+          {encouragementText}
         </div>
       </section>
 
