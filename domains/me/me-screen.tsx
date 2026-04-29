@@ -19,6 +19,21 @@ type ContentAsset = {
   createdAt: string;
 };
 
+export type ContentStats = {
+  totalSaved: number;
+  totalCompleted: number;
+  totalAll: number;
+  todayCreated: number;
+  yesterdayCreated: number;
+  latestAsset?: {
+    id: number;
+    toolKey: string;
+    title?: string | null;
+    status: string;
+    createdAt: string;
+  } | null;
+};
+
 type Subscription = {
   id: number;
   planKey: "experience" | "pro" | "team";
@@ -75,12 +90,37 @@ function getYesterdayKey() {
   return getDateKey(date.toISOString());
 }
 
-function buildContinueHint(asset?: ContentAsset) {
+function buildContinueHint(asset?: ContentAsset | null, stats?: ContentStats | null) {
   if (!asset) return "先从一个最明确的内容任务开始，生成后保存下来，明天就有东西可以接。";
-  if (asset.status === "completed") {
-    return `上次完成了「${asset.title || toolLabels[asset.toolKey]}」，今天可以继续做下一条转化内容。`;
+  if (stats && stats.todayCreated === 0) {
+    return `上次做了「${asset.title || toolLabels[asset.toolKey as ContentAsset["toolKey"]] || "内容"}」，今天还没开始，先生成一条吧。`;
   }
-  return `上次保存了「${asset.title || toolLabels[asset.toolKey]}」，今天先把它整理到可发布版本。`;
+  if (asset.status === "completed") {
+    return `上次完成了「${asset.title || toolLabels[asset.toolKey as ContentAsset["toolKey"]] || "内容"}」，今天可以继续做下一条转化内容。`;
+  }
+  return `上次保存了「${asset.title || toolLabels[asset.toolKey as ContentAsset["toolKey"]] || "内容"}」，今天先把它整理到可发布版本。`;
+}
+
+function buildTodaySuggestion(
+  quotaRemaining: number,
+  planLabel: string | undefined,
+  savedCount: number,
+  completedCount: number,
+  todayCount: number,
+): { text: string; actionLabel: string; actionHref: string } {
+  if (planLabel === "体验版" && savedCount > 0 && quotaRemaining <= 0) {
+    return { text: "体验额度已用完，升级后可继续生成并解锁更多权益。", actionLabel: "查看套餐", actionHref: "/pricing" };
+  }
+  if (savedCount > 0 && completedCount === 0) {
+    return { text: "你已有保存的内容，先把其中一条标记为完成，再继续生成新的。", actionLabel: "去完成", actionHref: "#assets" };
+  }
+  if (todayCount === 0 && quotaRemaining > 0) {
+    return { text: "今天还没有生成内容，建议先生成一条能直接发出去的标题或脚本。", actionLabel: "开始生成", actionHref: "/workspace" };
+  }
+  if (quotaRemaining <= 2) {
+    return { text: "剩余额度不多了，优先把最重要的内容先生成出来。", actionLabel: "开始生成", actionHref: "/workspace" };
+  }
+  return { text: "保持每天至少生成一条内容，持续积累你的素材库。", actionLabel: "继续生成", actionHref: "/workspace" };
 }
 
 export default function MeScreen() {
@@ -94,6 +134,7 @@ export default function MeScreen() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [pendingSummary, setPendingSummary] = useState<PendingSummary | null>(null);
   const [assets, setAssets] = useState<ContentAsset[]>([]);
+  const [contentStats, setContentStats] = useState<ContentStats | null>(null);
   const [completingId, setCompletingId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -112,14 +153,16 @@ export default function MeScreen() {
       apiRequest<Subscription | null>("/api/payments/subscription/me"),
       apiRequest<PendingSummary>("/api/payments/pending/me"),
       apiRequest<ContentAsset[]>("/api/content-assets/me?limit=30"),
+      apiRequest<ContentStats>("/api/content-assets/stats/me").catch(() => null),
     ])
-      .then(([nextMe, nextEntitlement, nextSubscription, nextPending, nextAssets]) => {
+      .then(([nextMe, nextEntitlement, nextSubscription, nextPending, nextAssets, nextStats]) => {
         if (!active) return;
         setMe(nextMe);
         setEntitlement(nextEntitlement);
         setSubscription(nextSubscription);
         setPendingSummary(nextPending);
         setAssets(nextAssets || []);
+        setContentStats(nextStats);
         setLoading(false);
       })
       .catch((err) => {
@@ -233,7 +276,7 @@ export default function MeScreen() {
               今天继续做内容
             </h1>
             <p className="mt-2 max-w-[620px] text-sm leading-7 text-[#737378]">
-              {buildContinueHint(latestAsset)}
+              {buildContinueHint(latestAsset, contentStats)}
             </p>
           </div>
           <ButtonLink href="/workspace">开始生成</ButtonLink>
@@ -266,6 +309,11 @@ export default function MeScreen() {
             <div className="mt-2 text-sm text-[#737378]">
               {subscription?.expiredAt ? `到期 ${formatDateTime(subscription.expiredAt)}` : entitlement?.resetHint || "开通后获得生成额度"}
             </div>
+            {entitlement?.planLabel === "体验版" && quotaRemaining <= 0 ? (
+              <ButtonLink className="mt-3 w-full rounded-[12px]" href="/pricing" variant="secondary">
+                升级套餐
+              </ButtonLink>
+            ) : null}
           </Card>
           <Card className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
             <div className="text-sm text-[#737378]">剩余额度</div>
@@ -276,13 +324,13 @@ export default function MeScreen() {
           </Card>
           <Card className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
             <div className="text-sm text-[#737378]">今日生成</div>
-            <div className="mt-2 text-[30px] font-semibold leading-none text-[#4A3168]">{todayAssets.length}</div>
-            <div className="mt-2 text-sm text-[#737378]">已完成 {todayAssets.filter((item) => item.status === "completed").length} 条</div>
+            <div className="mt-2 text-[30px] font-semibold leading-none text-[#4A3168]">{contentStats?.todayCreated ?? todayAssets.length}</div>
+            <div className="mt-2 text-sm text-[#737378]">昨日 {contentStats?.yesterdayCreated ?? yesterdayAssets.length} 条</div>
           </Card>
           <Card className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
             <div className="text-sm text-[#737378]">已保存内容</div>
-            <div className="mt-2 text-[30px] font-semibold leading-none text-[#4A3168]">{savedAssets.length}</div>
-            <div className="mt-2 text-sm text-[#737378]">累计完成 {completedAssets.length} 条</div>
+            <div className="mt-2 text-[30px] font-semibold leading-none text-[#4A3168]">{contentStats?.totalSaved ?? savedAssets.length}</div>
+            <div className="mt-2 text-sm text-[#737378]">累计完成 {contentStats?.totalCompleted ?? completedAssets.length} 条</div>
           </Card>
         </section>
 
@@ -346,19 +394,43 @@ export default function MeScreen() {
             <Card className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-[#F8F4FB] p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
               <div className="text-lg font-semibold text-[#27272A]">今日建议</div>
               <div className="mt-3 text-sm leading-7 text-[#6B5A78]">
-                {savedAssets.length
-                  ? "先把最近保存的一条内容推进到发布或排期，再生成下一条。"
-                  : quotaRemaining > 0
-                    ? "先生成一版能直接发的内容，再保存到这里形成记录。"
-                    : "今天先复盘已保存内容，额度恢复或升级后继续生成。"}
+                {buildTodaySuggestion(
+                  quotaRemaining,
+                  entitlement?.planLabel,
+                  contentStats?.totalSaved ?? savedAssets.length,
+                  contentStats?.totalCompleted ?? completedAssets.length,
+                  contentStats?.todayCreated ?? todayAssets.length,
+                ).text}
               </div>
-              <ButtonLink className="mt-4 w-full" href={quotaRemaining > 0 ? "/workspace" : "/pricing"}>
-                {quotaRemaining > 0 ? "继续生成" : "查看套餐"}
+              <ButtonLink
+                className="mt-4 w-full"
+                href={buildTodaySuggestion(
+                  quotaRemaining,
+                  entitlement?.planLabel,
+                  contentStats?.totalSaved ?? savedAssets.length,
+                  contentStats?.totalCompleted ?? completedAssets.length,
+                  contentStats?.todayCreated ?? todayAssets.length,
+                ).actionHref}
+              >
+                {buildTodaySuggestion(
+                  quotaRemaining,
+                  entitlement?.planLabel,
+                  contentStats?.totalSaved ?? savedAssets.length,
+                  contentStats?.totalCompleted ?? completedAssets.length,
+                  contentStats?.todayCreated ?? todayAssets.length,
+                ).actionLabel}
               </ButtonLink>
             </Card>
 
             <Card className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-              <div className="text-lg font-semibold text-[#27272A]">昨日记录</div>
+              <div className="flex items-center justify-between">
+                <div className="text-lg font-semibold text-[#27272A]">昨日记录</div>
+                {(contentStats?.yesterdayCreated ?? yesterdayAssets.length) > 0 ? (
+                  <span className="rounded-full bg-[#F5F3F7] px-3 py-1 text-xs font-medium text-[#4A3168]">
+                    共 {contentStats?.yesterdayCreated ?? yesterdayAssets.length} 条
+                  </span>
+                ) : null}
+              </div>
               <div className="mt-4 space-y-3">
                 {yesterdayAssets.length ? (
                   yesterdayAssets.slice(0, 3).map((asset) => (

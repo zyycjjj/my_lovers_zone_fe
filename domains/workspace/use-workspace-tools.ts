@@ -11,6 +11,7 @@ import {
   type RefineResult,
   type ToolKind,
 } from "./workspace-model";
+import { goals, type Goal } from "./workspace-goal-picker";
 import { submitWorkspaceTool } from "./workspace-tool-requests";
 
 function buildRefineText(result: RefineResult) {
@@ -38,6 +39,7 @@ function buildCommissionText(result: CommissionResult) {
 
 export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unknown>) {
   const [activeTool, setActiveTool] = useState<ToolKind>("title");
+  const [activeGoalKey, setActiveGoalKey] = useState<string | null>(null);
   const [toolError, setToolError] = useState("");
   const [loadingTool, setLoadingTool] = useState<ToolKind | null>(null);
   const [copiedText, setCopiedText] = useState("");
@@ -116,6 +118,35 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
 
   const activeTips = useMemo(() => buildActiveTips(activeTool), [activeTool]);
   const examplePrompts = useMemo(() => buildExamplePrompts(activeTool), [activeTool]);
+
+  const nextActions = useMemo(() => {
+    if (!activeResultExists) return [];
+    const actions: { label: string; onClick: () => void; variant: "primary" | "secondary" | "ghost" }[] = [];
+
+    if (activeTool === "title") {
+      actions.push(
+        { label: "生成脚本", onClick: () => { selectTool("script"); setScriptKeyword(titleKeyword.trim() || resumedDraftPrompt.trim()); }, variant: "primary" },
+        { label: "保存这组", onClick: () => void saveCurrentResult(false), variant: "secondary" },
+      );
+    } else if (activeTool === "script") {
+      actions.push(
+        { label: "提炼话术", onClick: () => void refineCurrentScript(), variant: "primary" },
+        { label: "生成标题", onClick: () => void generateTitlesFromScript(), variant: "secondary" },
+        { label: "复制并完成", onClick: () => void copyAndCompleteCurrentResult(), variant: "ghost" },
+      );
+    } else if (activeTool === "refine") {
+      actions.push(
+        { label: "生成标题", onClick: () => void generateTitlesFromScript(), variant: "primary" },
+        { label: "保存结果", onClick: () => void saveCurrentResult(false), variant: "secondary" },
+      );
+    } else if (activeTool === "commission") {
+      actions.push(
+        { label: "生成脚本", onClick: () => { selectTool("script"); setScriptKeyword(commissionPrice.trim()); }, variant: "primary" },
+        { label: "保存测算", onClick: () => void saveCurrentResult(false), variant: "secondary" },
+      );
+    }
+    return actions;
+  }, [activeTool, activeResultExists, titleKeyword, resumedDraftPrompt, commissionPrice]);
 
   async function handleCopy(text: string) {
     if (!text.trim()) return;
@@ -206,6 +237,30 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
     setActiveTool(next);
     setToolError("");
     setCopiedText("");
+  }
+
+  function handleGoalSelect(goal: Goal) {
+    setActiveGoalKey(goal.key);
+    setActiveTool(goal.defaultTool);
+    setToolError("");
+    setCopiedText("");
+    if (goal.key === "publish") {
+      if (!scriptKeyword.trim()) {
+        setScriptKeyword("今天要发的内容主题是：");
+      }
+    } else if (goal.key === "new_product") {
+      if (!titleKeyword.trim()) {
+        setTitleKeyword("新上架的商品名称或关键词：");
+      }
+    } else if (goal.key === "convert") {
+      if (!refineText.trim()) {
+        setRefineText("粘贴需要优化的话术或脚本内容：");
+      }
+    }
+  }
+
+  function handleGoalClear() {
+    setActiveGoalKey(null);
   }
 
   async function refineCurrentScript() {
@@ -401,6 +456,7 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
   }
 
   return {
+    activeGoalKey,
     activeResultExists,
     activeResultText,
     activeTips,
@@ -414,8 +470,11 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
     examplePrompts,
     handleCopy,
     handleExampleClick,
+    handleGoalClear,
+    handleGoalSelect,
     handleSubmitTool,
     loadingTool,
+    nextActions,
     platformRate,
     refineCurrentScript,
     refineResult,

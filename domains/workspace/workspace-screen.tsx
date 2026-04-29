@@ -1,14 +1,29 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card, NoticePanel } from "@/shared/ui/ui";
+import { apiRequest } from "@/shared/lib/api";
+import { WorkspaceGoalPicker } from "./workspace-goal-picker";
 import { WorkspaceHeader } from "./workspace-header";
+import type { ContentStats } from "@/domains/me/me-screen";
 import { WorkspaceResultPanel } from "./workspace-result-panel";
 import { WorkspaceSidebar } from "./workspace-sidebar";
 import { WorkspaceToolPanel } from "./workspace-tool-panel";
+import { useDailyPrompt } from "./use-daily-prompt";
 import { useWorkspace } from "./use-workspace";
 
 export default function WorkspaceScreen() {
   const ws = useWorkspace();
+  const [contentStats, setContentStats] = useState<ContentStats | null>(null);
+
+  useEffect(() => {
+    if (ws.loading) return;
+    apiRequest<ContentStats>("/api/content-assets/stats/me")
+      .then(setContentStats)
+      .catch(() => {});
+  }, [ws.loading]);
+
+  const { showPrompt: showDailyPrompt, promptMessage, dismiss: dismissDailyPrompt } = useDailyPrompt(contentStats);
 
   if (ws.loading) {
     return (
@@ -60,8 +75,32 @@ export default function WorkspaceScreen() {
           </NoticePanel>
         ) : null}
 
+        {showDailyPrompt && promptMessage ? (
+          <NoticePanel className="mb-6" tone="brand">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <span className="font-semibold">{promptMessage.title}</span>
+                <span className="ml-2 text-sm">{promptMessage.text}</span>
+              </div>
+              <button
+                className="shrink-0 rounded-[12px] bg-white px-3 py-1.5 text-sm font-medium text-[#8961F2] transition-colors hover:bg-[#F5F3F7]"
+                onClick={dismissDailyPrompt}
+              >
+                {promptMessage.actionLabel}
+              </button>
+            </div>
+          </NoticePanel>
+        ) : null}
+
         <section className="grid gap-6 lg:grid-cols-[minmax(0,824px)_minmax(0,395px)]">
           <div className="space-y-6">
+            <WorkspaceGoalPicker
+              activeGoalKey={ws.activeGoalKey}
+              activeTool={ws.activeTool}
+              onSelect={(goal) => ws.handleGoalSelect(goal)}
+              onClear={() => ws.handleGoalClear()}
+            />
+
             <WorkspaceToolPanel
               activeTool={ws.activeTool}
               activeToolMeta={ws.activeToolMeta}
@@ -108,6 +147,7 @@ export default function WorkspaceScreen() {
               onGenerateTitlesFromScript={() => void ws.generateTitlesFromScript()}
               onRefineCurrentScript={() => void ws.refineCurrentScript()}
               onSaveCurrentResult={() => void ws.saveCurrentResult()}
+              nextActions={ws.nextActions}
               refineResult={ws.refineResult}
               resumedDraftPrompt={ws.resumedDraftPrompt}
               scriptResult={ws.scriptResult}
