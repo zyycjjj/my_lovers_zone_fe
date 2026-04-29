@@ -13,6 +13,7 @@ import {
 } from "./workspace-model";
 import { goals, type Goal } from "./workspace-goal-picker";
 import { submitWorkspaceTool } from "./workspace-tool-requests";
+import { useTracking } from "./use-tracking";
 
 function buildRefineText(result: RefineResult) {
   return [
@@ -46,6 +47,9 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
   const [resultActionMessage, setResultActionMessage] = useState("");
   const [savingAsset, setSavingAsset] = useState(false);
   const [resumedDraftPrompt, setResumedDraftPrompt] = useState("");
+
+  // 埋点
+  const { trackToolUsed, trackContentSaved, trackContentCompleted, trackContentCopied, trackGoalSelected } = useTracking();
 
   const [titleKeyword, setTitleKeyword] = useState("");
   const [titleStyle, setTitleStyle] = useState("");
@@ -153,6 +157,7 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
     try {
       await navigator.clipboard.writeText(text);
       setCopiedText("已复制到剪贴板");
+      trackContentCopied(activeTool); // 埋点：内容复制
       window.setTimeout(() => setCopiedText(""), 1800);
     } catch {
       setCopiedText("复制失败，请手动复制");
@@ -181,6 +186,14 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
           markCompleted,
         },
       });
+      
+      // 埋点：内容保存/完成
+      if (markCompleted) {
+        trackContentCompleted(activeTool);
+      } else {
+        trackContentSaved(activeTool);
+      }
+      
       setResultActionMessage(markCompleted ? "已记录完成，明天可以接着这条继续。" : "已保存到内容记录。");
       window.setTimeout(() => setResultActionMessage(""), 2400);
     } catch (err) {
@@ -244,6 +257,7 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
     setActiveTool(goal.defaultTool);
     setToolError("");
     setCopiedText("");
+    trackGoalSelected(goal.key); // 埋点：目标选择
     if (goal.key === "publish") {
       if (!scriptKeyword.trim()) {
         setScriptKeyword("今天要发的内容主题是：");
@@ -437,6 +451,10 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
         titleKeyword,
         titleStyle,
       });
+      
+      // 埋点：工具使用
+      trackToolUsed(activeTool);
+      
       if (result.kind === "title") setTitleResult(result.titleResult);
       if (result.kind === "script") setScriptResult(result.scriptResult);
       if (result.kind === "refine") setRefineResult(result.refineResult);
