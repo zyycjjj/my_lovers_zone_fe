@@ -18,8 +18,8 @@ export function OnboardingForm({
     <div className="min-h-screen bg-linear-to-b from-brand-50/50 to-white">
       <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="mb-8 text-center">
-          <h1 className="text-strong mb-3 text-2xl font-semibold sm:text-3xl">很高兴认识你！</h1>
-          <p className="text-soft text-base">为了更好地帮助你生成内容，我们想快速了解一下你的情况。只需要1分钟 · 随时可以修改</p>
+          <h1 className="text-strong mb-3 text-2xl font-semibold sm:text-3xl">先认识一下</h1>
+          <p className="text-soft text-base">填一下你的基本情况，生成的内容会更对口。1分钟就好 · 随时可以改</p>
         </div>
 
         <div className="mb-6 flex justify-center gap-2">
@@ -67,7 +67,7 @@ export function OnboardingForm({
                 <label className="text-strong text-sm font-medium">你卖什么或做什么内容？</label>
                 <span className="rounded-full bg-[rgba(112,70,214,0.08)] px-2 py-0.5 text-[11px] font-medium text-(--primary-700)">可多选</span>
               </div>
-              <p className="text-soft ml-8 text-xs">让AI更懂你的业务领域，适合同时经营多个品类的主播</p>
+              <p className="text-soft ml-8 text-xs">多选几个品类的话，各方向的内容都能兼顾到</p>
               <div className="ml-8 rounded-2xl border border-[rgba(88,51,175,0.08)] bg-[rgba(248,246,255,0.85)] px-4 py-3">
                 <p className="text-sm font-medium text-[#4A3168]">多品类经营也没关系</p>
                 <p className="mt-1 text-xs leading-6 text-[#616479]">可以按你现在正在卖的主营方向多选，后续进入工作台后也可以继续调整。</p>

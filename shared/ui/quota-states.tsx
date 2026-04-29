@@ -65,7 +65,7 @@ export function QuotaExhausted({
           </h3>
           <p className="mt-1 text-sm leading-6 text-[#737378]">
             {isExperience 
-              ? `你已经使用了 ${limitCount} 次体验机会，升级后可以获得更多额度和高级功能`
+              ? `体验机会用完了（${limitCount}/${limitCount}），升级后解锁更多额度和功能`
               : `${quotaLabels[quotaType]}额度已达到上限（${usedCount}/${limitCount}），明天自动重置`
             }
           </p>

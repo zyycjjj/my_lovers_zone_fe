@@ -86,7 +86,7 @@ export const tools: Array<{
     promptLabel: "描述你要生成的标题方向",
     promptPlaceholder: "例如：春季连衣裙上新，想要更适合小红书的种草标题",
     emptyTitle: "准备好了，开始生成标题吧！",
-    emptyDescription: "在上方输入框描述你的商品和标题方向，我会先给你一组可直接参考的标题。",
+    emptyDescription: "在上方输入框描述你的商品和标题方向，先给你一组可直接参考的标题。",
   },
   {
     key: "script",
@@ -94,8 +94,8 @@ export const tools: Array<{
     label: "脚本生成",
     promptLabel: "描述你要生成的脚本内容",
     promptPlaceholder: "例如：帮我写一篇春季新品发布的小红书文案，产品是连衣裙，强调设计感和舒适度...",
-    emptyTitle: "准备好了，开始创作吧！",
-    emptyDescription: "在上方输入框描述你的需求，AI将为你生成内容",
+    emptyTitle: "准备好了，开始写吧！",
+    emptyDescription: "在上方输入框描述你的需求，直接生成内容。",
   },
   {
     key: "refine",
@@ -104,7 +104,7 @@ export const tools: Array<{
     promptLabel: "贴入你要提炼的话术",
     promptPlaceholder: "例如：这是我直播间准备讲的一段话术，想更有说服力也更稳妥",
     emptyTitle: "准备好了，开始整理吧！",
-    emptyDescription: "把已有话术贴进来，我会帮你提炼卖点、识别风险并给出更顺的表达。",
+    emptyDescription: "把已有话术贴进来，帮你找卖点、识别风险、换更稳的表达。",
   },
   {
     key: "commission",
@@ -113,7 +113,7 @@ export const tools: Array<{
     promptLabel: "补充测算背景",
     promptPlaceholder: "例如：这款商品想看高客单和低客单两种情况下的佣金空间",
     emptyTitle: "准备好了，开始测算吧！",
-    emptyDescription: "填写价格、佣金和扣点信息后，我会帮你快速算清这单值不值得推。",
+    emptyDescription: "填好价格、佣金和扣点信息后，帮你算清这单值不值得推。",
   },
 ];
 

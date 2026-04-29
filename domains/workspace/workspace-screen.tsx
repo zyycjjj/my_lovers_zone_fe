@@ -42,7 +42,7 @@ export default function WorkspaceScreen() {
             开始创作你的内容
           </h1>
           <p className="text-base leading-relaxed text-[#737378]">
-            输入你的需求，AI 将为你生成专业内容
+            输入需求，直接生成能用的内容
           </p>
         </section>
 
@@ -54,7 +54,7 @@ export default function WorkspaceScreen() {
 
         {ws.resumedDraftPrompt ? (
           <NoticePanel className="mb-6" tone="brand">
-            已经把你在体验页那轮内容接过来了，当前先按“脚本生成”帮你继续往下跑。
+            体验页的内容已带过来了，按「脚本生成」接着用就行。
           </NoticePanel>
         ) : null}
 

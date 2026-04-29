@@ -42,7 +42,7 @@ export function useDailyPrompt(stats: ContentStats | null) {
     if (stats.todayCreated === 0 && stats.yesterdayCreated > 0) {
       return {
         title: "欢迎回来",
-        text: `昨天你生成了 ${stats.yesterdayCreated} 条内容，上次做了「${stats.latestAsset.title || toolLabel}」。今天继续吗？`,
+        text: `昨天你生成了 ${stats.yesterdayCreated} 条内容，上次做了「${stats.latestAsset.title || toolLabel}」。今天接着来？`,
         actionLabel: "继续生成",
         actionHref: null,
       };
@@ -51,7 +51,7 @@ export function useDailyPrompt(stats: ContentStats | null) {
     if (stats.totalAll > 0 && stats.todayCreated === 0) {
       return {
         title: "好久不见",
-        text: `你已经保存了 ${stats.totalAll} 条内容。今天先生成一条，保持节奏。`,
+        text: `你已经保存了 ${stats.totalAll} 条内容。今天先生成一条，别断了节奏。`,
         actionLabel: "开始生成",
         actionHref: null,
       };

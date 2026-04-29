@@ -5,7 +5,7 @@ export function HomeBenefitsSection({ items }: { items: Benefit[] }) {
   return (
     <section className="bg-white py-16 lg:py-20">
       <div className="mx-auto max-w-[1280px] px-4">
-        <HomeSectionTitle title="为什么选择我们？" description="专为中国内容创作者打造的AI助手" />
+        <HomeSectionTitle title="为什么选择我们？" description="帮内容人省时间的生成工具" />
 
         <div className="mt-12 grid gap-6 lg:grid-cols-4">
           {items.map((item) => (

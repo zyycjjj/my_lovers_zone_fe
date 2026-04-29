@@ -94,17 +94,17 @@ function getYesterdayKey() {
 
 function buildContinueHint(asset?: ContentAsset | null, stats?: ContentStats | null, streak = 0) {
   if (!asset) {
-    if (streak >= 3) return "你已经连续开工好几天了，选一个目标开始今天的第一条内容吧。";
-    return "先从一个最明确的内容任务开始，生成后保存下来，明天就有东西可以接。";
+    if (streak >= 3) return `连续 ${streak} 天来开工了，选个目标开始今天的内容吧。`;
+    return "先从一个明确的方向开始，生成后保存下来，明天就能接着用。";
   }
   if (stats && stats.todayCreated === 0) {
     const toolLabel = asset.title || toolLabels[asset.toolKey as ContentAsset["toolKey"]] || "内容";
-    if (streak >= 2) return `上次做了「${toolLabel}」，连续 ${streak} 天在坚持，今天继续吧。`;
+    if (streak >= 2) return `上次做了「${toolLabel}」，连续 ${streak} 天了，今天继续？`;
     return `上次做了「${toolLabel}」，今天还没开始，先生成一条吧。`;
   }
   if (asset.status === "completed") {
     const toolLabel = asset.title || toolLabels[asset.toolKey as ContentAsset["toolKey"]] || "内容";
-    if (streak >= 3) return `已完成「${toolLabel}」，你已经在持续积累了，今天可以尝试新的方向。`;
+    if (streak >= 3) return `已完成「${toolLabel}」，这几天做得不少了，试试新方向？`;
     return `上次完成了「${toolLabel}」，今天可以继续做下一条转化内容。`;
   }
   const toolLabel = asset.title || toolLabels[asset.toolKey as ContentAsset["toolKey"]] || "内容";
@@ -120,10 +120,10 @@ function buildTodaySuggestion(
   streak = 0,
 ): { text: string; actionLabel: string; actionHref: string } {
   if (streak >= 3 && todayCount === 0) {
-    return { text: `已经连续 ${streak} 天开工了，今天选个目标继续积累你的内容素材吧。`, actionLabel: "开始生成", actionHref: "/workspace" };
+    return { text: `连续 ${streak} 天开工了，今天选个目标出一条新的吧。`, actionLabel: "开始生成", actionHref: "/workspace" };
   }
   if (streak >= 5) {
-    return { text: `你已经是连续 ${streak} 天开工的常客了，保持这个节奏，每周都会看到明显变化。`, actionLabel: "继续生成", actionHref: "/workspace" };
+    return { text: `连续 ${streak} 天的老用户了，保持这个频率，一周下来效果很明显。`, actionLabel: "继续生成", actionHref: "/workspace" };
   }
   if (planLabel === "体验版" && savedCount > 0 && quotaRemaining <= 0) {
     return { text: "体验额度已用完，升级后可继续生成并解锁更多权益。", actionLabel: "查看套餐", actionHref: "/pricing" };
@@ -137,7 +137,7 @@ function buildTodaySuggestion(
   if (quotaRemaining <= 2) {
     return { text: "剩余额度不多了，优先把最重要的内容先生成出来。", actionLabel: "开始生成", actionHref: "/workspace" };
   }
-  return { text: "保持每天至少生成一条内容，持续积累你的素材库。", actionLabel: "继续生成", actionHref: "/workspace" };
+  return { text: "每天至少出一条，存下来就是自己的内容库。", actionLabel: "继续生成", actionHref: "/workspace" };
 }
 
 export default function MeScreen() {

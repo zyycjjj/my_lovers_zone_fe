@@ -50,7 +50,7 @@ export function TrialSidebar({
         </div>
 
         <div className="mt-4 rounded-[16px] border border-white bg-white/80 px-[13px] py-[13px] text-center text-sm leading-5 text-[#3f3f46]">
-          开始你的创作之旅
+          开始今天的内容
         </div>
       </ExperienceCard>
 

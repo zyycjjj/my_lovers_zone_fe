@@ -15,9 +15,9 @@ type MoodOption = {
 };
 
 export const moods: MoodOption[] = [
-  { key: "energized", label: "有状态", icon: "✨", hint: "状态好的时候，先生成一版能直接发的内容" },
-  { key: "rushed", label: "赶时间", icon: "🔥", hint: "时间紧的话，先出标题再挑一条最快的发出去" },
-  { key: "unsure", label: "找灵感", icon: "💡", hint: "不确定方向的时候，从最近做过的内容继续延伸" },
+  { key: "energized", label: "有状态", icon: "✨", hint: "状态好的时候，先出一版能直接发的内容" },
+  { key: "rushed", label: "赶时间", icon: "🔥", hint: "时间紧的话，先出标题挑一条最快的发" },
+  { key: "unsure", label: "找灵感", icon: "💡", hint: "不确定方向的话，从最近做的内容接着来" },
   { key: "tired", label: "先试试", icon: "☁️", hint: "累了就先来一条，不用追求完美" },
 ];
 

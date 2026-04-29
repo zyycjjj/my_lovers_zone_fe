@@ -31,7 +31,7 @@ export default function TrialPage() {
           <h1 className="text-[24px] font-semibold leading-[30px] tracking-[-0.02em] text-[#18181b] lg:text-[30px] lg:leading-[38px]">
             开始创作你的内容
           </h1>
-          <p className="mt-2 text-base leading-[26px] text-[#737378]">输入你的需求，AI将为你生成专业内容</p>
+          <p className="mt-2 text-base leading-[26px] text-[#737378]">输入需求，直接生成能用的内容</p>
         </div>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,824px)_398px] lg:items-start">

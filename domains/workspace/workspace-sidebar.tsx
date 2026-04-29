@@ -53,8 +53,8 @@ export function WorkspaceSidebar({
 
   const encouragementText = useMemo(() => {
     if (todayCount === 0 && checkedInToday) return "已开工，选个目标开始今天的第一条内容吧。";
-    if (todayCount >= 3 && checkinStreak >= 2) return `今天已生成 ${todayCount} 条，连续 ${checkinStreak} 天在坚持，很棒！`;
-    if (todayCount > 0) return "继续保持这个节奏，每多一条都是在积累你的素材库。";
+    if (todayCount >= 3 && checkinStreak >= 2) return `今天已生成 ${todayCount} 条，连续 ${checkinStreak} 天了，状态不错。`;
+    if (todayCount > 0) return "今天出的这几条都存一下，明天接上用得着。";
     return quotaRemain > 0 ? "先生成一版能发的内容，再继续细修下一步。" : "额度用完时，先保留当前结果，明天或升级后继续。";
   }, [todayCount, checkedInToday, checkinStreak, quotaRemain]);
 

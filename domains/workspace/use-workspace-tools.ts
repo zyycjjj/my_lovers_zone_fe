@@ -328,7 +328,7 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
     const derivedKeyword = normalizedKeyword || resumedDraftPrompt.trim() || normalizedScript.replace(/\s+/g, " ").slice(0, 36);
 
     if (!derivedKeyword) {
-      setToolError("先生成一版内容，再继续帮你出标题。");
+      setToolError("先生成一版内容，再帮你出标题。");
       return;
     }
 

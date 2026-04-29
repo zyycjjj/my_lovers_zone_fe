@@ -93,7 +93,7 @@ export const emptyStates = {
         </svg>
       }
       title="还没有保存的内容"
-      description="生成内容后可以在这里保存和管理，方便下次继续使用"
+      description="生成的内容会保存在这里，方便下次接着用"
       actionLabel="开始生成"
       actionHref="/workspace"
     />
@@ -111,7 +111,7 @@ export const emptyStates = {
         </svg>
       }
       title="还没有制定计划"
-      description="创建一个7天内容计划，每天一个任务，让内容产出更有节奏"
+      description="创建一个7天内容计划，每天一个任务，内容产出有章法"
       actionLabel="创建计划"
     />
   ),

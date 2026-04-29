@@ -39,10 +39,10 @@ export type Stat = {
 };
 
 export const benefits: Benefit[] = [
-  { icon: "⚡", title: "3秒出稿", description: "告别熬夜写文案，AI帮你秒出结果" },
-  { icon: "🎯", title: "直接可用", description: "生成即可发布，无需二次修改" },
-  { icon: "📈", title: "数据支持", description: "基于10万+爆款案例训练" },
-  { icon: "💪", title: "持续陪跑", description: "不只是工具，更是你的内容助手" },
+  { icon: "⚡", title: "3秒出稿", description: "不用熬夜想文案，输入需求就出结果" },
+  { icon: "🎯", title: "直接可用", description: "生成完就能用，基本不用改" },
+  { icon: "📈", title: "有数据支撑", description: "基于平台爆款案例来生成" },
+  { icon: "💪", title: "每天都陪你跑", description: "不是工具，是跟你一起做内容的搭档" },
 ];
 
 export const examples: Example[] = [
@@ -85,7 +85,7 @@ export const audiences: Audience[] = [
   { icon: "🛍️", title: "个体商家", description: "快速生成产品文案" },
   { icon: "📱", title: "直播主播", description: "一键生成话术脚本" },
   { icon: "✍️", title: "内容运营", description: "批量创作营销内容" },
-  { icon: "👥", title: "团队主理人", description: "高效管理内容产出" },
+  { icon: "👥", title: "团队主理人", description: "帮团队统一内容产出效率" },
 ];
 
 export const plans: Plan[] = [

@@ -22,7 +22,7 @@ export function HomeHeroSection() {
           </h1>
 
           <p className="mt-6 max-w-[576px] text-lg leading-[29px] text-[#52525a] lg:text-[20px] lg:leading-[32.5px]">
-            不用再为写文案发愁，AI帮你快速生成小红书、抖音、直播话术等各类营销内容
+            写文案不用自己憋着了，小红书、抖音、直播话术都能直接出
           </p>
 
           <div className="mt-6 flex w-full flex-col gap-4 lg:mt-8 lg:flex-row lg:justify-center">

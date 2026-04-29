@@ -10,7 +10,7 @@ import { WorkspaceScriptFields } from "./workspace-tool-panel/script-fields";
 import { WorkspaceTitleStyleField } from "./workspace-tool-panel/title-style-field";
 
 const goalHints: Record<string, string> = {
-  publish: "输入今天要发布的内容主题或产品关键词，AI 会帮你生成适合发布的文案",
+  publish: "输入今天要发布的内容主题或产品关键词，直接生成适合发布的文案",
   new_product: "输入新上架的商品名称或关键词，AI 会生成吸引人的标题和文案",
   convert: "粘贴需要优化的话术或脚本，AI 会提炼卖点并替换高风险表达",
 };
