@@ -2,6 +2,7 @@
 
 import { Card } from "@/shared/ui/ui";
 import type { CommissionResult, RefineResult, ToolKind } from "./workspace-model";
+import type { Recommendation } from "./use-recommendation";
 import { WorkspaceCommissionResult } from "./workspace-results/commission-result";
 import { WorkspaceEmptyState } from "./workspace-results/empty-state";
 import { WorkspaceResultHeader } from "./workspace-results/header";
@@ -34,12 +35,21 @@ type Props = {
   onRefineCurrentScript: () => void;
   onSaveCurrentResult: () => void;
   nextActions?: NextAction[];
+  recommendation?: Recommendation | null;
 };
 
 type NextAction = {
   label: string;
   onClick: () => void;
   variant?: "primary" | "secondary" | "ghost";
+};
+
+/** 每种工具的默认下一步提示（推荐 API 不可用时兜底） */
+const defaultNextTips: Record<ToolKind, string> = {
+  title: "挑一条最像你语气的标题先发，保存这组后明天可以接着做脚本。",
+  script: "复制脚本发一版，如果已发布或排期，点「复制并标记完成」留记录。",
+  refine: "优先替换高风险表达，再把稳妥版本保存为直播话术模板。",
+  commission: "保存测算结果，再决定是否继续生成卖点或完整脚本。",
 };
 
 export function WorkspaceResultPanel({
@@ -62,17 +72,11 @@ export function WorkspaceResultPanel({
   resumedDraftPrompt,
   scriptResult,
   titleResult,
+  recommendation,
 }: Props) {
-  const nextTips: Record<ToolKind, string> = {
-    title:
-      "挑一条最像你语气的标题先发，保存这组后明天可以接着做脚本。",
-    script:
-      "复制脚本发一版，如果已发布或排期，点「复制并标记完成」留记录。",
-    refine:
-      "优先替换高风险表达，再把稳妥版本保存为直播话术模板。",
-    commission:
-      "保存测算结果，再决定是否继续生成卖点或完整脚本。",
-  };
+  // 优先使用推荐引擎的提示，兜底用工具默认提示
+  const nextTip = recommendation?.hint || (defaultNextTips as Record<ToolKind, string>)[activeTool];
+
   return (
     <Card className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white p-6 shadow-[0_1px_3px_rgba(0,0,0,0.08)] sm:p-[25px]">
       {activeResultExists ? (
@@ -88,7 +92,7 @@ export function WorkspaceResultPanel({
             <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="text-sm font-semibold text-[#4A3168]">建议下一步</div>
-                <div className="mt-1 text-sm leading-7 text-[#6B5A78]">{nextTips[activeTool]}</div>
+                <div className="mt-1 text-sm leading-7 text-[#6B5A78]">{nextTip}</div>
               </div>
               {nextActions?.length ? (
                 <div className="flex flex-wrap items-center gap-2 shrink-0">

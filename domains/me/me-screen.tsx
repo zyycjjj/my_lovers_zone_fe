@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiClientError, apiRequest } from "@/shared/lib/api";
 import { clearAuthSession, useAuthSession } from "@/shared/lib/session-store";
@@ -57,6 +57,13 @@ const toolLabels: Record<ContentAsset["toolKey"], string> = {
   script: "脚本",
   refine: "话术",
   commission: "测算",
+};
+
+const toolContinueMap: Record<ContentAsset["toolKey"], { label: string; nextTool: string }> = {
+  title: { label: "生成脚本", nextTool: "script" },
+  script: { label: "提炼话术", nextTool: "refine" },
+  refine: { label: "生成标题", nextTool: "title" },
+  commission: { label: "生成脚本", nextTool: "script" },
 };
 
 function formatDateTime(value?: string | null) {
@@ -140,6 +147,17 @@ function buildTodaySuggestion(
   return { text: "每天至少出一条，存下来就是自己的内容库。", actionLabel: "继续生成", actionHref: "/workspace" };
 }
 
+/** 构建跳转到工作台的 URL，预填上下文 */
+function buildWorkspaceContinueUrl(asset: ContentAsset): string {
+  const base = "/workspace";
+  const params = new URLSearchParams();
+  // 用 sourcePrompt 或 title 或 content 前缀作为预填关键词
+  const keyword = asset.sourcePrompt?.trim() || asset.title?.trim() || asset.content.trim().slice(0, 60);
+  params.set("continueFrom", asset.toolKey);
+  params.set("keyword", keyword.slice(0, 100));
+  return `${base}?${params.toString()}`;
+}
+
 export default function MeScreen() {
   const router = useRouter();
   const session = useAuthSession();
@@ -154,8 +172,13 @@ export default function MeScreen() {
   const [contentStats, setContentStats] = useState<ContentStats | null>(null);
   const [checkinStreak, setCheckinStreak] = useState(0);
   const [completingId, setCompletingId] = useState<number | null>(null);
-  const [filterTab, setFilterTab] = useState<"all" | "saved" | "completed">("all");
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [copyingId, setCopyingId] = useState<number | null>(null);
+  // 筛选状态：status(全部/已保存/已完成) + toolKey(全部工具/标题/脚本/话术/测算)
+  const [filterStatus, setFilterStatus] = useState<"all" | "saved" | "completed">("all");
+  const [filterTool, setFilterTool] = useState<ContentAsset["toolKey"] | "all">("all");
+  // 展开的内容 ID 集合
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     if (!session?.sessionToken) {
@@ -172,7 +195,7 @@ export default function MeScreen() {
       apiRequest<EntitlementStatus>("/api/payments/entitlement/me"),
       apiRequest<Subscription | null>("/api/payments/subscription/me"),
       apiRequest<PendingSummary>("/api/payments/pending/me"),
-      apiRequest<ContentAsset[]>("/api/content-assets/me?limit=30"),
+      apiRequest<ContentAsset[]>("/api/content-assets/me?limit=50"),
       apiRequest<ContentStats>("/api/content-assets/stats/me").catch(() => null),
       apiRequest<{ streak: number }>("/api/checkins/streak").then((d) => d.streak ?? 0).catch(() => 0),
     ])
@@ -247,7 +270,7 @@ export default function MeScreen() {
       setContentStats((prev) =>
         prev ? { ...prev, totalCompleted: prev.totalCompleted + 1, totalSaved: Math.max(0, prev.totalSaved - 1) } : prev,
       );
-      setActionMessage("已标记完成，明天会更容易接着做。");
+      setActionMessage("标记完成，明天接着做下一条。");
       window.setTimeout(() => setActionMessage(""), 2400);
     } catch (err) {
       setActionMessage(
@@ -263,13 +286,13 @@ export default function MeScreen() {
   }
 
   async function handleDelete(assetId: number) {
-    if (!window.confirm("确定要删除这条内容记录吗？")) return;
+    if (!window.confirm("删除后找不回来，确定删？")) return;
     setDeletingId(assetId);
     setActionMessage("");
     try {
       await apiRequest(`/api/content-assets/${assetId}`, { method: "DELETE" });
       setAssets((current) => current.filter((item) => item.id !== assetId));
-      setActionMessage("已删除。");
+      setActionMessage("删掉了。");
       window.setTimeout(() => setActionMessage(""), 1600);
     } catch (err) {
       setActionMessage(
@@ -280,10 +303,54 @@ export default function MeScreen() {
     }
   }
 
+  /** 复制单条内容到剪贴板 */
+  const handleCopy = useCallback(async (asset: ContentAsset) => {
+    setCopyingId(asset.id);
+    try {
+      const text = asset.content.trim();
+      await navigator.clipboard.writeText(text);
+      setActionMessage("已复制到剪贴板。");
+      window.setTimeout(() => setActionMessage(""), 2000);
+    } catch {
+      setActionMessage("复制失败，请手动选择文字复制。");
+      window.setTimeout(() => setActionMessage(""), 2500);
+    } finally {
+      setCopyingId(null);
+    }
+  }, []);
+
+  /** 切换内容展开/收起 */
+  const toggleExpand = useCallback((id: number) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  /** 跳转到工作台继续操作 */
+  const handleContinue = useCallback((asset: ContentAsset) => {
+    router.push(buildWorkspaceContinueUrl(asset));
+  }, [router]);
+
   const filteredAssets = useMemo(
-    () => (filterTab === "all" ? assets : assets.filter((a) => a.status === filterTab)),
-    [assets, filterTab],
+    () => {
+      let result = assets;
+      if (filterStatus !== "all") result = result.filter((a) => a.status === filterStatus);
+      if (filterTool !== "all") result = result.filter((a) => a.toolKey === filterTool);
+      return result;
+    },
+    [assets, filterStatus, filterTool],
   );
+
+  // 各工具类型的数量统计
+  const toolCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: assets.length };
+    for (const t of ["title", "script", "refine", "commission"] as const) {
+      counts[t] = assets.filter((a) => a.toolKey === t).length;
+    }
+    return counts;
+  }, [assets]);
 
   if (loading) {
     return <MeSkeleton />;
@@ -318,18 +385,18 @@ export default function MeScreen() {
               <span className="text-sm font-medium text-[#737378]">{displayName}</span>
               {checkinStreak >= 2 ? (
                 <span className="rounded-full bg-[linear-gradient(135deg,#F5F3F7_0%,#FDF4F8_100%)] px-3 py-1 text-xs font-semibold text-[#D4668F] border border-[rgba(212,102,143,0.18)]">
-                  🔥 连续 {checkinStreak} 天
+                  连续 {checkinStreak} 天
                 </span>
               ) : null}
             </div>
             <h1 className="mt-2 text-[28px] font-semibold text-[#18181B] sm:text-[34px]">
-              今天继续做内容
+              内容都在这儿
             </h1>
             <p className="mt-2 max-w-[620px] text-sm leading-7 text-[#737378]">
               {buildContinueHint(latestAsset, contentStats, checkinStreak)}
             </p>
           </div>
-          <ButtonLink href="/workspace">开始生成</ButtonLink>
+          <ButtonLink href="/workspace">去生成</ButtonLink>
         </section>
 
         {pageError ? (
@@ -350,6 +417,7 @@ export default function MeScreen() {
           </NoticePanel>
         ) : null}
 
+        {/* 统计卡片 */}
         <section className="grid gap-5 md:grid-cols-4">
           <Card className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
             <div className="text-sm text-[#737378]">当前套餐</div>
@@ -378,108 +446,230 @@ export default function MeScreen() {
             <div className="mt-2 text-sm text-[#737378]">昨日 {contentStats?.yesterdayCreated ?? yesterdayAssets.length} 条</div>
           </Card>
           <Card className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-            <div className="text-sm text-[#737378]">已保存内容</div>
-            <div className="mt-2 text-[30px] font-semibold leading-none text-[#4A3168]">{contentStats?.totalSaved ?? savedAssets.length}</div>
-            <div className="mt-2 text-sm text-[#737378]">累计完成 {contentStats?.totalCompleted ?? completedAssets.length} 条</div>
+            <div className="text-sm text-[#737378]">已存内容</div>
+            <div className="mt-2 text-[30px] font-semibold leading-none text-[#4A3168]">{contentStats?.totalAll ?? assets.length}</div>
+            <div className="mt-2 text-sm text-[#737378]">{contentStats?.totalCompleted ?? completedAssets.length} 条已完成</div>
           </Card>
         </section>
 
+        {/* 主内容区：左侧列表 + 右侧栏 */}
         <section className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+          {/* ====== 内容列表（核心入口） ====== */}
           <Card className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white p-0 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+            {/* 筛选栏 */}
             <div className="border-b border-[rgba(0,0,0,0.08)] px-5 py-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <div className="text-lg font-semibold text-[#27272A]">内容记录</div>
-                  <div className="mt-1 text-sm text-[#737378]">保存、完成和明天继续都从这里接住。</div>
+                  <div className="mt-1 text-sm text-[#737378]">点「继续做」直接跳工作台接着生成。</div>
                 </div>
-                <div className="flex rounded-full bg-[#FAFAFA] p-1">
-                  {(["all", "saved", "completed"] as const).map((tab) => {
-                    const labels = { all: "全部", saved: "已保存", completed: "已完成" };
-                    return (
-                      <button
-                        key={tab}
-                        onClick={() => setFilterTab(tab)}
-                        className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                          filterTab === tab ? "bg-white text-[#4A3168] shadow-sm" : "text-[#737378]"
-                        }`}
-                      >
-                        {labels[tab]}
-                      </button>
-                    );
-                  })}
+              </div>
+
+              {/* 双层筛选：状态 tab + 工具类型 chip */}
+              <div className="mt-3 flex flex-col gap-3">
+                {/* 状态筛选 */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-[#A1A1AA] shrink-0">状态：</span>
+                  <div className="flex rounded-full bg-[#FAFAFA] p-1">
+                    {(["all", "saved", "completed"] as const).map((tab) => {
+                      const labels = { all: "全部", saved: "已存", completed: "已完成" };
+                      return (
+                        <button
+                          key={tab}
+                          onClick={() => setFilterStatus(tab)}
+                          className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                            filterStatus === tab ? "bg-white text-[#4A3168] shadow-sm" : "text-[#737378]"
+                          }`}
+                        >
+                          {labels[tab]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 工具类型筛选 */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-[#A1A1AA] shrink-0">类型：</span>
+                  {([
+                    { key: "all" as const, label: "全部" },
+                    ...(["title", "script", "refine", "commission"] as const).map((k) => ({ key: k, label: toolLabels[k] })),
+                  ]).map((t) => (
+                    <button
+                      key={t.key}
+                      onClick={() => setFilterTool(t.key)}
+                      className={`shrink-0 rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                        filterTool === t.key
+                          ? "bg-[#4A3168] text-white"
+                          : "bg-[#F5F3F7] text-[#6B5A78] hover:bg-[#EBE5F1]"
+                      }`}
+                    >
+                      {t.label}
+                      {t.key !== "all" && toolCounts[t.key!] > 0 ? (
+                        <span className="ml-1 opacity-60">{toolCounts[t.key!]}</span>
+                      ) : null}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
-            <div className="divide-y divide-[rgba(0,0,0,0.08)]">
+
+            {/* 内容列表 */}
+            <div className="divide-y divide-[rgba(0,0,0,0.06)]">
               {filteredAssets.length ? (
-                filteredAssets.map((asset) => (
-                  <article key={asset.id} className="group px-5 py-4">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="rounded-full bg-[#F5F3F7] px-3 py-1 text-xs font-medium text-[#4A3168]">
-                            {toolLabels[asset.toolKey]}
-                          </span>
-                          <span className="text-xs text-[#737378]">{formatDateTime(asset.createdAt)}</span>
-                          <span className="text-xs text-[#737378]">
-                            {asset.status === "completed" ? "已完成" : asset.status === "saved" ? "已保存" : "已归档"}
-                          </span>
+                filteredAssets.map((asset) => {
+                  const isExpanded = expandedIds.has(asset.id);
+                  const continueInfo = toolContinueMap[asset.toolKey];
+                  const isLongText = asset.content.length > 120;
+
+                  return (
+                    <article key={asset.id} className="group px-5 py-4 transition-colors hover:bg-[#FAFAFA]/80">
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="min-w-0 flex-1">
+                          {/* 头部行：标签 + 时间 + 状态 */}
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="rounded-full bg-[#F5F3F7] px-2.5 py-0.5 text-xs font-medium text-[#4A3168]">
+                              {toolLabels[asset.toolKey]}
+                            </span>
+                            <span className="text-xs text-[#A1A1AA]">{formatDateTime(asset.createdAt)}</span>
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                              asset.status === "completed"
+                                ? "bg-[#ECFDF5] text-[#059669]"
+                                : "bg-[#FFF8EB] text-[#D97706]"
+                            }`}>
+                              {asset.status === "completed" ? "已完成" : "已存"}
+                            </span>
+                          </div>
+
+                          {/* 标题 */}
+                          <h2 className="mt-2 text-base font-semibold text-[#27272A]">
+                            {asset.title || toolLabels[asset.toolKey]}
+                          </h2>
+
+                          {/* 来源提示 */}
+                          {asset.sourcePrompt ? (
+                            <p className="mt-0.5 truncate text-xs text-[#A1A1AA]">{asset.sourcePrompt}</p>
+                          ) : null}
+
+                          {/* 正文内容（可展开） */}
+                          <div className="relative mt-2">
+                            <p
+                              className={`whitespace-pre-line text-sm leading-7 ${isLongText && !isExpanded ? "line-clamp-3" : ""} text-[#52525B]`}
+                              onClick={isLongText ? () => void toggleExpand(asset.id) : undefined}
+                              role={isLongText ? "button" : undefined}
+                              tabIndex={isLongText ? 0 : undefined}
+                            >
+                              {asset.content}
+                            </p>
+                            {isLongText ? (
+                              <button
+                                onClick={() => void toggleExpand(asset.id)}
+                                className="mt-1 text-xs font-medium text-[#8961F2] hover:text-[#7046D6]"
+                              >
+                                {isExpanded ? "收起" : "展开全部"}
+                              </button>
+                            ) : null}
+                          </div>
                         </div>
-                        <h2 className="mt-3 text-base font-semibold text-[#27272A]">{asset.title || toolLabels[asset.toolKey]}</h2>
-                        {asset.sourcePrompt ? (
-                          <p className="mt-1 text-sm text-[#737378]">来源：{asset.sourcePrompt}</p>
-                        ) : null}
-                        <p className="mt-3 line-clamp-3 whitespace-pre-line text-sm leading-7 text-[#52525B]">
-                          {asset.content}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        {asset.status !== "completed" ? (
+
+                        {/* 操作按钮组 */}
+                        <div className="flex flex-wrap items-center gap-2 shrink-0 mt-2 sm:mt-0">
+                          {/* 继续做：跳工作台 */}
                           <Button
-                            className="min-h-10 rounded-[14px] px-4"
-                            disabled={completingId === asset.id}
-                            onClick={() => void handleComplete(asset.id)}
-                            variant="secondary"
+                            className="min-h-9 rounded-[12px] px-3 text-xs"
+                            onClick={() => void handleContinue(asset)}
+                            variant="primary"
                           >
-                            {completingId === asset.id ? "标记中" : "标记完成"}
+                            {continueInfo.label}
                           </Button>
-                        ) : null}
-                        <button
-                          disabled={deletingId === asset.id}
-                          onClick={() => void handleDelete(asset.id)}
-                          className="min-h-10 w-10 flex items-center justify-center rounded-full text-[#C4C4CC] opacity-0 transition-opacity hover:bg-[rgba(239,68,68,0.08)] hover:text-[#EF4444] group-hover:opacity-100"
-                          title="删除"
-                        >
-                          {deletingId === asset.id ? "…" : "✕"}
-                        </button>
+
+                          {/* 复制内容 */}
+                          <button
+                            disabled={copyingId === asset.id}
+                            onClick={() => void handleCopy(asset)}
+                            className={`min-h-9 rounded-[12px] border px-3 text-xs font-medium transition-colors ${
+                              copyingId === asset.id
+                                ? "border-[#D4CFCF] bg-[#FAFAFA] text-[#A1A1AA]"
+                                : "border-[rgba(74,49,104,0.18)] bg-white text-[#4A3168] hover:bg-[#F5F3F7]"
+                            }`}
+                          >
+                            {copyingId === asset.id ? "已复制" : "复制"}
+                          </button>
+
+                          {/* 标记完成（仅未完成的显示） */}
+                          {asset.status !== "completed" ? (
+                            <Button
+                              className="min-h-9 rounded-[12px] px-3 text-xs"
+                              disabled={completingId === asset.id}
+                              onClick={() => void handleComplete(asset.id)}
+                              variant="ghost"
+                            >
+                              {completingId === asset.id ? "…" : "完成"}
+                            </Button>
+                          ) : null}
+
+                          {/* 删除 */}
+                          <button
+                            disabled={deletingId === asset.id}
+                            onClick={() => void handleDelete(asset.id)}
+                            className="min-h-9 w-9 flex items-center justify-center rounded-full text-[#C4C4CC] opacity-0 transition-opacity hover:bg-[rgba(239,68,68,0.08)] hover:text-[#EF4444] group-hover:opacity-100"
+                            title="删除"
+                          >
+                            {deletingId === asset.id ? "…" : ""}
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </article>
-                ))
+                    </article>
+                  );
+                })
               ) : assets.length ? (
+                /* 有数据但当前筛选无匹配 */
                 <div className="px-5 py-12 text-center">
-                  <div className="text-base font-semibold text-[#27272A]">该筛选下没有内容</div>
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#F5F3F7]">
+                    <svg className="h-5 w-5 text-[#A1A1AA]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                    </svg>
+                  </div>
+                  <div className="text-base font-semibold text-[#27272A]">这个分类下还没有内容</div>
                   <div className="mx-auto mt-2 max-w-[360px] text-sm leading-7 text-[#737378]">
-                    切换到「全部」查看所有内容记录。
+                    换个筛选项看看，或者去工作台生成几条。
+                  </div>
+                  <div className="mt-3 flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => { setFilterStatus("all"); setFilterTool("all"); }}
+                      className="text-sm font-medium text-[#8961F2] hover:underline"
+                    >
+                      清除筛选
+                    </button>
+                    <span className="text-[#D4D4D8]">|</span>
+                    <ButtonLink className="text-sm" href="/workspace">去生成</ButtonLink>
                   </div>
                 </div>
               ) : (
+                /* 完全没有内容 */
                 <div className="px-5 py-12 text-center">
-                  <div className="text-base font-semibold text-[#27272A]">还没有保存内容</div>
+                  <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#F5F3F7]">
+                    <svg className="h-5 w-5 text-[#A1A1AA]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 16v-5m0 0V7m0 5h5m-5 0H7l3-3" />
+                    </svg>
+                  </div>
+                  <div className="text-base font-semibold text-[#27272A]">还没存过内容</div>
                   <div className="mx-auto mt-2 max-w-[360px] text-sm leading-7 text-[#737378]">
-                    去工作台生成一条标题、脚本或话术，保存后这里会变成你的连续记录。
+                    在工作台生成的内容可以存到这里，之后随时回来查看或继续用。
                   </div>
                   <ButtonLink className="mt-5" href="/workspace">
-                    去工作台
+                    开始生成第一条
                   </ButtonLink>
                 </div>
               )}
             </div>
           </Card>
 
+          {/* 右侧栏 */}
           <aside className="space-y-6">
+            {/* 今日建议 */}
             <Card className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-[#F8F4FB] p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
-              <div className="text-lg font-semibold text-[#27272A]">今日建议</div>
+              <div className="text-lg font-semibold text-[#27272A]">接下来做什么</div>
               <div className="mt-3 text-sm leading-7 text-[#6B5A78]">
                 {buildTodaySuggestion(
                   quotaRemaining,
@@ -512,9 +702,10 @@ export default function MeScreen() {
               </ButtonLink>
             </Card>
 
+            {/* 昨日记录（可点击跳转） */}
             <Card className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-white p-5 shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
               <div className="flex items-center justify-between">
-                <div className="text-lg font-semibold text-[#27272A]">昨日记录</div>
+                <div className="text-lg font-semibold text-[#27272A]">昨天做的</div>
                 {(contentStats?.yesterdayCreated ?? yesterdayAssets.length) > 0 ? (
                   <span className="rounded-full bg-[#F5F3F7] px-3 py-1 text-xs font-medium text-[#4A3168]">
                     共 {contentStats?.yesterdayCreated ?? yesterdayAssets.length} 条
@@ -523,29 +714,43 @@ export default function MeScreen() {
               </div>
               <div className="mt-4 space-y-3">
                 {yesterdayAssets.length ? (
-                  yesterdayAssets.slice(0, 3).map((asset) => (
-                    <div key={asset.id} className="rounded-[16px] border border-[rgba(0,0,0,0.08)] bg-[#FAFAFA] px-4 py-3">
-                      <div className="text-sm font-medium text-[#27272A]">{asset.title || toolLabels[asset.toolKey]}</div>
-                      <div className="mt-1 text-xs text-[#737378]">
-                        {toolLabels[asset.toolKey]} · {asset.status === "completed" ? "已完成" : "已保存"}
+                  yesterdayAssets.slice(0, 4).map((asset) => (
+                    <Link
+                      key={asset.id}
+                      href={buildWorkspaceContinueUrl(asset)}
+                      className="group block rounded-[16px] border border-[rgba(0,0,0,0.08)] bg-[#FAFAFA] px-4 py-3 transition-colors hover:border-[#8961F2]/30 hover:bg-[#F8F4FB]"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div>
+                          <div className="text-sm font-medium text-[#27272A] group-hover:text-[#4A3168]">
+                            {asset.title || toolLabels[asset.toolKey]}
+                          </div>
+                          <div className="mt-0.5 text-xs text-[#737378]">
+                            {toolLabels[asset.toolKey]} · {asset.status === "completed" ? "已完成" : "已存"}
+                          </div>
+                        </div>
+                        <span className="shrink-0 text-xs text-[#8961F2] opacity-0 transition-opacity group-hover:opacity-100">
+                          继续 &rarr;
+                        </span>
                       </div>
-                    </div>
+                    </Link>
                   ))
                 ) : (
                   <div className="rounded-[16px] border border-dashed border-[rgba(0,0,0,0.12)] bg-[#FAFAFA] px-4 py-4 text-sm leading-7 text-[#737378]">
-                    昨天还没有内容记录，今天保存第一条后，明天就能从这里接着做。
+                    昨天没存过内容，今天存第一条后这里会自动出现。
                   </div>
                 )}
               </div>
             </Card>
 
+            {/* 社群入口 */}
             <Card className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-[#4A3168] p-5 text-white shadow-[0_12px_32px_rgba(74,49,104,0.2)]">
-              <div className="text-lg font-semibold">社群入口</div>
+              <div className="text-lg font-semibold">社群</div>
               <div className="mt-3 text-sm leading-7 text-white/80">
-                付费后承接到社群，后续这里会放入进群方式和运营任务。
+                付费后进社群，后续在这里放入群方式和运营任务。
               </div>
               <ButtonLink className="mt-4 w-full bg-white text-[#4A3168] hover:bg-[#F5F3F7]" href="/pricing">
-                查看权益
+                查看套餐
               </ButtonLink>
             </Card>
           </aside>

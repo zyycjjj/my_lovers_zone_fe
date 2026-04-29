@@ -8,6 +8,7 @@ import { apiRequest } from "@/shared/lib/api";
 import { WorkspaceCheckinPanel } from "./workspace-checkin-panel";
 import { WorkspaceHeader } from "./workspace-header";
 import type { ContentStats } from "@/domains/me/me-screen";
+import type { Recommendation } from "./use-recommendation";
 import { WorkspaceResultPanel } from "./workspace-result-panel";
 import { WorkspaceSidebar } from "./workspace-sidebar";
 import { WorkspaceToolPanel } from "./workspace-tool-panel";
@@ -17,11 +18,15 @@ import { useWorkspace } from "./use-workspace";
 export default function WorkspaceScreen() {
   const ws = useWorkspace();
   const [contentStats, setContentStats] = useState<ContentStats | null>(null);
+  const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
 
   useEffect(() => {
     if (ws.loading) return;
     apiRequest<ContentStats>("/api/content-assets/stats/me")
       .then(setContentStats)
+      .catch(() => {});
+    apiRequest<Recommendation>("/api/recommendations/me")
+      .then(setRecommendation)
       .catch(() => {});
   }, [ws.loading]);
 
@@ -149,6 +154,7 @@ export default function WorkspaceScreen() {
               resumedDraftPrompt={ws.resumedDraftPrompt}
               scriptResult={ws.scriptResult}
               titleResult={ws.titleResult}
+              recommendation={recommendation}
             />
           </div>
 
