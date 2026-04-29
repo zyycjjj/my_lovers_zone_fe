@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Card, NoticePanel } from "@/shared/ui/ui";
+import { WorkspaceSkeleton } from "@/shared/ui/skeletons";
+import { ErrorBoundary } from "@/shared/ui/error-boundary";
 import { apiRequest } from "@/shared/lib/api";
 import { WorkspaceGoalPicker } from "./workspace-goal-picker";
 import { WorkspaceHeader } from "./workspace-header";
@@ -26,13 +28,7 @@ export default function WorkspaceScreen() {
   const { showPrompt: showDailyPrompt, promptMessage, dismiss: dismissDailyPrompt } = useDailyPrompt(contentStats);
 
   if (ws.loading) {
-    return (
-      <div className="min-h-screen bg-[#FAFAFA] px-4 py-8 sm:px-6 lg:px-8">
-        <Card className="mx-auto max-w-[1200px] rounded-[24px] p-8">
-          <p className="text-sm text-[#737378]">正在进入你的工作台…</p>
-        </Card>
-      </div>
-    );
+    return <WorkspaceSkeleton />;
   }
 
   return (
@@ -40,6 +36,7 @@ export default function WorkspaceScreen() {
       <WorkspaceHeader />
 
       <main className="mx-auto max-w-[1283px] px-4 py-6 sm:px-6 lg:px-8">
+        <ErrorBoundary fallbackTitle="工作台出了点问题" fallbackDescription="工作台内容暂时无法显示，刷新后重试。">
         <section className="mb-8 space-y-2">
           <h1 className="text-[24px] font-semibold tracking-[-0.02em] text-[#18181B] sm:text-[30px]">
             开始创作你的内容
@@ -168,6 +165,7 @@ export default function WorkspaceScreen() {
             totalAllCount={contentStats?.totalAll ?? 0}
           />
         </section>
+        </ErrorBoundary>
       </main>
     </div>
   );

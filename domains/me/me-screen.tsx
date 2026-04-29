@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { ApiClientError, apiRequest } from "@/shared/lib/api";
 import { clearAuthSession, useAuthSession } from "@/shared/lib/session-store";
 import { Button, ButtonLink, Card, NoticePanel } from "@/shared/ui/ui";
+import { MeSkeleton } from "@/shared/ui/skeletons";
+import { ErrorBoundary } from "@/shared/ui/error-boundary";
 import type { AuthMe, EntitlementStatus } from "@/domains/workspace/workspace-model";
 
 type ContentAsset = {
@@ -266,13 +268,7 @@ export default function MeScreen() {
   );
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#FAFAFA] px-4 py-8 sm:px-6 lg:px-8">
-        <Card className="mx-auto max-w-[1180px] rounded-[24px] p-8">
-          <p className="text-sm text-[#737378]">正在整理你的内容记录...</p>
-        </Card>
-      </div>
-    );
+    return <MeSkeleton />;
   }
 
   return (
@@ -297,6 +293,7 @@ export default function MeScreen() {
       </header>
 
       <main className="mx-auto max-w-[1180px] px-4 py-6 sm:px-6 lg:px-8">
+        <ErrorBoundary fallbackTitle="我的页出了点问题" fallbackDescription="内容记录暂时无法显示，刷新后重试。">
         <section className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="text-sm font-medium text-[#737378]">{displayName}</div>
@@ -525,6 +522,7 @@ export default function MeScreen() {
             </Card>
           </aside>
         </section>
+        </ErrorBoundary>
       </main>
     </div>
   );
