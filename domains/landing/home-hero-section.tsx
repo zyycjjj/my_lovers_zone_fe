@@ -1,6 +1,19 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useAuthSession } from "@/shared/lib/session-store";
 import { HomePrimaryButton, HomeSecondaryButton } from "./home-buttons";
 
 export function HomeHeroSection() {
+  const session = useAuthSession();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isLoggedIn = mounted && session?.sessionToken;
+
   return (
     <section className="relative overflow-hidden bg-[linear-gradient(125deg,#ffffff_0%,rgba(245,243,247,0.3)_50%,rgba(253,244,248,0.2)_100%)]">
       <div className="pointer-events-none absolute inset-0 opacity-40">
@@ -26,8 +39,12 @@ export function HomeHeroSection() {
           </p>
 
           <div className="mt-6 flex w-full flex-col gap-4 lg:mt-8 lg:flex-row lg:justify-center">
-            <HomePrimaryButton href="/trial">1元立即体验</HomePrimaryButton>
-            <HomeSecondaryButton href="/login">直接登录</HomeSecondaryButton>
+            <HomePrimaryButton href={isLoggedIn ? "/workspace" : "/trial"}>
+              {isLoggedIn ? "进入工作台" : "1元立即体验"}
+            </HomePrimaryButton>
+            <HomeSecondaryButton href={isLoggedIn ? "/pricing" : "/login"}>
+              {isLoggedIn ? "查看套餐" : "直接登录"}
+            </HomeSecondaryButton>
           </div>
 
           <p className="mt-6 text-sm text-[#737378]">💎 1元体验7天 · 随时可退 · 无需绑卡</p>
