@@ -2,7 +2,40 @@
 
 import Link from "next/link";
 
-export function WorkspaceHeader() {
+type PlanKey = "experience" | "pro" | "team";
+
+const PLAN_LABELS: Record<PlanKey, string> = {
+  experience: "体验版",
+  pro: "专业版",
+  team: "团队版",
+};
+
+const PLAN_STYLES: Record<PlanKey, { border: string; bg: string; text: string; dot: string }> = {
+  experience: {
+    border: "border-[#F9CFE3]",
+    bg: "bg-[#FDF4F8]",
+    text: "text-[#993D63]",
+    dot: "bg-[#D4668F]",
+  },
+  pro: {
+    border: "border-[#D4CFF7]",
+    bg: "bg-[#F3F0FF]",
+    text: "text-[#5B3FA0]",
+    dot: "bg-[#8961F2]",
+  },
+  team: {
+    border: "border-[#C2F0D4]",
+    bg: "bg-[#ECFDF5]",
+    text: "text-[#166534]",
+    dot: "bg-[#22C55E]",
+  },
+};
+
+export function WorkspaceHeader({ planKey }: { planKey?: PlanKey | null }) {
+  const key = planKey && PLAN_LABELS[planKey] ? planKey : "experience";
+  const label = PLAN_LABELS[key];
+  const style = PLAN_STYLES[key];
+
   return (
     <header className="sticky top-0 z-20 border-b border-[rgba(0,0,0,0.08)] bg-[rgba(255,255,255,0.8)] backdrop-blur-xl">
       <div className="mx-auto flex max-w-[1283px] items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
@@ -19,9 +52,9 @@ export function WorkspaceHeader() {
           >
             我的
           </Link>
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#F9CFE3] bg-[#FDF4F8] px-3 py-1.5 text-sm font-medium text-[#993D63]">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#D4668F]" />
-            体验版
+          <div className={`inline-flex items-center gap-2 rounded-full border ${style.border} ${style.bg} px-3 py-1.5 text-sm font-medium ${style.text}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${style.dot}`} />
+            {label}
           </div>
         </div>
       </div>

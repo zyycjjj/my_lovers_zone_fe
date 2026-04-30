@@ -38,7 +38,7 @@ export default function WorkspaceScreen() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
-      <WorkspaceHeader />
+      <WorkspaceHeader planKey={ws.subscription?.planKey} />
 
       <main className="mx-auto max-w-[1283px] px-4 py-6 sm:px-6 lg:px-8">
         <ErrorBoundary fallbackTitle="工作台出了点问题" fallbackDescription="工作台内容暂时无法显示，刷新后重试。">
