@@ -87,6 +87,24 @@ export type PlanConfig = {
   plans: PlanConfigItem[];
 };
 
+export type AccountSubscription = {
+  id: number;
+  planKey: string;
+  status: string;
+  startedAt: string;
+  expiredAt?: string | null;
+};
+
+export type Account = {
+  id: number;
+  phone?: string | null;
+  displayName?: string | null;
+  avatarUrl?: string | null;
+  status: string;
+  createdAt: string;
+  subscription: AccountSubscription | null;
+};
+
 export function maskToken(value: string) {
   if (value.length <= 8) return value;
   return `${value.slice(0, 3)}***${value.slice(-3)}`;

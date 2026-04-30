@@ -6,6 +6,7 @@ import { useAuthSession } from "@/shared/lib/session-store";
 import { useProfiles } from "@/shared/lib/use-client-token";
 import {
   maskToken,
+  type Account,
   type ActivityEvent,
   type EventLog,
   type PlanConfig,
@@ -24,6 +25,7 @@ export function useAdmin() {
   const { profiles, setProfiles } = useProfiles();
   const [summary, setSummary] = useState<Summary | null>(null);
   const [users, setUsers] = useState<User[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [logs, setLogs] = useState<EventLog[]>([]);
   const [paymentOrders, setPaymentOrders] = useState<PaymentOrder[]>([]);
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig>({});
@@ -126,7 +128,7 @@ export function useAdmin() {
     setLoading(true);
     resetMessages();
     try {
-      const [data, userList, eventLogs, payments, config, plans] = await Promise.all([
+      const [data, userList, eventLogs, payments, config, plans, accountList] = await Promise.all([
         apiRequest<Summary>("/api/me/summary", {
           sessionToken,
         }),
@@ -145,6 +147,9 @@ export function useAdmin() {
         apiRequest<PlanConfig>("/api/me/plan-config", {
           sessionToken,
         }),
+        apiRequest<Account[]>("/api/me/accounts", {
+          sessionToken,
+        }),
       ]);
       setSummary(data);
       setUsers(userList ?? []);
@@ -152,6 +157,7 @@ export function useAdmin() {
       setPaymentOrders(payments ?? []);
       setPaymentConfig(config ?? {});
       setPlanConfig(plans ?? { plans: [] });
+      setAccounts(accountList ?? []);
       syncProfilesFromUsers(userList ?? []);
       setSuccess("汇总已更新");
     } catch (err) {
@@ -250,6 +256,25 @@ export function useAdmin() {
     }
   }
 
+  async function manualActivate(accountId: number, planKey: string, note?: string) {
+    if (!sessionToken) {
+      setError("请先登录管理员账号");
+      return;
+    }
+    resetMessages();
+    try {
+      await apiRequest("/api/me/manual-activate", {
+        method: "POST",
+        sessionToken,
+        body: { accountId, planKey, note },
+      });
+      await fetchSummary();
+      setSuccess("套餐已手动开通");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "手动开通失败");
+    }
+  }
+
   async function savePaymentConfig() {
     if (!sessionToken) {
       setError("请先登录管理员账号");
@@ -295,6 +320,7 @@ export function useAdmin() {
   }
 
   return {
+    accounts,
     activities,
     copyToken,
     echoText,
@@ -304,6 +330,7 @@ export function useAdmin() {
     fetchSummary,
     loading,
     logs,
+    manualActivate,
     paymentOrders,
     paymentConfig,
     planConfig,

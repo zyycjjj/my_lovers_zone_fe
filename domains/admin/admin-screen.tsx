@@ -6,6 +6,7 @@ import { AdminControlPanel } from "./admin-control-panel";
 import { AdminPlanConfigPanel } from "./admin-plan-config-panel";
 import { AdminPaymentConfigPanel } from "./admin-payment-config-panel";
 import { AdminPaymentOrdersPanel } from "./admin-payment-orders-panel";
+import { AdminAccountsPanel } from "./admin-accounts-panel";
 import { useAdmin } from "./use-admin";
 import { useAuthSession } from "@/shared/lib/session-store";
 import { apiRequest } from "@/shared/lib/api";
@@ -76,6 +77,14 @@ export default function AdminScreen() {
         onRefresh={() => void admin.fetchSummary()}
         onReject={(orderId) => void admin.rejectPaymentOrder(orderId)}
         orders={admin.paymentOrders}
+      />
+
+      <AdminAccountsPanel
+        accounts={admin.accounts}
+        plans={admin.planConfig.plans}
+        loading={admin.loading}
+        onManualActivate={(accountId, planKey, note) => void admin.manualActivate(accountId, planKey, note)}
+        onRefresh={() => void admin.fetchSummary()}
       />
 
       <AdminPaymentConfigPanel
