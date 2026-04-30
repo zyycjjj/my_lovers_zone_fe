@@ -1,14 +1,68 @@
 "use client";
 
+import ReactMarkdown from "react-markdown";
 import { Button, NoticePanel } from "@/shared/ui/ui";
 import type { ToolKind } from "../workspace-model";
 
-function splitParagraphs(script: string) {
-  return script
-    .split(/\n{2,}/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
+const mdComponents = {
+  h1: ({ children }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h1 className="mb-3 mt-5 text-lg font-bold text-[#27272A] first:mt-0">{children}</h1>
+  ),
+  h2: ({ children }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h2 className="mb-2 mt-4 text-base font-bold text-[#27272A] first:mt-0">{children}</h2>
+  ),
+  h3: ({ children }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h3 className="mb-2 mt-3 text-sm font-bold text-[#3D2856] first:mt-0">{children}</h3>
+  ),
+  p: ({ children }: React.HTMLAttributes<HTMLParagraphElement>) => (
+    <p className="mb-2 leading-7 text-[#27272A] last:mb-0">{children}</p>
+  ),
+  ul: ({ children }: React.HTMLAttributes<HTMLUListElement>) => (
+    <ul className="mb-2 list-disc space-y-1 pl-5 text-[#27272A] last:mb-0">{children}</ul>
+  ),
+  ol: ({ children }: React.HTMLAttributes<HTMLOListElement>) => (
+    <ol className="mb-2 list-decimal space-y-1 pl-5 text-[#27272A] last:mb-0">{children}</ol>
+  ),
+  li: ({ children }: React.HTMLAttributes<HTMLLIElement>) => (
+    <li className="leading-7">{children}</li>
+  ),
+  strong: ({ children }: React.HTMLAttributes<HTMLElement>) => (
+    <strong className="font-semibold text-[#3D2856]">{children}</strong>
+  ),
+  em: ({ children }: React.HTMLAttributes<HTMLElement>) => (
+    <em className="text-[#993D63]">{children}</em>
+  ),
+  blockquote: ({ children }: React.HTMLAttributes<HTMLQuoteElement>) => (
+    <blockquote className="my-2 border-l-3 border-[#D4668F] bg-[#FDF4F8] py-2 pl-4 pr-3 text-sm text-[#7A4760]">
+      {children}
+    </blockquote>
+  ),
+  code: ({ children, className }: React.HTMLAttributes<HTMLElement>) => {
+    if (className) {
+      return (
+        <code className="rounded-md bg-[#F3F0FF] px-1.5 py-0.5 text-xs text-[#5B3FA0]">
+          {children}
+        </code>
+      );
+    }
+    return (
+      <code className="rounded bg-[#F3F0FF] px-1 py-0.5 text-xs text-[#5B3FA0]">
+        {children}
+      </code>
+    );
+  },
+  pre: ({ children }: React.HTMLAttributes<HTMLPreElement>) => (
+    <pre className="my-2 overflow-x-auto rounded-xl bg-[#1E1B2E] p-4 text-sm text-[#E2DFF0]">
+      {children}
+    </pre>
+  ),
+  hr: () => <hr className="my-4 border-[rgba(0,0,0,0.08)]" />,
+  a: ({ children, href }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a href={href} className="text-[#993D63] underline hover:text-[#D4668F]" target="_blank" rel="noopener noreferrer">
+      {children}
+    </a>
+  ),
+};
 
 export function WorkspaceScriptResult({
   script,
@@ -25,7 +79,6 @@ export function WorkspaceScriptResult({
   onGenerateTitles: () => void;
   onRefine: () => void;
 }) {
-  const paragraphs = splitParagraphs(script);
   const charCount = script.trim().length;
   const topicCount = Math.max(
     1,
@@ -64,24 +117,8 @@ export function WorkspaceScriptResult({
           </Button>
         </div>
 
-        <div className="space-y-3">
-          {paragraphs.length ? (
-            paragraphs.map((paragraph, index) => (
-              <div
-                key={`${paragraph.slice(0, 16)}-${index}`}
-                className="rounded-[18px] border border-[rgba(0,0,0,0.06)] bg-white px-4 py-4 text-sm leading-7 text-[#27272A]"
-              >
-                <div className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-[#8A7C98]">
-                  {index === 0 ? "开场" : `段落 ${index + 1}`}
-                </div>
-                <div>{paragraph}</div>
-              </div>
-            ))
-          ) : (
-            <pre className="whitespace-pre-wrap rounded-[18px] border border-[rgba(0,0,0,0.06)] bg-white px-4 py-4 text-sm leading-7 text-[#27272A]">
-              {script}
-            </pre>
-          )}
+        <div className="rounded-[18px] border border-[rgba(0,0,0,0.06)] bg-white px-5 py-5 text-sm leading-7">
+          <ReactMarkdown components={mdComponents}>{script}</ReactMarkdown>
         </div>
       </div>
 

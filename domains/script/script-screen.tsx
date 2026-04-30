@@ -1,12 +1,70 @@
 "use client";
 
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 import { UiButton } from "@/shared/ui/ui-button";
 import { apiRequest } from "@/shared/lib/api";
 import { useClientToken } from "@/shared/lib/use-client-token";
 
 type ScriptResult = {
   text: string;
+};
+
+const mdComponents = {
+  h1: ({ children }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h1 className="mb-3 mt-5 text-lg font-bold text-slate-800 first:mt-0">{children}</h1>
+  ),
+  h2: ({ children }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h2 className="mb-2 mt-4 text-base font-bold text-slate-800 first:mt-0">{children}</h2>
+  ),
+  h3: ({ children }: React.HTMLAttributes<HTMLHeadingElement>) => (
+    <h3 className="mb-2 mt-3 text-sm font-bold text-slate-700 first:mt-0">{children}</h3>
+  ),
+  p: ({ children }: React.HTMLAttributes<HTMLParagraphElement>) => (
+    <p className="mb-2 leading-7 text-slate-700 last:mb-0">{children}</p>
+  ),
+  ul: ({ children }: React.HTMLAttributes<HTMLUListElement>) => (
+    <ul className="mb-2 list-disc space-y-1 pl-5 text-slate-700 last:mb-0">{children}</ul>
+  ),
+  ol: ({ children }: React.HTMLAttributes<HTMLOListElement>) => (
+    <ol className="mb-2 list-decimal space-y-1 pl-5 text-slate-700 last:mb-0">{children}</ol>
+  ),
+  li: ({ children }: React.HTMLAttributes<HTMLLIElement>) => (
+    <li className="leading-7">{children}</li>
+  ),
+  strong: ({ children }: React.HTMLAttributes<HTMLElement>) => (
+    <strong className="font-semibold text-slate-900">{children}</strong>
+  ),
+  blockquote: ({ children }: React.HTMLAttributes<HTMLQuoteElement>) => (
+    <blockquote className="my-2 border-l-3 border-rose-300 bg-rose-50 py-2 pl-4 pr-3 text-sm text-rose-700">
+      {children}
+    </blockquote>
+  ),
+  code: ({ children, className }: React.HTMLAttributes<HTMLElement>) => {
+    if (className) {
+      return (
+        <code className="rounded-md bg-purple-50 px-1.5 py-0.5 text-xs text-purple-700">
+          {children}
+        </code>
+      );
+    }
+    return (
+      <code className="rounded bg-purple-50 px-1 py-0.5 text-xs text-purple-700">
+        {children}
+      </code>
+    );
+  },
+  pre: ({ children }: React.HTMLAttributes<HTMLPreElement>) => (
+    <pre className="my-2 overflow-x-auto rounded-xl bg-slate-800 p-4 text-sm text-slate-200">
+      {children}
+    </pre>
+  ),
+  hr: () => <hr className="my-4 border-slate-200" />,
+  a: ({ children, href }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a href={href} className="text-rose-600 underline hover:text-rose-500" target="_blank" rel="noopener noreferrer">
+      {children}
+    </a>
+  ),
 };
 
 export default function ScriptPage() {
@@ -142,9 +200,13 @@ export default function ScriptPage() {
       </div>
       <div className="rounded-2xl border border-rose-100 bg-white p-6 shadow-sm">
         <h2 className="text-lg font-semibold text-slate-800">生成结果</h2>
-        <pre className="mt-4 whitespace-pre-wrap rounded-xl bg-rose-50/60 p-4 text-sm text-slate-700">
-          {result || "等待生成内容..."}
-        </pre>
+        <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50/50 p-5 text-sm">
+          {result ? (
+            <ReactMarkdown components={mdComponents}>{result}</ReactMarkdown>
+          ) : (
+            <p className="text-slate-400">等待生成内容...</p>
+          )}
+        </div>
       </div>
     </div>
   );
