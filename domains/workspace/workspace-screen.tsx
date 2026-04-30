@@ -140,6 +140,7 @@ export default function WorkspaceScreen() {
               activeToolMeta={ws.activeToolMeta}
               commissionResult={ws.commissionResult}
               copiedText={ws.copiedText || ws.resultActionMessage}
+              currentAssetId={ws.currentAssetId}
               isSavingAsset={ws.savingAsset}
               examplePrompts={ws.examplePrompts}
               loadingTool={ws.loadingTool}

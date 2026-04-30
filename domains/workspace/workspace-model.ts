@@ -45,10 +45,12 @@ export type ToolKind = "title" | "script" | "refine" | "commission";
 
 export type TitleResult = {
   titles: string[];
+  assetId?: number;
 };
 
 export type ScriptResult = {
   text: string;
+  assetId?: number;
 };
 
 export type RefineRisk = {
@@ -62,6 +64,7 @@ export type RefineResult = {
   risks: RefineRisk[];
   suggestions: string[];
   safeRewrites: string[];
+  assetId?: number;
 };
 
 export type CommissionResult = {

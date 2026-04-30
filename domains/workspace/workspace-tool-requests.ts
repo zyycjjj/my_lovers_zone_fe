@@ -25,8 +25,8 @@ export type WorkspaceToolInputs = {
 };
 
 export type WorkspaceToolResult =
-  | { kind: "title"; titleResult: string[] }
-  | { kind: "script"; scriptResult: string }
+  | { kind: "title"; titleResult: string[]; assetId?: number }
+  | { kind: "script"; scriptResult: string; assetId?: number }
   | { kind: "refine"; refineResult: RefineResult }
   | { kind: "commission"; commissionResult: CommissionResult };
 
@@ -44,7 +44,7 @@ export async function submitWorkspaceTool(
         style: inputs.titleStyle.trim() || undefined,
       },
     });
-    return { kind: "title", titleResult: data.titles ?? [] };
+    return { kind: "title", titleResult: data.titles ?? [], assetId: data.assetId };
   }
 
   if (activeTool === "script") {
@@ -60,7 +60,7 @@ export async function submitWorkspaceTool(
         style: inputs.scriptStyle,
       },
     });
-    return { kind: "script", scriptResult: data.text || "" };
+    return { kind: "script", scriptResult: data.text || "", assetId: data.assetId };
   }
 
   if (activeTool === "refine") {

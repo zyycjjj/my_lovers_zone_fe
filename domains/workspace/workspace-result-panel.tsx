@@ -21,6 +21,7 @@ type Props = {
   activeToolMeta: ToolMeta;
   commissionResult: CommissionResult | null;
   copiedText: string;
+  currentAssetId?: number;
   examplePrompts: string[];
   isSavingAsset: boolean;
   loadingTool: ToolKind | null;
@@ -58,6 +59,7 @@ export function WorkspaceResultPanel({
   activeToolMeta,
   commissionResult,
   copiedText,
+  currentAssetId,
   examplePrompts,
   isSavingAsset,
   loadingTool,
@@ -118,11 +120,12 @@ export function WorkspaceResultPanel({
           </div>
 
           {activeTool === "title" && titleResult.length ? (
-            <WorkspaceTitleResult titles={titleResult} onCopy={onCopy} />
+            <WorkspaceTitleResult assetId={currentAssetId} titles={titleResult} onCopy={onCopy} />
           ) : null}
 
           {activeTool === "script" && scriptResult ? (
             <WorkspaceScriptResult
+              assetId={currentAssetId}
               loadingTool={loadingTool}
               onCopy={onCopy}
               onGenerateTitles={onGenerateTitlesFromScript}

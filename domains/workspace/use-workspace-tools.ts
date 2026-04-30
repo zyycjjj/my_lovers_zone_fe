@@ -54,6 +54,7 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
   const [titleKeyword, setTitleKeyword] = useState("");
   const [titleStyle, setTitleStyle] = useState("");
   const [titleResult, setTitleResult] = useState<string[]>([]);
+  const [titleAssetId, setTitleAssetId] = useState<number | undefined>();
 
   const [scriptKeyword, setScriptKeyword] = useState("");
   const [scriptPrice, setScriptPrice] = useState("");
@@ -61,6 +62,7 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
   const [scriptScene, setScriptScene] = useState("");
   const [scriptStyle, setScriptStyle] = useState<"short" | "live">("short");
   const [scriptResult, setScriptResult] = useState("");
+  const [scriptAssetId, setScriptAssetId] = useState<number | undefined>();
 
   const [refineText, setRefineText] = useState("");
   const [refineResult, setRefineResult] = useState<RefineResult | null>(null);
@@ -250,6 +252,8 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
     setActiveTool(next);
     setToolError("");
     setCopiedText("");
+    setTitleAssetId(undefined);
+    setScriptAssetId(undefined);
   }
 
   function handleGoalSelect(goal: Goal) {
@@ -307,6 +311,7 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
 
       if (result.kind === "refine") {
         setRefineResult(result.refineResult);
+        setScriptAssetId(undefined);
       }
     } catch (err) {
       setToolError(
@@ -355,6 +360,7 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
 
       if (result.kind === "title") {
         setTitleResult(result.titleResult);
+        setTitleAssetId(result.assetId);
       }
     } catch (err) {
       setToolError(
@@ -403,6 +409,7 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
 
         if (result.kind === "script") {
           setScriptResult(result.scriptResult);
+          setScriptAssetId(result.assetId);
         }
       } catch (err) {
         setToolError(
@@ -455,9 +462,9 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
       // 埋点：工具使用
       trackToolUsed(activeTool);
       
-      if (result.kind === "title") setTitleResult(result.titleResult);
-      if (result.kind === "script") setScriptResult(result.scriptResult);
-      if (result.kind === "refine") setRefineResult(result.refineResult);
+      if (result.kind === "title") { setTitleResult(result.titleResult); setTitleAssetId(result.assetId); }
+      if (result.kind === "script") { setScriptResult(result.scriptResult); setScriptAssetId(result.assetId); }
+      if (result.kind === "refine") { setRefineResult(result.refineResult); }
       if (result.kind === "commission") setCommissionResult(result.commissionResult);
     } catch (err) {
       setToolError(
@@ -473,6 +480,12 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
     }
   }
 
+  const currentAssetId = useMemo(() => {
+    if (activeTool === "title") return titleAssetId;
+    if (activeTool === "script") return scriptAssetId;
+    return undefined;
+  }, [activeTool, titleAssetId, scriptAssetId]);
+
   return {
     activeGoalKey,
     activeResultExists,
@@ -485,6 +498,7 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
     commissionResult,
     copyAndCompleteCurrentResult,
     copiedText,
+    currentAssetId,
     examplePrompts,
     handleCopy,
     handleExampleClick,

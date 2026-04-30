@@ -71,6 +71,7 @@ export function WorkspaceScriptResult({
   onCopy,
   onGenerateTitles,
   onRefine,
+  assetId,
 }: {
   script: string;
   originPrompt?: string;
@@ -78,6 +79,7 @@ export function WorkspaceScriptResult({
   onCopy: (text: string) => void;
   onGenerateTitles: () => void;
   onRefine: () => void;
+  assetId?: number;
 }) {
   const charCount = script.trim().length;
   const topicCount = Math.max(
@@ -109,7 +111,15 @@ export function WorkspaceScriptResult({
       <div className="rounded-[22px] border border-[rgba(74,49,104,0.12)] bg-[linear-gradient(180deg,#ffffff_0%,#faf7fd_100%)] p-5 shadow-[0_12px_30px_rgba(74,49,104,0.08)]">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-sm font-semibold text-[#27272A]">脚本正文</div>
+            <div className="flex items-center gap-2">
+              <div className="text-sm font-semibold text-[#27272A]">脚本正文</div>
+              {assetId ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-[#ECFDF5] px-2 py-0.5 text-xs font-medium text-[#166534]">
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                  已自动保存
+                </span>
+              ) : null}
+            </div>
             <div className="mt-1 text-sm leading-6 text-[#737378]">{originPrompt?.trim() || "根据你的需求生成"}</div>
           </div>
           <Button onClick={() => onCopy(script)} type="button" variant="secondary">
