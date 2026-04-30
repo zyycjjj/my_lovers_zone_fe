@@ -7,7 +7,7 @@ type PlanKey = "experience" | "pro" | "team";
 const PLAN_LABELS: Record<PlanKey, string> = {
   experience: "体验版",
   pro: "专业版",
-  team: "团队版",
+  team: "终身版",
 };
 
 const PLAN_STYLES: Record<PlanKey, { border: string; bg: string; text: string; dot: string }> = {
@@ -24,10 +24,10 @@ const PLAN_STYLES: Record<PlanKey, { border: string; bg: string; text: string; d
     dot: "bg-[#8961F2]",
   },
   team: {
-    border: "border-[#C2F0D4]",
-    bg: "bg-[#ECFDF5]",
-    text: "text-[#166534]",
-    dot: "bg-[#22C55E]",
+    border: "border-[#FDE68A]",
+    bg: "bg-[#FFFBEB]",
+    text: "text-[#92400E]",
+    dot: "bg-[#F59E0B]",
   },
 };
 
