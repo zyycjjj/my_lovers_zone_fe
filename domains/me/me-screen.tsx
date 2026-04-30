@@ -161,6 +161,7 @@ function buildWorkspaceContinueUrl(asset: ContentAsset): string {
 export default function MeScreen() {
   const router = useRouter();
   const session = useAuthSession();
+  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
   const [actionMessage, setActionMessage] = useState("");
@@ -180,7 +181,13 @@ export default function MeScreen() {
   // 展开的内容 ID 集合
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
+  // hydration 安全：等客户端 mount 后再访问 localStorage session
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
     if (!session?.sessionToken) {
       router.replace("/login");
       return;
@@ -225,7 +232,7 @@ export default function MeScreen() {
     return () => {
       active = false;
     };
-  }, [router, session?.sessionToken]);
+  }, [router, mounted, session?.sessionToken]);
 
   const displayName = useMemo(() => {
     if (!me) return "";
@@ -352,7 +359,7 @@ export default function MeScreen() {
     return counts;
   }, [assets]);
 
-  if (loading) {
+  if (!mounted || loading) {
     return <MeSkeleton />;
   }
 
