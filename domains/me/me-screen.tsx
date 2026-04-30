@@ -202,7 +202,7 @@ export default function MeScreen() {
       apiRequest<EntitlementStatus>("/api/payments/entitlement/me"),
       apiRequest<Subscription | null>("/api/payments/subscription/me"),
       apiRequest<PendingSummary>("/api/payments/pending/me"),
-      apiRequest<ContentAsset[]>("/api/content-assets/me?limit=50"),
+      apiRequest<{ items: ContentAsset[]; total: number }>("/api/content-assets/me?limit=50"),
       apiRequest<ContentStats>("/api/content-assets/stats/me").catch(() => null),
       apiRequest<{ streak: number }>("/api/checkins/streak").then((d) => d.streak ?? 0).catch(() => 0),
     ])
@@ -212,7 +212,7 @@ export default function MeScreen() {
         setEntitlement(nextEntitlement);
         setSubscription(nextSubscription);
         setPendingSummary(nextPending);
-        setAssets(nextAssets || []);
+        setAssets(nextAssets.items || []);
         setContentStats(nextStats);
         setCheckinStreak(nextStreak);
         setLoading(false);
@@ -751,9 +751,9 @@ export default function MeScreen() {
             </Card>
 
             {/* 社群入口 */}
-            <Card className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-[#4A3168] p-5 text-white shadow-[0_12px_32px_rgba(74,49,104,0.2)]">
+            <Card className="ui-card-dark p-5 text-white">
               <div className="text-lg font-semibold">社群</div>
-              <div className="mt-3 text-sm leading-7 text-white/80">
+              <div className="mt-3 h-14 text-sm leading-7 text-white/80">
                 付费后进社群，后续在这里放入群方式和运营任务。
               </div>
               <ButtonLink className="mt-4 w-full bg-white text-[#4A3168] hover:bg-[#F5F3F7]" href="/pricing">
