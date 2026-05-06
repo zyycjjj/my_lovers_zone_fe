@@ -10,9 +10,10 @@ import {
   type CommissionResult,
   type RefineResult,
   type ToolKind,
+  type ViralResult,
 } from "./workspace-model";
 import { goals, type Goal } from "./workspace-goal-picker";
-import { submitWorkspaceTool } from "./workspace-tool-requests";
+import { submitWorkspaceTool, type WorkspaceToolInputs } from "./workspace-tool-requests";
 import { useTracking } from "./use-tracking";
 
 function buildRefineText(result: RefineResult) {
@@ -72,6 +73,13 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
   const [platformRate, setPlatformRate] = useState("");
   const [commissionResult, setCommissionResult] = useState<CommissionResult | null>(null);
 
+  const [viralSource, setViralSource] = useState("");
+  const [viralPlatform, setViralPlatform] = useState("");
+  const [viralProduct, setViralProduct] = useState("");
+  const [viralMyPlatform, setViralMyPlatform] = useState("");
+  const [viralStyle, setViralStyle] = useState("");
+  const [viralResult, setViralResult] = useState<ViralResult | null>(null);
+
   const activeToolMeta = useMemo(
     () => tools.find((item) => item.key === activeTool) ?? tools[0],
     [activeTool],
@@ -81,8 +89,9 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
     if (activeTool === "title") return titleResult.length > 0;
     if (activeTool === "script") return Boolean(scriptResult.trim());
     if (activeTool === "refine") return Boolean(refineResult);
+    if (activeTool === "viral") return Boolean(viralResult);
     return Boolean(commissionResult);
-  }, [activeTool, titleResult, scriptResult, refineResult, commissionResult]);
+  }, [activeTool, titleResult, scriptResult, refineResult, commissionResult, viralResult]);
 
   const activeResultText = useMemo(() => {
     if (activeTool === "title") {
@@ -91,6 +100,14 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
     if (activeTool === "script") return scriptResult.trim();
     if (activeTool === "refine" && refineResult) return buildRefineText(refineResult);
     if (activeTool === "commission" && commissionResult) return buildCommissionText(commissionResult);
+    if (activeTool === "viral" && viralResult) {
+      const parts: string[] = [];
+      if (viralResult.structure?.title) parts.push(`原爆款标题：${viralResult.structure.title}`);
+      if (viralResult.myVersion?.title) parts.push(`我的标题：${viralResult.myVersion.title}`);
+      if (viralResult.myVersion?.content30s) parts.push(viralResult.myVersion.content30s);
+      if (viralResult.myVersion?.content60s) parts.push(viralResult.myVersion.content60s);
+      return parts.join('\n\n');
+    }
     return "";
   }, [activeTool, titleResult, scriptResult, refineResult, commissionResult]);
 
@@ -98,13 +115,17 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
     if (activeTool === "title") return titleKeyword.trim() || "标题生成结果";
     if (activeTool === "script") return scriptKeyword.trim() || resumedDraftPrompt.trim() || "脚本生成结果";
     if (activeTool === "refine") return "话术提炼结果";
+    if (activeTool === "viral") return viralResult?.myVersion?.title || viralResult?.structure?.title || "爆款复刻结果";
     return "佣金测算结果";
-  }, [activeTool, titleKeyword, scriptKeyword, resumedDraftPrompt]);
+  }, [activeTool, titleKeyword, scriptKeyword, resumedDraftPrompt, viralResult]);
 
   const activeSourcePrompt = useMemo(() => {
     if (activeTool === "title") return titleKeyword.trim();
     if (activeTool === "script") return scriptKeyword.trim() || resumedDraftPrompt.trim();
     if (activeTool === "refine") return refineText.trim();
+    if (activeTool === "viral") {
+      return [viralSource, viralProduct, viralMyPlatform, viralStyle].filter(Boolean).join(' | ');
+    }
     if (activeTool === "commission") {
       return [commissionPrice && `售价 ${commissionPrice}`, commissionRate && `佣金 ${commissionRate}`, platformRate && `扣点 ${platformRate}`]
         .filter(Boolean)
@@ -149,6 +170,11 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
       actions.push(
         { label: "生成脚本", onClick: () => { selectTool("script"); setScriptKeyword(commissionPrice.trim()); }, variant: "primary" },
         { label: "保存测算", onClick: () => void saveCurrentResult(false), variant: "secondary" },
+      );
+    } else if (activeTool === "viral") {
+      actions.push(
+        { label: "生成脚本", onClick: () => { selectTool("script"); setScriptKeyword(viralProduct.trim() || viralSource.trim().slice(0, 36)); }, variant: "primary" },
+        { label: "保存结果", onClick: () => void saveCurrentResult(false), variant: "secondary" },
       );
     }
     return actions;
@@ -242,6 +268,11 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
       return;
     }
 
+    if (activeTool === "viral") {
+      setViralSource(example);
+      return;
+    }
+
     const parsed = parseCommissionExample(example);
     setCommissionPrice(parsed.price);
     setCommissionRate(parsed.commissionRate);
@@ -281,6 +312,27 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
     setActiveGoalKey(null);
   }
 
+  function buildToolInputs(): WorkspaceToolInputs {
+    return {
+      commissionPrice,
+      commissionRate,
+      platformRate,
+      refineText,
+      scriptAudience,
+      scriptKeyword,
+      scriptPrice,
+      scriptScene,
+      scriptStyle,
+      titleKeyword,
+      titleStyle,
+      viralSource,
+      viralPlatform,
+      viralProduct,
+      viralMyPlatform,
+      viralStyle,
+    };
+  }
+
   async function refineCurrentScript() {
     const normalizedScript = scriptResult.trim();
     if (!normalizedScript) {
@@ -295,19 +347,7 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
     setLoadingTool("refine");
 
     try {
-      const result = await submitWorkspaceTool("refine", {
-        commissionPrice,
-        commissionRate,
-        platformRate,
-        refineText: normalizedScript,
-        scriptAudience,
-        scriptKeyword,
-        scriptPrice,
-        scriptScene,
-        scriptStyle,
-        titleKeyword,
-        titleStyle,
-      });
+      const result = await submitWorkspaceTool("refine", { ...buildToolInputs(), refineText: normalizedScript });
 
       if (result.kind === "refine") {
         setRefineResult(result.refineResult);
@@ -344,19 +384,7 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
     setLoadingTool("title");
 
     try {
-      const result = await submitWorkspaceTool("title", {
-        commissionPrice,
-        commissionRate,
-        platformRate,
-        refineText,
-        scriptAudience,
-        scriptKeyword,
-        scriptPrice,
-        scriptScene,
-        scriptStyle,
-        titleKeyword: derivedKeyword,
-        titleStyle: titleStyle.trim() || "种草感",
-      });
+      const result = await submitWorkspaceTool("title", { ...buildToolInputs(), titleKeyword: derivedKeyword, titleStyle: titleStyle.trim() || "种草感" });
 
       if (result.kind === "title") {
         setTitleResult(result.titleResult);
@@ -393,19 +421,7 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
       setLoadingTool("script");
 
       try {
-        const result = await submitWorkspaceTool("script", {
-          commissionPrice,
-          commissionRate,
-          platformRate,
-          refineText,
-          scriptAudience,
-          scriptKeyword: normalizedPrompt,
-          scriptPrice,
-          scriptScene,
-          scriptStyle,
-          titleKeyword,
-          titleStyle,
-        });
+        const result = await submitWorkspaceTool("script", { ...buildToolInputs(), scriptKeyword: normalizedPrompt });
 
         if (result.kind === "script") {
           setScriptResult(result.scriptResult);
@@ -445,19 +461,7 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
     setLoadingTool(activeTool);
 
     try {
-      const result = await submitWorkspaceTool(activeTool, {
-        commissionPrice,
-        commissionRate,
-        platformRate,
-        refineText,
-        scriptAudience,
-        scriptKeyword,
-        scriptPrice,
-        scriptScene,
-        scriptStyle,
-        titleKeyword,
-        titleStyle,
-      });
+      const result = await submitWorkspaceTool(activeTool, buildToolInputs());
       
       // 埋点：工具使用
       trackToolUsed(activeTool);
@@ -466,6 +470,7 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
       if (result.kind === "script") { setScriptResult(result.scriptResult); setScriptAssetId(result.assetId); }
       if (result.kind === "refine") { setRefineResult(result.refineResult); }
       if (result.kind === "commission") setCommissionResult(result.commissionResult);
+      if (result.kind === "viral") setViralResult(result.viralResult);
     } catch (err) {
       setToolError(
         err instanceof ApiClientError
@@ -539,5 +544,16 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
     titleResult,
     titleStyle,
     toolError,
+    viralSource,
+    viralPlatform,
+    viralProduct,
+    viralMyPlatform,
+    viralStyle,
+    viralResult,
+    setViralSource,
+    setViralPlatform,
+    setViralProduct,
+    setViralMyPlatform,
+    setViralStyle,
   };
 }

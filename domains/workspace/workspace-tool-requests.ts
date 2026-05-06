@@ -1,7 +1,7 @@
 "use client";
 
 import { apiRequest } from "@/shared/lib/api";
-import type { CommissionResult, RefineResult, ScriptResult, TitleResult, ToolKind } from "./workspace-model";
+import type { CommissionResult, RefineResult, ScriptResult, TitleResult, ToolKind, ViralResult } from "./workspace-model";
 
 function parseOptionalNumber(value: string) {
   const trimmed = value.trim();
@@ -22,13 +22,19 @@ export type WorkspaceToolInputs = {
   commissionPrice: string;
   commissionRate: string;
   platformRate: string;
+  viralSource: string;
+  viralPlatform: string;
+  viralProduct: string;
+  viralMyPlatform: string;
+  viralStyle: string;
 };
 
 export type WorkspaceToolResult =
   | { kind: "title"; titleResult: string[]; assetId?: number }
   | { kind: "script"; scriptResult: string; assetId?: number }
   | { kind: "refine"; refineResult: RefineResult }
-  | { kind: "commission"; commissionResult: CommissionResult };
+  | { kind: "commission"; commissionResult: CommissionResult }
+  | { kind: "viral"; viralResult: ViralResult };
 
 export async function submitWorkspaceTool(
   activeTool: ToolKind,
@@ -71,6 +77,22 @@ export async function submitWorkspaceTool(
       body: { text: inputs.refineText.trim() },
     });
     return { kind: "refine", refineResult: data };
+  }
+
+  if (activeTool === "viral") {
+    if (!inputs.viralSource.trim()) throw new Error("先贴入爆款内容的链接或原文。");
+    const data = await apiRequest<ViralResult>("/api/viral/analyze", {
+      method: "POST",
+      timeoutMs: 45000,
+      body: {
+        source: inputs.viralSource.trim(),
+        sourcePlatform: inputs.viralPlatform.trim() || undefined,
+        myProduct: inputs.viralProduct.trim() || undefined,
+        myPlatform: inputs.viralMyPlatform.trim() || undefined,
+        style: inputs.viralStyle.trim() || undefined,
+      },
+    });
+    return { kind: "viral", viralResult: data };
   }
 
   if (!inputs.commissionPrice || !inputs.commissionRate) {

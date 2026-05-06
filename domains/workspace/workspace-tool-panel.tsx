@@ -8,6 +8,7 @@ import { WorkspaceCommissionFields } from "./workspace-tool-panel/commission-fie
 import { WorkspacePromptField } from "./workspace-tool-panel/prompt-field";
 import { WorkspaceScriptFields } from "./workspace-tool-panel/script-fields";
 import { WorkspaceTitleStyleField } from "./workspace-tool-panel/title-style-field";
+import { WorkspaceViralFields } from "./workspace-tool-panel/viral-fields";
 
 const goalHints: Record<string, string> = {
   publish: "输入今天要发布的内容主题或产品关键词，直接生成适合发布的文案",
@@ -38,6 +39,11 @@ type Props = {
   commissionPrice: string;
   commissionRate: string;
   platformRate: string;
+  viralSource: string;
+  viralPlatform: string;
+  viralProduct: string;
+  viralMyPlatform: string;
+  viralStyle: string;
   onToolChange: (next: ToolKind) => void;
   onSubmit: () => void;
   setTitleKeyword: (value: string) => void;
@@ -51,6 +57,11 @@ type Props = {
   setCommissionPrice: (value: string) => void;
   setCommissionRate: (value: string) => void;
   setPlatformRate: (value: string) => void;
+  setViralSource: (value: string) => void;
+  setViralPlatform: (value: string) => void;
+  setViralProduct: (value: string) => void;
+  setViralMyPlatform: (value: string) => void;
+  setViralStyle: (value: string) => void;
 };
 
 export function WorkspaceToolPanel({
@@ -73,6 +84,16 @@ export function WorkspaceToolPanel({
   setCommissionRate,
   setPlatformRate,
   setRefineText,
+  setViralSource,
+  setViralPlatform,
+  setViralProduct,
+  setViralMyPlatform,
+  setViralStyle,
+  viralSource,
+  viralPlatform,
+  viralProduct,
+  viralMyPlatform,
+  viralStyle,
   setScriptAudience,
   setScriptKeyword,
   setScriptPrice,
@@ -103,10 +124,12 @@ export function WorkspaceToolPanel({
           onRefineTextChange={setRefineText}
           onScriptKeywordChange={setScriptKeyword}
           onTitleKeywordChange={setTitleKeyword}
+          onViralSourceChange={setViralSource}
           placeholder={activeToolMeta.promptPlaceholder}
           refineText={refineText}
           scriptKeyword={scriptKeyword}
           titleKeyword={titleKeyword}
+          viralSource={viralSource}
         />
 
         {activeTool === "title" ? (
@@ -134,6 +157,21 @@ export function WorkspaceToolPanel({
             onCommissionRateChange={setCommissionRate}
             onPlatformRateChange={setPlatformRate}
             platformRate={platformRate}
+          />
+        ) : null}
+
+        {activeTool === "viral" ? (
+          <WorkspaceViralFields
+            viralSource={viralSource}
+            viralPlatform={viralPlatform}
+            viralProduct={viralProduct}
+            viralMyPlatform={viralMyPlatform}
+            viralStyle={viralStyle}
+            onViralSourceChange={setViralSource}
+            onViralPlatformChange={setViralPlatform}
+            onViralProductChange={setViralProduct}
+            onViralMyPlatformChange={setViralMyPlatform}
+            onViralStyleChange={setViralStyle}
           />
         ) : null}
 

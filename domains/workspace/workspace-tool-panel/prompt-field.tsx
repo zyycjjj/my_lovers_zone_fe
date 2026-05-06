@@ -9,18 +9,22 @@ export function WorkspacePromptField({
   refineText,
   scriptKeyword,
   titleKeyword,
+  viralSource,
   onRefineTextChange,
   onScriptKeywordChange,
   onTitleKeywordChange,
+  onViralSourceChange,
 }: {
   activeTool: ToolKind;
   placeholder: string;
   titleKeyword: string;
   scriptKeyword: string;
   refineText: string;
+  viralSource: string;
   onTitleKeywordChange: (value: string) => void;
   onScriptKeywordChange: (value: string) => void;
   onRefineTextChange: (value: string) => void;
+  onViralSourceChange: (value: string) => void;
 }) {
   const value =
     activeTool === "title"
@@ -29,10 +33,12 @@ export function WorkspacePromptField({
         ? scriptKeyword
         : activeTool === "refine"
           ? refineText
-          : "";
+          : activeTool === "viral"
+            ? viralSource
+            : "";
 
   return (
-    <FieldGroup label="内容描述">
+    <FieldGroup label={activeTool === "viral" ? "爆款内容链接或原文" : "内容描述"}>
       <textarea
         className="min-h-[122px] w-full resize-none rounded-[16px] border border-[#ECECF0] bg-white px-4 py-3 text-base leading-6 text-[#27272A] outline-none transition-colors placeholder:text-[#A3A3AB] focus:border-[#4A3168]"
         onChange={(event) => {
@@ -40,6 +46,7 @@ export function WorkspacePromptField({
           if (activeTool === "title") onTitleKeywordChange(next);
           if (activeTool === "script") onScriptKeywordChange(next);
           if (activeTool === "refine") onRefineTextChange(next);
+          if (activeTool === "viral") onViralSourceChange(next);
         }}
         placeholder={placeholder}
         value={value}

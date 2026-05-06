@@ -1,7 +1,7 @@
 "use client";
 
 import { Card } from "@/shared/ui/ui";
-import type { CommissionResult, RefineResult, ToolKind } from "./workspace-model";
+import type { CommissionResult, RefineResult, ToolKind, ViralResult } from "./workspace-model";
 import type { Recommendation } from "./use-recommendation";
 import { WorkspaceCommissionResult } from "./workspace-results/commission-result";
 import { WorkspaceEmptyState } from "./workspace-results/empty-state";
@@ -9,6 +9,7 @@ import { WorkspaceResultHeader } from "./workspace-results/header";
 import { WorkspaceRefineResult } from "./workspace-results/refine-result";
 import { WorkspaceScriptResult } from "./workspace-results/script-result";
 import { WorkspaceTitleResult } from "./workspace-results/title-result";
+import { WorkspaceViralResult } from "./workspace-results/viral-result";
 
 type ToolMeta = {
   emptyTitle: string;
@@ -37,6 +38,7 @@ type Props = {
   onSaveCurrentResult: () => void;
   nextActions?: NextAction[];
   recommendation?: Recommendation | null;
+  viralResult: ViralResult | null;
 };
 
 type NextAction = {
@@ -51,6 +53,7 @@ const defaultNextTips: Record<ToolKind, string> = {
   script: "复制脚本发一版，如果已发布或排期，点「复制并标记完成」留记录。",
   refine: "优先替换高风险表达，再把稳妥版本保存为直播话术模板。",
   commission: "保存测算结果，再决定是否继续生成卖点或完整脚本。",
+  viral: "先复制你的定制版本，再根据拆解的逻辑调整节奏和卖点。",
 };
 
 export function WorkspaceResultPanel({
@@ -75,6 +78,7 @@ export function WorkspaceResultPanel({
   scriptResult,
   titleResult,
   recommendation,
+  viralResult,
 }: Props) {
   // 优先使用推荐引擎的提示，兜底用工具默认提示
   const nextTip = recommendation?.hint || (defaultNextTips as Record<ToolKind, string>)[activeTool];
@@ -141,6 +145,10 @@ export function WorkspaceResultPanel({
 
           {activeTool === "commission" && commissionResult ? (
             <WorkspaceCommissionResult commission={commissionResult} onCopy={onCopy} />
+          ) : null}
+
+          {activeTool === "viral" && viralResult ? (
+            <WorkspaceViralResult viralResult={viralResult} onCopy={onCopy} />
           ) : null}
         </div>
       ) : (

@@ -41,7 +41,7 @@ export type EntitlementStatus = {
   resetHint: string;
 };
 
-export type ToolKind = "title" | "script" | "refine" | "commission";
+export type ToolKind = "title" | "script" | "refine" | "commission" | "viral";
 
 export type TitleResult = {
   titles: string[];
@@ -71,6 +71,43 @@ export type CommissionResult = {
   commission: number;
   comparisons: Array<{ price: number; commission: number }>;
   sellingPoint: string;
+};
+
+export type ViralStructureStep = {
+  step: string;
+  description: string;
+  technique: string;
+};
+
+export type ViralStructure = {
+  title: string;
+  hook: string;
+  structure: ViralStructureStep[];
+  sellingPoints: string[];
+  rhythmStrategy: string;
+  ctaAction: string;
+  emotionalTrigger: string;
+  targetAudience: string;
+  viralFactors: string[];
+  platformStyle: string;
+  risks: string[];
+};
+
+export type ViralMyVersion = {
+  title: string;
+  hook: string;
+  content30s: string;
+  content60s: string;
+  sellingPoints: string[];
+  ctaLine: string;
+  adaptationNotes: string[];
+};
+
+export type ViralResult = {
+  structure: ViralStructure;
+  myVersion: ViralMyVersion | null;
+  explosionCaseId?: number;
+  assetId?: number;
 };
 
 export const tools: Array<{
@@ -118,6 +155,15 @@ export const tools: Array<{
     emptyTitle: "准备好了，开始测算吧！",
     emptyDescription: "填好价格、佣金和扣点信息后，帮你算清这单值不值得推。",
   },
+  {
+    key: "viral",
+    icon: "爆",
+    label: "爆款复刻",
+    promptLabel: "输入爆款内容链接或原文",
+    promptPlaceholder: "例如：粘贴一条小红书爆款笔记链接，或直接贴原文内容",
+    emptyTitle: "准备好了，开始拆解爆款！",
+    emptyDescription: "贴入爆款内容的链接或原文，AI帮你拆解结构并生成你的版本。",
+  },
 ];
 
 export function getWorkspaceTypeLabel(type?: string) {
@@ -158,6 +204,9 @@ export function buildActiveTips(activeTool: ToolKind) {
   if (activeTool === "refine") {
     return ["描述越详细，生成内容越精准", "可以指定平台、风格、字数等", "对生成结果不满意可重新生成"];
   }
+  if (activeTool === "viral") {
+    return ["贴链接或原文，AI帮你拆解爆款结构", "结合你的商品和平台生成定制版本", "不是简单换词，是重新组织内容"];
+  }
   return ["描述越详细，生成内容越精准", "可以指定平台、风格、字数等", "对生成结果不满意可重新生成"];
 }
 
@@ -183,6 +232,13 @@ export function buildExamplePrompts(activeTool: ToolKind) {
       "这款面膜补水特别快，基本敷完就感觉皮肤状态很好，适合熬夜后急救。",
       "这双鞋真的巨显瘦，而且穿一天都不累，直播间很多姐妹都在回购。",
       "这个锅不挑灶台，热得快，清洗也方便，厨房新手也能轻松上手。",
+    ];
+  }
+  if (activeTool === "viral") {
+    return [
+      "https://www.xiaohongshu.com/explore/xxxxx 小红书爆款笔记链接",
+      "姐妹们！这个杯子我真的吹爆！颜值太绝了，放在桌上就是氛围感拉满...",
+      "这款吹风机真的太香了！先说外观，颜值直接拉满，开箱那一刻就爱上了",
     ];
   }
   return [

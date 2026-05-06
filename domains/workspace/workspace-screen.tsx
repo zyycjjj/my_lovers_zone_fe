@@ -132,6 +132,16 @@ export default function WorkspaceScreen() {
               titleKeyword={ws.titleKeyword}
               titleStyle={ws.titleStyle}
               toolError={ws.toolError}
+              viralSource={ws.viralSource}
+              viralPlatform={ws.viralPlatform}
+              viralProduct={ws.viralProduct}
+              viralMyPlatform={ws.viralMyPlatform}
+              viralStyle={ws.viralStyle}
+              setViralSource={ws.setViralSource}
+              setViralPlatform={ws.setViralPlatform}
+              setViralProduct={ws.setViralProduct}
+              setViralMyPlatform={ws.setViralMyPlatform}
+              setViralStyle={ws.setViralStyle}
             />
 
             <WorkspaceResultPanel
@@ -156,6 +166,7 @@ export default function WorkspaceScreen() {
               scriptResult={ws.scriptResult}
               titleResult={ws.titleResult}
               recommendation={recommendation}
+              viralResult={ws.viralResult}
             />
           </div>
 
