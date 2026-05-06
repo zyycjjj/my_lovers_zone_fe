@@ -760,6 +760,17 @@ export default function MeScreen() {
                 查看套餐
               </ButtonLink>
             </Card>
+
+            {/* 知识库入口 */}
+            <Card className="rounded-[20px] border border-[rgba(0,0,0,0.08)] bg-gradient-to-br from-[#4A3168] to-[#6B4A8C] p-5 text-white">
+              <div className="text-lg font-semibold">我的知识库</div>
+              <div className="mt-3 text-sm leading-7 text-white/80">
+                添加商品档案和内容偏好，让AI越用越懂你
+              </div>
+              <ButtonLink className="mt-4 w-full bg-white text-[#4A3168] hover:bg-[#F5F3F7]" href="/knowledge">
+                管理知识库
+              </ButtonLink>
+            </Card>
           </aside>
         </section>
         </ErrorBoundary>

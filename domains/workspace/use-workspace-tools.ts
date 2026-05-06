@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiRequest, ApiClientError } from "@/shared/lib/api";
 import {
   buildActiveTips,
@@ -15,6 +15,20 @@ import {
 import { goals, type Goal } from "./workspace-goal-picker";
 import { submitWorkspaceTool, type WorkspaceToolInputs } from "./workspace-tool-requests";
 import { useTracking } from "./use-tracking";
+
+type KnowledgePreferences = {
+  contentStyle: string | null;
+  defaultAudience: string | null;
+  brandKeywords: string | null;
+  targetPlatform: string | null;
+};
+
+type KnowledgeProduct = {
+  id: number;
+  name: string;
+  category: string | null;
+  platform: string | null;
+};
 
 function buildRefineText(result: RefineResult) {
   return [
@@ -79,6 +93,41 @@ export function useWorkspaceTools(onEntitlementChange?: () => void | Promise<unk
   const [viralMyPlatform, setViralMyPlatform] = useState("");
   const [viralStyle, setViralStyle] = useState("");
   const [viralResult, setViralResult] = useState<ViralResult | null>(null);
+
+  // 用户知识库加载（用于自动填充）
+  const [knowledgeLoaded, setKnowledgeLoaded] = useState(false);
+
+  useEffect(() => {
+    if (knowledgeLoaded) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const [prefRes, prodRes] = await Promise.all([
+          apiRequest<KnowledgePreferences>("/api/knowledge/preferences").catch(() => null),
+          apiRequest<KnowledgeProduct[]>("/api/knowledge/products").catch(() => [] as KnowledgeProduct[]),
+        ]);
+        if (cancelled) return;
+        // 自动填充爆款复刻字段
+        if (prefRes) {
+          if (prefRes.contentStyle && !viralStyle) setViralStyle(prefRes.contentStyle);
+          if (prefRes.targetPlatform && !viralMyPlatform) setViralMyPlatform(prefRes.targetPlatform);
+        }
+        if (Array.isArray(prodRes) && prodRes.length > 0 && !viralProduct) {
+          setViralProduct(prodRes[0].name);
+        }
+        // 自动填充脚本字段
+        if (prefRes?.defaultAudience && !scriptAudience) {
+          setScriptAudience(prefRes.defaultAudience);
+        }
+      } catch {
+        // 知识库加载失败不影响工作台
+      } finally {
+        if (!cancelled) setKnowledgeLoaded(true);
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [knowledgeLoaded]);
 
   const activeToolMeta = useMemo(
     () => tools.find((item) => item.key === activeTool) ?? tools[0],
