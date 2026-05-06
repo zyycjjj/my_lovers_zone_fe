@@ -9,6 +9,7 @@ const navItems = [
   { href: "/", label: "首页" },
   { href: "/trial", label: "体验" },
   { href: "/workspace", label: "工作台" },
+  { href: "/community", label: "小广场" },
 ];
 
 export function SiteHeader() {
@@ -24,21 +25,29 @@ export function SiteHeader() {
             M
           </span>
           <div className="min-w-0">
-            <div className="truncate text-lg font-semibold tracking-[-0.03em] text-strong">Memory</div>
-            <div className="truncate text-xs text-soft">轻陪跑式 AI 内容工作台</div>
+            <div className="truncate text-lg font-semibold tracking-[-0.03em] text-strong">
+              Memory
+            </div>
+            <div className="truncate text-xs text-soft">
+              轻陪跑式 AI 内容工作台
+            </div>
           </div>
         </Link>
 
         <nav className="hidden items-center gap-2 rounded-[18px] border border-[rgba(88,51,175,0.08)] bg-white/82 p-1 md:flex">
           {navItems.map((item) => {
-            const active = item.href === "/" ? pathname === "/" : pathname?.startsWith(item.href);
+            const active =
+              item.href === "/"
+                ? pathname === "/"
+                : pathname?.startsWith(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
                   "rounded-[14px] px-4 py-2 text-sm font-medium text-soft",
-                  active && "bg-[rgba(112,70,214,0.1)] text-[var(--primary-700)]",
+                  active &&
+                    "bg-[rgba(112,70,214,0.1)] text-[var(--primary-700)]"
                 )}
               >
                 {item.label}
@@ -50,7 +59,11 @@ export function SiteHeader() {
         <div className="flex items-center gap-3">
           {session?.sessionToken ? (
             <>
-              <ButtonLink href="/workspace" variant="secondary" className="hidden sm:inline-flex">
+              <ButtonLink
+                href="/workspace"
+                variant="secondary"
+                className="hidden sm:inline-flex"
+              >
                 进入工作台
               </ButtonLink>
               <button
