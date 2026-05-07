@@ -15,7 +15,7 @@ import type {
 
 type ContentAsset = {
   id: number;
-  toolKey: "title" | "script" | "refine" | "commission";
+  toolKey: "title" | "script" | "refine" | "commission" | "viral";
   title?: string | null;
   content: string;
   sourcePrompt?: string | null;
@@ -60,6 +60,7 @@ const toolLabels: Record<ContentAsset["toolKey"], string> = {
   script: "脚本",
   refine: "话术",
   commission: "测算",
+  viral: "爆款",
 };
 
 const toolContinueMap: Record<
@@ -70,6 +71,7 @@ const toolContinueMap: Record<
   script: { label: "提炼话术", nextTool: "refine" },
   refine: { label: "生成标题", nextTool: "title" },
   commission: { label: "生成脚本", nextTool: "script" },
+  viral: { label: "生成标题", nextTool: "title" },
 };
 
 function formatDateTime(value?: string | null) {
@@ -458,7 +460,7 @@ export default function MeScreen() {
   // 各工具类型的数量统计
   const toolCounts = useMemo(() => {
     const counts: Record<string, number> = { all: assets.length };
-    for (const t of ["title", "script", "refine", "commission"] as const) {
+    for (const t of ["title", "script", "refine", "commission", "viral"] as const) {
       counts[t] = assets.filter((a) => a.toolKey === t).length;
     }
     return counts;
@@ -655,7 +657,7 @@ export default function MeScreen() {
                     {[
                       { key: "all" as const, label: "全部" },
                       ...(
-                        ["title", "script", "refine", "commission"] as const
+                        ["title", "script", "refine", "commission", "viral"] as const
                       ).map((k) => ({ key: k, label: toolLabels[k] })),
                     ].map((t) => (
                       <button

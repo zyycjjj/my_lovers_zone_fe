@@ -1,11 +1,25 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { HomePlansSection } from "@/domains/landing/home-plans-section";
 import { usePublicPlans } from "@/domains/landing/use-public-plans";
+import { apiRequest } from "@/shared/lib/api";
+import type { EntitlementStatus } from "@/domains/workspace/workspace-model";
 
 export default function PricingPage() {
   const plans = usePublicPlans();
+  const [planLabel, setPlanLabel] = useState<string>("体验版");
+
+  useEffect(() => {
+    apiRequest<EntitlementStatus>("/api/payments/entitlement/me")
+      .then((entitlement) => {
+        if (entitlement?.planLabel) {
+          setPlanLabel(entitlement.planLabel);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#fafafa] text-[#18181b]">
@@ -15,7 +29,7 @@ export default function PricingPage() {
             返回首页
           </Link>
           <div className="inline-flex h-[30px] items-center rounded-full border border-[#F9CFE3] bg-[#FDF4F8] px-3 text-sm font-medium text-[#993D63]">
-            体验版
+            {planLabel}
           </div>
         </div>
       </header>
